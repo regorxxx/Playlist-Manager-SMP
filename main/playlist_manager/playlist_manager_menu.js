@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/26
+//12/01/26
 
 /* exported createMenuLeft, createMenuLeftMult, createMenuRightFilter, createMenuSearch, createMenuRightTop, createMenuRightSort, createMenuFilterSorting, importSettingsMenu, createMenuExport */
 
@@ -3815,7 +3815,7 @@ function createMenuRightTop() {
 				menu.newSeparator(subMenuName);
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Restore defaults', func: () => {
-						list.properties['converterPreset'][1] = list.defaultProperties['converterPreset'][3];
+						list.properties['converterPreset'][1] = list.properties['converterPreset'][3];
 						overwriteProperties(list.properties);
 						if (list.iDynamicMenus > 0) { list.createMainMenuDynamic().then(() => { list.exportPlaylistsInfo(); callbacksListener.checkPanelNamesAsync(); }); }
 					}
@@ -5080,7 +5080,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuNameL);
 			menu.newEntry({
 				menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
-					list.properties['lShortcuts'][1] = list.defaultProperties['lShortcuts'][3];
+					list.properties['lShortcuts'][1] = list.properties['lShortcuts'][3];
 					list.lShortcuts = JSON.parse(list.properties['lShortcuts'][1]);
 					overwriteProperties(list.properties);
 				}
@@ -5117,7 +5117,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuNameR);
 			menu.newEntry({
 				menuName: subMenuNameR, entryText: 'Restore defaults', func: () => {
-					list.properties['rShortcuts'][1] = list.defaultProperties['rShortcuts'][3];
+					list.properties['rShortcuts'][1] = list.properties['rShortcuts'][3];
 					list.rShortcuts = JSON.parse(list.properties['rShortcuts'][1]);
 					overwriteProperties(list.properties);
 				}
@@ -5153,7 +5153,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuNameM);
 			menu.newEntry({
 				menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
-					list.properties['mShortcuts'][1] = list.defaultProperties['mShortcuts'][3];
+					list.properties['mShortcuts'][1] = list.properties['mShortcuts'][3];
 					list.mShortcuts = JSON.parse(list.properties['mShortcuts'][1]);
 					overwriteProperties(list.properties);
 				}
@@ -5193,7 +5193,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuNameL);
 			menu.newEntry({
 				menuName: subMenuNameL, entryText: 'Restore defaults', func: () => {
-					list.properties['lShortcutsHeader'][1] = list.defaultProperties['lShortcutsHeader'][3];
+					list.properties['lShortcutsHeader'][1] = list.properties['lShortcutsHeader'][3];
 					list.lShortcutsHeader = JSON.parse(list.properties['lShortcutsHeader'][1]);
 					overwriteProperties(list.properties);
 				}
@@ -5230,7 +5230,7 @@ function createMenuRightTop() {
 			menu.newSeparator(subMenuNameM);
 			menu.newEntry({
 				menuName: subMenuNameM, entryText: 'Restore defaults', func: () => {
-					list.properties['mShortcutsHeader'][1] = list.defaultProperties['mShortcutsHeader'][3];
+					list.properties['mShortcutsHeader'][1] = list.properties['mShortcutsHeader'][3];
 					list.mShortcutsHeader = JSON.parse(list.properties['mShortcutsHeader'][1]);
 					overwriteProperties(list.properties);
 				}
@@ -5265,7 +5265,7 @@ function createMenuRightTop() {
 		menu.newEntry({
 			menuName: subMenuName, entryText: 'Restore defaults (all)', func: () => {
 				['lShortcuts', 'mShortcuts', 'lShortcutsHeader', 'mShortcutsHeader'].forEach((key) => {
-					list.properties[key][1] = list.defaultProperties[key][3];
+					list.properties[key][1] = list.properties[key][3];
 					list[key] = JSON.parse(list.properties[key][1]);
 				});
 				overwriteProperties(list.properties);

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/01/26
+//12/01/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -386,11 +386,11 @@ let properties = {
 };
 Object.keys(properties).forEach(p => properties[p].push(properties[p][1]));
 setProperties(properties, 'plm_');
+properties = getPropertiesPairs(properties, 'plm_');
 {	// Check if is a setup or normal init
-	let prop = getPropertiesPairs(properties, 'plm_');
-	const infoPopups = JSON.parse(prop.infoPopups[1]);
-	if (infoPopups.firstInit && prop.bSetup[1]) { prop.bSetup[1] = false; overwriteProperties(prop); } // Don't apply on already existing installations
-	if (!prop.bSetup[1] && !prop.bLiteMode[1]) {
+	const infoPopups = JSON.parse(properties.infoPopups[1]);
+	if (infoPopups.firstInit && properties.bSetup[1]) { properties.bSetup[1] = false; overwriteProperties(properties); } // Don't apply on already existing installations
+	if (!properties.bSetup[1] && !properties.bLiteMode[1]) {
 		instances.init();
 		instances.add(window.ScriptInfo.Name);
 		instances.get(window.ScriptInfo.Name, true);
@@ -401,8 +401,8 @@ setProperties(properties, 'plm_');
 	const props = ['columns', 'rShortcuts', 'uiElements', 'searchMethod', 'showMenus', 'lShortcutsHeader', 'mShortcutsHeader', 'mShortcuts', 'lShortcuts', 'playlistIcons', 'logOpt'];
 	let bDone = false;
 	props.forEach((propKey) => {
-		const oldProp = JSON.parse(prop[propKey][1]);
-		const defProp = JSON.parse(prop[propKey][3]);
+		const oldProp = JSON.parse(properties[propKey][1]);
+		const defProp = JSON.parse(properties[propKey][3]);
 		let bParse = false;
 		for (let key in defProp) {
 			if (!Object.hasOwn(oldProp, key)) { oldProp[key] = defProp[key]; bParse = true; }
@@ -411,59 +411,21 @@ setProperties(properties, 'plm_');
 			if (!Object.hasOwn(defProp, key)) { delete oldProp[key]; bParse = true; }
 		}
 		if (bParse) {
-			prop[propKey][1] = JSON.stringify(oldProp);
+			properties[propKey][1] = JSON.stringify(oldProp);
 			bDone = true;
 			console.log('Playlist Manager: Rewriting default values for property ' + _p(propKey));
 		}
 	});
-	// Update default info popup values (for compat with new releases)
-	if (!infoPopups.firstInit) {
-		[	// xspf popup is left to fire again on purpose
-			{ property: 'plm_16.Playlist Manager: Fired once', key: 'firstInit' },
-			{ property: 'plm_18.Playlist Manager fpl: Fired once', key: 'fplFormat' },
-			{ property: 'plm_19.Playlist Manager pls: Fired once', key: 'plsFormat' },
-			{ property: 'plm_43.Playlist Manager xsp: Fired once', key: 'xspFormat' },
-			{ property: 'plm_52.Playlist Manager on network drive: Fired once', key: 'networkDrive' },
-		].map((o) => {
-			if (window.GetProperty(o.property, false)) {
-				window.SetProperty(o.property, null);
-				infoPopups[o.key] = true;
-				return true;
-			}
-		}).some((val) => {
-			if (val) {
-				bDone = true;
-				prop.infoPopups[1] = JSON.stringify(infoPopups);
-				return true;
-			}
-		});
-	}
-	// Update old properties (for compat with new releases)
-	[
-		{ property: 'plm_01.Path to the folder containing the playlists', key: 'playlistsPath' },
-	].map((o) => {
-		const val = window.GetProperty(o.property, null);
-		if (val !== null) {
-			window.SetProperty(o.property, null);
-			prop[o.key][1] = val;
-			return true;
-		}
-	}).some((val) => {
-		if (val) {
-			bDone = true;
-			return true;
-		}
-	});
-	if (bDone) { overwriteProperties(prop); }
-	if (prop.bAutoUpdateCheck[1]) {
+	if (bDone) { overwriteProperties(properties); }
+	if (properties.bAutoUpdateCheck[1]) {
 		include('helpers\\helpers_xxx_web_update.js');
 		setTimeout(checkUpdate, 120000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb });
 	}
 	// Rename json file on lite mode the first time it runs
-	if (prop.panelUUID[1] === properties.panelUUID[1] && prop.bLiteMode[1]) {
-		const file = folders.data + 'playlistManager_' + prop.playlistsPath[1].split('\\').filter(Boolean).pop().replace(':', '');
+	if (properties.panelUUID[1] === properties.panelUUID[3] && properties.bLiteMode[1]) {
+		const file = folders.data + 'playlistManager_' + properties.playlistsPath[1].split('\\').filter(Boolean).pop().replace(':', '');
 		if (_isFile(file + '.json')) {
-			const newFile = folders.data + 'playlistManager_' + prop.panelUUID[1];
+			const newFile = folders.data + 'playlistManager_' + properties.panelUUID[1];
 			const suffix = ['.json', '_sorting.json', '_config.json', '.json.old', '_sorting.json.old', '_config.json.old'];
 			if (suffix.every((s) => { return !_isFile(file + s) || _copyFile(file + s, newFile + s); })) {
 				console.log(window.Name + ' (Playlist-Manager-SMP): creating UUID file from existing JSON ' + _p(file + '.json')); // DEBUG
@@ -476,8 +438,8 @@ setProperties(properties, 'plm_');
 	}
 }
 // Panel
-const bottomToolbar = new _listButtons(getPropertyByKey(properties, 'bSetup', 'plm_'));
-const panel = new _panel(true, getPropertyByKey(properties, 'bSetup', 'plm_'));
+const bottomToolbar = new _listButtons(properties.bSetup[1]);
+const panel = new _panel(true, properties.bSetup[1]);
 // Popups
 const pop = new _popup({
 	configuration: {
@@ -495,83 +457,82 @@ let autoUpdateRepeat;
 let plsRwLock;
 
 {	// Info Popup and setup
-	let prop = getPropertiesPairs(properties, 'plm_');
-	const infoPopups = JSON.parse(prop.infoPopups[1]);
+	const infoPopups = JSON.parse(properties.infoPopups[1]);
 	// Disable panel on init until it's done
-	if (prop.bSetup[1]) {
+	if (properties.bSetup[1]) {
 		pop.enable(true, 'Setup', 'Setup required.\nPanel will be disabled during the process.');
 	} else if (!infoPopups.firstInit) {
 		if (folders.JsPackageDirs) { // Workaround for https://github.com/TheQwertiest/foo_spider_monkey_panel/issues/210
 			WshShell.Popup('This script has been installed as a package.\nBefore closing the \'Spider Monkey Panel\\JSplitter configuration window\' all popups must be closed, take your time reading them and following their instructions.\nAfterwards, close the window. Panel will be reloaded.', 0, window.FullPanelName, popup.info + popup.ok);
-			if (getPropertiesValues(properties, 'plm_').filter(Boolean).length === 0) { // At this point nothing works properly so just throw
+			if (getPropertiesValues(properties, '', 0).filter(Boolean).length === 0) { // At this point nothing works properly so just throw
 				throw new Error('READ THE POPUPS AND STOP CLICKING ON BUTTONS WITHOUT READING!!!\nOtherwise TT, aka GeoRrGiA-ReBorN\'s master, will try\nto kill you with their good jokes.\n\nReally, read the popups and make our lives easier. Try reinstalling the script.\n\nThanks :)');
 			}
 		}
 		infoPopups.firstInit = true;
-		prop.infoPopups[1] = JSON.stringify(infoPopups);
-		isPortable(prop['playlistsPath'][0]);
+		properties.infoPopups[1] = JSON.stringify(infoPopups);
+		isPortable(properties['playlistsPath'][0]);
 		const readmePath = folders.xxx + 'helpers\\readme\\playlist_manager.txt';
 		const readme = _open(readmePath, utf8);
-		const uiElements = JSON.parse(prop.uiElements[1]);
+		const uiElements = JSON.parse(properties.uiElements[1]);
 		if (readme.length) { fb.ShowPopupMessage(readme, 'Playlist Manager: introduction'); }
 		{	// Lite mode
 			const answer = WshShell.Popup('By default Playlist Manager is installed with a myriad of features and the ability to manage playlist files.\nSome users may be looking for a simple foo_plorg replacement, in which case lite mode should be enabled. \n\nEnable lite mode?', 0, 'Lite mode', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
-				prop.bLiteMode[1] = true;
+				properties.bLiteMode[1] = true;
 			}
 		}
 		{	// Simple mode
-			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'Statistics mode'].concat(prop.bLiteMode[1] ? ['File locks'] : []);
+			const features = ['Tags', 'Relative paths handling', 'Export and copy', 'Online sync', 'Statistics mode'].concat(properties.bLiteMode[1] ? ['File locks'] : []);
 			const otherFeatures = ['Advanced search tools'];
-			const answer = prop.bLiteMode[1]
+			const answer = properties.bLiteMode[1]
 				? popup.no
 				: WshShell.Popup('By default Playlist Manager is installed with some features hidden.\nHidden features may be switch at \'UI\\Playlist menus\' at any time.\nDo you want to enable them now?\n\nList: ' + [...features, ...otherFeatures].join(', '), 0, 'Features', popup.question + popup.yes_no);
 			if (answer === popup.no) {
 				// Menus
-				const showMenus = JSON.parse(prop.showMenus[1]);
+				const showMenus = JSON.parse(properties.showMenus[1]);
 				features.forEach((key) => {
 					showMenus[key] = false;
 				});
-				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
+				properties.showMenus[3] = properties.showMenus[1] = JSON.stringify(showMenus);
 				// Other tools
-				const searchMethod = JSON.parse(prop.searchMethod[1]);
+				const searchMethod = JSON.parse(properties.searchMethod[1]);
 				searchMethod.bPath = searchMethod.bRegExp = searchMethod.bMetaPls = false;
-				prop.searchMethod[1] = JSON.stringify(searchMethod);
+				properties.searchMethod[1] = JSON.stringify(searchMethod);
 			}
 		}
-		if (prop.bLiteMode[1]) {	// Bottom toolbar
+		if (properties.bLiteMode[1]) {	// Bottom toolbar
 			const answer = WshShell.Popup('Show the bottom toolbar for quick access to sorting and filtering?\nUI elements can be tweaked later at Settings menu \'UI\\UI elements\' submenu.\n\n(Click no if looking for a simple replacement of foo_plorg)', 0, 'Bottom toolbar', popup.question + popup.yes_no);
 			if (answer === popup.no) {
 				uiElements['Bottom toolbar'].enabled = false;
-				prop.uiElements[1] = JSON.stringify(uiElements);
+				properties.uiElements[1] = JSON.stringify(uiElements);
 			}
 		}
 		{	// UI tracking
-			const answer = prop.bLiteMode[1]
+			const answer = properties.bLiteMode[1]
 				? popup.yes
 				: WshShell.Popup('By default only physical playlist files are used.\nUI-only playlists tracking may be enabled at \'Panel behavior\'.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, 'UI-only playlists tracking', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
-				prop.bAllPls[1] = true;
+				properties.bAllPls[1] = true;
 			}
 		}
 		{	// Contextual menus
 			const features = ['Playlist\'s items menu'];
-			const answer = prop.bLiteMode[1]
+			const answer = properties.bLiteMode[1]
 				? popup.yes
-				: prop.bAllPls[1]
+				: properties.bAllPls[1]
 					? WshShell.Popup('Show native contextual menu on UI-playlists (applies to its items)?', 0, 'Playlist contextual menus', popup.question + popup.yes_no)
 					: popup.no;
 			if (answer === popup.yes) {
 				// Menus
-				const showMenus = JSON.parse(prop.showMenus[1]);
+				const showMenus = JSON.parse(properties.showMenus[1]);
 				features.forEach((key) => {
 					showMenus[key] = answer === popup.yes;
 				});
-				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
+				properties.showMenus[3] = properties.showMenus[1] = JSON.stringify(showMenus);
 			}
 		}
 		{	// Manual sorting
-			const answer = prop.bLiteMode[1]
+			const answer = properties.bLiteMode[1]
 				? popup.yes
 				: WshShell.Popup('By default automatic sorting by name is used.\n\nManual sorting can be set at the ' + (uiElements['Bottom toolbar'].enabled ? 'sorting button at bottom and ' : '') + 'filter and sorting menu at top.\nWith manual sorting, playlists may be reordered using drag n\' drop or the contextual menu.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, 'Manual sorting', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
@@ -585,29 +546,29 @@ let plsRwLock;
 			}
 		}
 		{	// Folders
-			const answer = prop.bLiteMode[1]
+			const answer = properties.bLiteMode[1]
 				? popup.yes
 				: WshShell.Popup('By default folders are disabled and playlists may be sorted using categories/tags and the different filter/sorting options.\nEnabling folders allow to group items in a hierarchical list. Playlists may be moved using drag n\' drop.\nDo you want to enable it now?\n\n(Enable it if looking for a replacement of foo_plorg)', 0, 'Folders', popup.question + popup.yes_no);
 			if (answer === popup.yes) {
-				const showMenus = JSON.parse(prop.showMenus[1]);
+				const showMenus = JSON.parse(properties.showMenus[1]);
 				showMenus['Folders'] = true;
-				prop.showMenus[3] = prop.showMenus[1] = JSON.stringify(showMenus);
+				properties.showMenus[3] = properties.showMenus[1] = JSON.stringify(showMenus);
 			}
 		}
 		// Other changes due to lite mode
-		if (prop.bLiteMode[1]) {
-			prop.bAutoSelTitle[1] = true;
-			prop.autoSave[1] = 1000;
-			prop.delays[1] = JSON.stringify({
+		if (properties.bLiteMode[1]) {
+			properties.bAutoSelTitle[1] = true;
+			properties.autoSave[1] = 1000;
+			properties.delays[1] = JSON.stringify({
 				playlistLoading: 0,
 				startupPlaylist: 1000,
 				dynamicMenus: 2500,
 				playlistCache: 6000,
 			});
 		}
-		overwriteProperties(prop); // Updates panel
+		overwriteProperties(properties); // Updates panel
 		// Share ListenBrainz Token
-		if (!prop.lBrainzToken[1].length) {
+		if (!properties.lBrainzToken[1].length) {
 			callbacksListener.lBrainzTokenListener = true;
 			setTimeout(() => window.NotifyOthers('xxx-scripts: lb token', null), 3000);
 			setTimeout(() => { callbacksListener.lBrainzTokenListener = false; }, 6000);
@@ -650,18 +611,18 @@ let plsRwLock;
 		});
 	}
 	// Stats mode available?
-	if (prop.bStatsMode[1]) {
-		const showMenus = JSON.parse(prop.showMenus[1]);
-		if (!showMenus['Statistics mode']) { prop.bStatsMode[1] = false; }
-		overwriteProperties(prop); // Updates panel
+	if (properties.bStatsMode[1]) {
+		const showMenus = JSON.parse(properties.showMenus[1]);
+		if (!showMenus['Statistics mode']) { properties.bStatsMode[1] = false; }
+		overwriteProperties(properties); // Updates panel
 	}
 	// Disable panel on init until it's done
-	if (!pop.isEnabled() && !prop.bLiteMode[1] && plmInit.interval) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.', 'cacheLib'); }
+	if (!pop.isEnabled() && !properties.bLiteMode[1] && plmInit.interval) { pop.enable(true, 'Loading...', 'Caching library paths...\nPanel will be disabled during the process.', 'cacheLib'); }
 }
 globProfiler.Print('init');
 
 // List and other UI elements
-const list = new _list(LM, TM, 0, 0);
+const list = new _list({ x: LM, y: TM, w: 0, h: 0, properties });
 const stats = new _listStatistics(LM, TM, 0, 0, list.properties.bStatsMode[1], JSON.parse(list.properties.statsConfig[1]));
 /** @type {_scrollBar} */
 let scrollBar; // eslint-disable-line no-redeclare
@@ -1471,10 +1432,10 @@ if (!list.properties.bSetup[1]) {
 			const bShift = utils.IsKeyPressed(VK_SHIFT);
 			const bCtrl = utils.IsKeyPressed(VK_CONTROL);
 			if (bShift === keyListener.bShift && bCtrl === keyListener.bCtrl) { return; }
-			else if (bShift && bCtrl) { list.move(list.mx, list.my, MK_SHIFT + MK_CONTROL, list.bIsDragDrop); }
-			else if (bShift) { list.move(list.mx, list.my, MK_SHIFT, list.bIsDragDrop); }
-			else if (bCtrl) { list.move(list.mx, list.my, MK_CONTROL, list.bIsDragDrop); }
-			else { list.move(list.mx, list.my, null, list.bIsDragDrop); }
+			else if (bShift && bCtrl) { list.move(list.mX, list.mY, MK_SHIFT + MK_CONTROL, list.bIsDragDrop); }
+			else if (bShift) { list.move(list.mX, list.mY, MK_SHIFT, list.bIsDragDrop); }
+			else if (bCtrl) { list.move(list.mX, list.mY, MK_CONTROL, list.bIsDragDrop); }
+			else { list.move(list.mX, list.mY, null, list.bIsDragDrop); }
 			keyListener.bShift = bShift;
 			keyListener.bCtrl = bCtrl;
 		} else {
