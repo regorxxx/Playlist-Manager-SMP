@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/01/26
+//12/01/26
 
 /* exported _chart */
 
@@ -1518,8 +1518,8 @@ function _chart({
 		if (this.trace(x, y)) {
 			let bHand = false;
 			let ttText = '';
-			this.mx = x;
-			this.my = y;
+			this.mX = x;
+			this.mY = y;
 			if (!this.inFocus) {
 				this.getButtonKeys().forEach((button) => this[button].repaint());
 				this.inFocus = true;
@@ -1667,8 +1667,8 @@ function _chart({
 	this.leave = (cleanNear) => {
 		if (!window.ID) { return false; }
 		if (this.pop.isEnabled()) { return false; }
-		this.mx = -1;
-		this.my = -1;
+		this.mX = -1;
+		this.mY = -1;
 		this.getButtonKeys().forEach((button) => this[button].hover = false);
 		if (this.inFocus) {
 			this.getButtonKeys().forEach((button) => this[button].repaint());
@@ -1752,7 +1752,7 @@ function _chart({
 		if (left < 0) { left = 0; }
 		if (currSlice[0] === left || currSlice[1] === right) { return false; }
 		this.changeConfig({ bPaint: true, dataManipulation: { slice: [left, right === points ? Infinity : right] } });
-		this.move(this.mx, this.my);
+		this.move(this.mX, this.mY);
 		return true;
 	};
 	this.scrollXThrottle = throttle(this.scrollX, 60);
@@ -1810,7 +1810,7 @@ function _chart({
 			if ((left - right) >= range) { return false; }
 		}
 		this.changeConfig({ bPaint: true, dataManipulation: { slice: [left, right === points ? Infinity : right] } });
-		setTimeout(() => this.move(this.mx, this.my), 10);
+		setTimeout(() => this.move(this.mX, this.mY), 10);
 		return true;
 	};
 	this.zoomXThrottle = throttle(this.zoomX, 30);
@@ -1931,16 +1931,16 @@ function _chart({
 	this.wheelResize = (step, bForce, callbackArgs) => {
 		if ((this.inFocus || bForce) && step !== 0) {
 			const newConfig = {};
-			if (this.isInPoint(this.mx, this.my, false)) {
+			if (this.isInPoint(this.mX, this.mY, false)) {
 				newConfig.graph = { borderWidth: Math.max(0.5, this.graph.borderWidth + Math.sign(step)) };
 				newConfig.axis = {};
 				Object.keys(this.axis).forEach((key) => {
 					newConfig.axis[key] = {};
 					newConfig.axis[key].width = Math.max(0, this.axis[key].width + Math.sign(step));
 				});
-			} else if (this.isOnButton(this.mx, this.my)) {
+			} else if (this.isOnButton(this.mX, this.mY)) {
 				newConfig.buttons = { size: Math.max(10, this.buttons.size + Math.sign(step)) };
-			} else if (this.trace(this.mx, this.my)) {
+			} else if (this.trace(this.mX, this.mY)) {
 				newConfig.margin = { ...this.margin };
 				Object.keys(this.margin).forEach((key) => {
 					newConfig.margin[key] *= 1 + 0.1 * Math.sign(step);
@@ -2999,8 +2999,8 @@ function _chart({
 	this.y = y;
 	this.w = w;
 	this.h = h;
-	this.mx = -1;
-	this.my = -1;
+	this.mX = -1;
+	this.mY = -1;
 	this.inFocus = false;
 	this.title = typeof title !== 'undefined' ? title : window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
 	this.tooltipText = tooltipText;
