@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/01/26
+//14/01/26
 
 /* exported _list */
 
@@ -7526,47 +7526,6 @@ function _list({x, y, w, h, properties} =  {}) {
 				bDone = true;
 			}
 		});
-		// Check UI elements
-		const uiELementsDef = JSON.parse(this.properties['uiElements'][3]);
-		if (!isArrayEqual(Object.keys(this.uiElements), Object.keys(uiELementsDef))) {
-			for (let key in uiELementsDef) {
-				this.uiElements[key] = uiELementsDef[key];
-			}
-			this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
-			bDone = true;
-		}
-		for (let key in this.uiElements) {
-			const newEl = this.uiElements[key];
-			const defEl = uiELementsDef[key];
-			const bMissingSubs = Object.hasOwn(defEl, 'elements') && !isArrayEqual(Object.keys(newEl.elements || {}), Object.keys(defEl.elements));
-			if (!isArrayEqual(Object.keys(newEl), Object.keys(defEl)) || bMissingSubs) {
-				if (bMissingSubs) {
-					const defKeys = new Set(Object.keys(defEl.elements));
-					const newKeys = new Set(Object.keys(newEl.elements));
-					newKeys.difference(defKeys).forEach((subKey) => {
-						delete newEl.elements[subKey];
-					});
-					defKeys.difference(newKeys).forEach((subKey) => {
-						newEl.elements[subKey] = defEl.elements[subKey];
-					});
-				} else {
-					for (let subKey in defEl) {
-						newEl[subKey] = defEl[subKey];
-					}
-				}
-				this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
-				bDone = true;
-			}
-		}
-		const headerButtons = this.uiElements['Header buttons'].elements;
-		const headerButtonsDef = uiELementsDef['Header buttons'].elements;
-		if (!isArrayEqual(Object.keys(headerButtons), Object.keys(headerButtonsDef))) {
-			for (let key in headerButtonsDef) {
-				headerButtons[key] = headerButtonsDef[key];
-			}
-			this.properties['uiElements'][1] = JSON.stringify(this.uiElements);
-			bDone = true;
-		}
 		// Check by features enabled
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		const bSearch = this.uiElements['Search filter'].enabled; // this.searchInput is null at this point before painting
@@ -7610,44 +7569,7 @@ function _list({x, y, w, h, properties} =  {}) {
 			this.switchTracking(false);
 			bDone = true;
 		}
-		// Check status icons
-		const iconChars = {
-			playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
-			active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: false },
-			loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true },
-		};
-		Object.keys(iconChars).forEach((k) => {
-			if (!Object.hasOwn(this.statusIcons, k)) {
-				this.statusIcons[k] = iconChars[k];
-				this.properties.statusIcons[1] = JSON.stringify(this.statusIcons);
-				bDone = true;
-			}
-			Object.keys(iconChars[k]).forEach((sk) => {
-				if (!Object.hasOwn(this.statusIcons[k], sk) || this.statusIcons[k][sk] === '') {
-					this.statusIcons[k][sk] = iconChars[k][sk];
-					this.properties.statusIcons[1] = JSON.stringify(this.statusIcons);
-					bDone = true;
-				}
-			});
-		});
-		// Check XSPF rules
-		const xspfRulesDef = JSON.parse(this.properties['xspfRules'][3]);
-		if (!isArrayEqual(Object.keys(this.xspfRules), Object.keys(xspfRulesDef))) {
-			for (let key in xspfRulesDef) {
-				this.xspfRules[key] = xspfRulesDef[key];
-			}
-			this.properties['xspfRules'][1] = JSON.stringify(this.xspfRules);
-			bDone = true;
-		}
 		// Check FPL rules
-		const fplRulesDef = JSON.parse(this.properties['fplRules'][3]);
-		if (!isArrayEqual(Object.keys(this.fplRules), Object.keys(fplRulesDef))) {
-			for (let key in fplRulesDef) {
-				this.fplRules[key] = fplRulesDef[key];
-			}
-			this.properties['fplRules'][1] = JSON.stringify(this.fplRules);
-			bDone = true;
-		}
 		if (this.fplRules.bNonTrackedSupport && !bFplWrite) {
 			this.fplRules.bNonTrackedSupport = false;
 			this.properties['fplRules'][1] = JSON.stringify(this.fplRules);

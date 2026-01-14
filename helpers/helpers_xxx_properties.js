@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/11/25
+//14/01/26
 
-/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues,checkJsonProperties */
+/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues, checkJsonProperties */
 
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _isFolder:readable, doOnce:readable*/
@@ -233,6 +233,28 @@ function checkProperty(property, withValue) {
 
 function checkJsonProperties(propertiesDescriptor) {
 	let bSave = false;
+	const checkChild = (obj, def, key, info) => {
+		if (!Object.hasOwn(obj, key)) {
+			obj[key] = def[key];
+			bSave = true;
+			console.log(window.FullPanelName + ': Adding missing key (' + key + ') to property \'' + info + '\'');
+			return true;
+		} else if (typeof def[key] === 'object' && !Array.isArray(def[key])) {
+			let bReplace = false;
+			if (typeof obj[key] !== 'object' || Array.isArray(obj[key])) {
+				obj[key] = def[key];
+				bReplace = true;
+				bSave = true;
+				console.log(window.FullPanelName + ': Adding mismatched variable (' + key + ') to property \'' + info + '\'');
+			}
+			for (let subKey in def[key]) {
+				if (checkChild(obj[key], def[key], subKey, info)) { bReplace = true; };
+			}
+			return bReplace;
+
+		}
+		return false;
+	};
 	for (const k in propertiesDescriptor) {
 		const prop = propertiesDescriptor[k];
 		const checks = prop[2];
@@ -242,12 +264,7 @@ function checkJsonProperties(propertiesDescriptor) {
 			if (!Array.isArray(obj)) {
 				const def = JSON.parse(prop[3]);
 				for (let key in def) {
-					if (!Object.hasOwn(obj, key)) {
-						obj[key] = def[key];
-						bSave = true;
-						bReplace = true;
-						console.log(window.FullPanelName + ': Adding missing key (' + key + ') to property \'' + prop[0] + '\'');
-					}
+					if (checkChild(obj, def, key, prop[0])) { bReplace = true; };
 				}
 				if (bReplace) {
 					prop[1] = JSON.stringify(obj);

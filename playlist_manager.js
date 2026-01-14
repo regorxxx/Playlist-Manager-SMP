@@ -15,7 +15,7 @@ include('helpers\\helpers_xxx.js');
 include('helpers\\helpers_xxx_flags.js');
 /* global VK_LWIN:readable, dropMask:readable */
 include('helpers\\helpers_xxx_properties.js');
-/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, deleteProperties:readable */
+/* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, getPropertiesValues:readable, checkJsonProperties:readable */
 include('helpers\\helpers_xxx_prototypes.js');
 /* global isInt:readable, isBoolean:readable, isStringWeak:readable, _t:readable, isJSON:readable, isString:readable, isUUID:readable, UUID:readable, _p:readable, range:readable, clone:readable */
 include('helpers\\helpers_xxx_prototypes_smp.js');
@@ -124,7 +124,7 @@ let properties = {
 	fplRules: ['fpl playlists behavior', JSON.stringify({
 		bLockOnLoad: true,
 		bNonTrackedSupport: true,
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	extension: ['Extension used when saving playlists', '.m3u8', { func: (val) => writablePlaylistFormats.has(val) }],
 	autoUpdate: ['Periodically checks playlist path (in ms). Forced > 200. 0 disables it.', 5000, { func: isInt, range: [[0, 0], [200, Infinity]] }], // Safety limit 0 or > 200
 	bShowSize: ['Show playlist size', false, { func: isBoolean }],
@@ -148,13 +148,13 @@ let properties = {
 		networkDrive: false,
 		plsMirror: false,
 		autoTags: false
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }],
 	scrollSettings: ['Scroll settings', JSON.stringify({
 		bSmooth: true,
 		bReversed: false,
 		unit: null
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
 	categoryState: ['Current categories showed.', JSON.stringify([]), { func: isJSON }], // Description and value filled on list.init() with defaults. Just a placeholder
 	tooltipSettings: ['Tooltip settings', JSON.stringify({
@@ -170,7 +170,7 @@ let properties = {
 			tags: true,
 			trackSize: true,
 		}
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bAutoLoadTag: ['Automatically add \'bAutoLoad\' to all playlists', false, { func: isBoolean }],
 	bAutoLockTag: ['Automatically add \'bAutoLock\' to all playlists', false, { func: isBoolean }],
 	bAutoCustomTag: ['Automatically add custom tags to all playlists', false, { func: isBoolean }],
@@ -227,13 +227,13 @@ let properties = {
 		'Ctrl + Shift': 'Clone playlist in UI',
 		'Single Click': '- None -',
 		'Double Click': 'Load / show playlist'
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	mShortcuts: ['M. click modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: 'Multiple selection (range)',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Multiple selection'
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bMultMenuTag: ['Automatically add \'bMultMenu\' to all playlists', false, { func: isBoolean }],
 	lBrainzToken: ['ListenBrainz user token', '', { func: isStringWeak }],
 	lBrainzEncrypt: ['Encrypt ListenBrainz user token', false, { func: isBoolean }],
@@ -248,14 +248,14 @@ let properties = {
 		Shift: '- None -',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Multiple selection (all)'
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	lShortcutsHeader: ['L. click (header) modifiers', JSON.stringify({
 		Ctrl: '- None -',
 		Shift: '- None -',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Show current / playing playlist',
 		'Double Click': 'Cycle categories'
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	showMenus: ['Show menus configuration', JSON.stringify({
 		'Playlist\'s items menu': false,
 		'Category': true,
@@ -271,7 +271,7 @@ let properties = {
 		'Folders': true,
 		'Statistics mode': true,
 		'Queue handling': true
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	searchMethod: ['Search settings', JSON.stringify({
 		bName: true,
 		bTags: true,
@@ -291,7 +291,7 @@ let properties = {
 		dragDropPriority: ['bPath', 'bQuery', 'bMetaTracks'],
 		dragDropTags: [globTags.title, globTags.artistRaw],
 		text: '',
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	uiElements: ['UI elements', JSON.stringify({
 		'Scrollbar': { enabled: true },
 		'Search filter': { enabled: true },
@@ -310,7 +310,7 @@ let properties = {
 				'Help': { enabled: true, position: 6 },
 			}
 		}
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bSetup: ['Setup mode', true, { func: isBoolean }],
 	iDoubleClickTimer: ['Double click timer', 375, { func: isInt }],
 	rShortcuts: ['R. click modifiers', JSON.stringify({
@@ -318,7 +318,7 @@ let properties = {
 		Shift: 'Playlist\'s items menu',
 		'Ctrl + Shift': '- None -',
 		'Single Click': 'Manage playlist'
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bSpotify: ['ListenBrainz export to Spotify', true, { func: isBoolean }],
 	iTooltipTimer: ['Tooltip timer', 375 * 2, { func: isInt }],
 	bGlobalShortcuts: ['Enable FX global shortcuts', true, { func: isBoolean }],
@@ -341,7 +341,7 @@ let properties = {
 		bShowSize: true,
 		bShowSizeDeep: true,
 		icons: { open: chars.downOutline, closed: chars.leftOutline }
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bStatsMode: ['Stats mode enabled', false, { func: isBoolean }],
 	statsConfig: ['Stats mode configuration', JSON.stringify({
 		background: { color: null },
@@ -356,12 +356,12 @@ let properties = {
 		startupPlaylist: 2000,
 		dynamicMenus: 2500,
 		playlistCache: 6000,
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	statusIcons: ['Playlist status icons', JSON.stringify({
 		active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: true },
 		playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
 		loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true }
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }],
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone]), { func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }],
 	importPlaylistMask: ['Import file \\ url pattern', JSON.stringify(['. ', '%TITLE%', ' - ', globTags.artist]), { func: isJSON }],
@@ -371,22 +371,23 @@ let properties = {
 		internalUi: '',
 		plsFromSel: '',
 		others: ''
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	bRwLock: ['Not overwrite playlists loading new files', false, { func: isBoolean }],
 	logOpt: ['Logging options', JSON.stringify({
 		autoSize: false,
 		loadPls: false,
 		profile: false,
 		mainMenu: false
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 	xspfRules: ['XSPF playlists behavior', JSON.stringify({
 		bFallbackComponentXSPF: false,
 		bLoadNotTrackedItems: false,
-	}), { func: isJSON }],
+	}), { func: isJSON, forceDefaults: true }],
 };
 Object.keys(properties).forEach(p => properties[p].push(properties[p][1]));
 setProperties(properties, '', 0);
 properties = getPropertiesPairs(properties, '', 0);
+checkJsonProperties(properties);
 
 {	// Check if is a setup or normal init
 	const infoPopups = JSON.parse(properties.infoPopups[1]);
