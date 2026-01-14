@@ -71,6 +71,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- Settings: internal changes at properties for future releases. Upgrading from [1.0.0-beta.8](#100-beta8---2026-01-12) will work seamlessly, but previous versions are not supported (settings will be reset).
 ### Removed
 ### Fixed
 
