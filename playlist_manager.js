@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/26
+//15/01/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -45,9 +45,9 @@ include('main\\playlist_manager\\playlist_manager_list.js');
 include('main\\playlist_manager\\playlist_manager_panel.js');
 /* global _panel:readable */
 include('main\\playlist_manager\\playlist_manager_buttons.js');
-/* global createMenuRightFilter:readable, createMenuRightSort:readable, _listButtons */
+/* global createFilterMenu:readable, createSortMenu:readable, _listButtons */
 include('main\\playlist_manager\\playlist_manager_menu.js');
-/* global createMenuRightTop:readable, createMenuRight:readable, importSettingsMenu:readable */
+/* global createSettingsMenu:readable, createListMenu:readable, importSettingsMenu:readable */
 include('main\\playlist_manager\\playlist_manager_helpers.js');
 /* global backup:readable, switchLock:readable, clonePlaylistInUI:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable */
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
@@ -806,9 +806,9 @@ if (!list.properties.bSetup[1]) {
 		}
 		if (list.modeUI === 'traditional' && bottomToolbar.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
-				return createMenuRightTop().btn_up(x, y);
+				return createSettingsMenu(list).btn_up(x, y);
 			} else { // List menu
-				return createMenuRight().btn_up(x, y);
+				return createListMenu().btn_up(x, y);
 			}
 		} else {
 			if (bottomToolbar.curBtn === null) {
@@ -816,11 +816,11 @@ if (!list.properties.bSetup[1]) {
 				else { return list.rbtn_up(x, y, mask); }
 			}
 			if (bottomToolbar.curBtn === bottomToolbar.buttons.sortButton) { // Sort button menu
-				return createMenuRightSort().btn_up(x, y);
+				return createSortMenu().btn_up(x, y);
 			} else if (bottomToolbar.curBtn === bottomToolbar.buttons.filterOneButton) { // Filter button menus
-				return createMenuRightFilter('filterOneButton').btn_up(x, y);
+				return createFilterMenu('filterOneButton').btn_up(x, y);
 			} else if (bottomToolbar.curBtn === bottomToolbar.buttons.filterTwoButton) {
-				return createMenuRightFilter('filterTwoButton').btn_up(x, y);
+				return createFilterMenu('filterTwoButton').btn_up(x, y);
 			}
 		}
 		return true; // left shift + left windows key will bypass this callback and will open default context menu.
@@ -1098,7 +1098,7 @@ if (!list.properties.bSetup[1]) {
 					break;
 				}
 				case 'manual refresh': {
-					createMenuRight().btn_up(-1, -1, null, 'Manual refresh');
+					createListMenu().btn_up(-1, -1, null, 'Manual refresh');
 					bDone = true;
 					break;
 				}

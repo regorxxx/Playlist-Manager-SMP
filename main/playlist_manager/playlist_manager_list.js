@@ -1,9 +1,9 @@
 ﻿'use strict';
-//14/01/26
+//15/01/26
 
 /* exported _list */
 
-/* global bottomToolbar:readable, createMenuRightTop:readable, createMenuRight:readable, createMenuFilterSorting:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMenuLeftMult:readable, createMenuLeft:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createMenuSearch:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable, scrollBar:readable */
+/* global bottomToolbar:readable, createSettingsMenu:readable, createListMenu:readable, createFilterSortMenu:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMulSelMenu:readable, createSelMenu:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createSearchMenu:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable, scrollBar:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable */
 include('..\\window\\window_xxx_input.js');
@@ -875,7 +875,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft - 2.5, lineY, this.searchCurrent, 'Search', blendColors(panel.colors.headerButtons, panelBgColor, 0.1), panelBgColor, panelBgColor, this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
+						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft, lineY, this.searchCurrent, 'Search', blendColors(panel.colors.headerButtons, panelBgColor, 0.1), opaqueColor(panelBgColor, 10), opaqueColor(panelBgColor, 10), this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
 						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
 							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
 							if (this.searchMethod.text.length) {
@@ -886,8 +886,8 @@ function _list({x, y, w, h, properties} =  {}) {
 						this.searchInput.autoValidation = this.searchMethod.bAutoSearch;
 					}
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
-					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - 2.5, lineY, panel.fonts.inputSize);
-					this.searchInput.paint(gr, LM + iconOffsetLeft + 5, 0);
+					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - LM/ 2, lineY, panel.fonts.inputSize);
+					this.searchInput.paint(gr, LM * 2 + iconOffsetLeft - 1, 0);
 					if (panel.imageBackground.bTint) {
 						panel.paintImage(
 							gr,
@@ -2022,12 +2022,12 @@ function _list({x, y, w, h, properties} =  {}) {
 				if (!bButtonTrace) {
 					const buttons = this.uiElements['Header buttons'].elements;
 					if (!buttons['Settings menu'].enabled && !buttons['Power actions'].enabled || bActionButton) {
-						return createMenuRightTop().btn_up(x, y);
+						return createSettingsMenu(this).btn_up(x, y);
 					}
 				}
 			}
 		} else if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
-			return createMenuRight().btn_up(x, y);
+			return createListMenu().btn_up(x, y);
 		} else if (this.trace(x, y)) {
 			this.cacheLastPosition();
 			const z = this.index;
@@ -2538,7 +2538,7 @@ function _list({x, y, w, h, properties} =  {}) {
 								if (!bShift && this.searchInput && bValidSearchMethods) {
 									this.on_drag_drop_external('search');
 								} else {
-									createMenuRight().btn_up(this.mX, this.mY, void (0), 'Find current selection...');
+									createListMenu().btn_up(this.mX, this.mY, void (0), 'Find current selection...');
 								}
 								return true;
 							}
@@ -2546,16 +2546,16 @@ function _list({x, y, w, h, properties} =  {}) {
 						}
 						case 'f10': // Settings / List (+ Shift)
 							if (getKeyboardMask() === kMask.shift) {
-								createMenuRight().btn_up(this.mX, this.mY);
+								createListMenu().btn_up(this.mX, this.mY);
 							} else {
-								createMenuRightTop().btn_up(this.mX, this.mY);
+								createSettingsMenu(this).btn_up(this.mX, this.mY);
 							}
 							return true;
 						case 'f11': // Help
 							if (getKeyboardMask() === kMask.shift) {
 								this.headerButtons.help.func(void (0), void (0), MK_SHIFT);
 							} else {
-								createMenuRightTop().btn_up(this.mX, this.mY, void (0), 'Open documentation...');
+								createSettingsMenu(this).btn_up(this.mX, this.mY, void (0), 'Open documentation...');
 							}
 							return true;
 						case 'f12': // Tracked folder
@@ -2768,9 +2768,9 @@ function _list({x, y, w, h, properties} =  {}) {
 					this.multSelect(z);
 				}
 			}
-			createMenuLeftMult(this.indexes).btn_up(x, y);
+			createMulSelMenu(this.indexes).btn_up(x, y);
 		} else {
-			createMenuLeft(z).btn_up(x, y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
+			createSelMenu(z).btn_up(x, y); // Must force index here since the mouse may move on the 500 ms delay to another pls (bug) or even out of range (crash)
 		}
 		this.bSelMenu = false;
 	};
@@ -8164,7 +8164,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				} else if (this.isFilterActive('Playlist')) {
 					this.filter({ plsState: [] });
 				} else {
-					createMenuSearch().btn_up(x, y);
+					createSearchMenu().btn_up(x, y);
 				}
 			}
 		},
@@ -8197,7 +8197,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				} else {
 					return Object.keys(this.getFilter(true)).length && getKeyboardMask() !== kMask.ctrl
 						? this.resetFilter()
-						: createMenuFilterSorting().btn_up(x, y);
+						: createFilterSortMenu().btn_up(x, y);
 				}
 			},
 			altColor: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
@@ -8247,7 +8247,7 @@ function _list({x, y, w, h, properties} =  {}) {
 			},
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_SHIFT) {
-					createMenuRight().btn_up(-1, -1, void (0), 'New playlist from selection...');
+					createListMenu().btn_up(-1, -1, void (0), 'New playlist from selection...');
 				} else if (mask === MK_CONTROL) {
 					if (this.items && plman.ActivePlaylist !== -1 && !this.bIsDragDrop) {
 						const selItems = fb.GetSelections(1);
@@ -8257,7 +8257,7 @@ function _list({x, y, w, h, properties} =  {}) {
 						}
 					}
 				} else {
-					createMenuRight().btn_up(x, y);
+					createListMenu().btn_up(x, y);
 				}
 			},
 			leave: (mask, parent) => {  // eslint-disable-line no-unused-vars
@@ -8295,7 +8295,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				if (!this.bLiteMode && mask === MK_SHIFT) {
 					this.switchTracking(void (0), true);
 				} else {
-					createMenuRightTop().btn_up(x, y);
+					createSettingsMenu(this).btn_up(x, y);
 				}
 			},
 			highlighting: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
@@ -8428,7 +8428,7 @@ function _list({x, y, w, h, properties} =  {}) {
 						'\n• Ctrl + Win + R. Click: open script panel menu.'
 						, window.FullPanelName + ': Quick help');
 				} else {
-					createMenuRightTop().btn_up(x, y, void (0), 'Open documentation...');
+					createSettingsMenu(this).btn_up(x, y, void (0), 'Open documentation...');
 				}
 			}
 		},
