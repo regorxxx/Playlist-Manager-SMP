@@ -1,13 +1,13 @@
 ﻿'use strict';
-//08/01/26
+//15/01/26
 
 /* exported _panel */
 
 /* global bottomToolbar:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global globFonts:readable, FontStyle:readable, InterpolationMode:readable, DLGC_WANTALLKEYS:readable, clone: readable */
+/* global globFonts:readable, FontStyle:readable, DLGC_WANTALLKEYS:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable, isJSON:readable, isInt:readable, debounce:readable, deepAssign:readable*/
+/* global isInt:readable, isBoolean:readable, isJSON:readable, isInt:readable, deepAssign:readable*/
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global overwriteProperties:readable, setProperties:readable, getPropertiesPairs:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -27,17 +27,7 @@ function _panel(customBackground = false, bSetup = false) {
 		bButtonsBackground: ['Use buttons background', false, { func: isBoolean }],
 		buttonsToolbarColor: ['Buttons\' toolbar color', RGB(0, 0, 0), { func: isInt }],
 		buttonsToolbarOpacity: ['Buttons\' toolbar opacity', 5, { func: isInt, range: [[0, 100]] }],
-		imageBackground: ['Image background config', JSON.stringify({
-			enabled: true,
-			mode: 1,
-			art: { path: '', image: null, id: '' },
-			opacity: 60,
-			bProportions: true,
-			bFill: true,
-			blur: 10,
-			bTint: true,
-			bCacheAlbum: true
-		}), { func: isJSON }],
+		placeholder: ['placerholder', 0, { func: isInt }],
 		bFontOutline: ['Add shadows to font', false, { func: isBoolean }],
 		bBold: ['Use bold font', false, { func: isBoolean }],
 		headerButtonsColor: ['Header buttons\' toolbar color', -1, { func: isJSON }],
@@ -126,93 +116,6 @@ function _panel(customBackground = false, bSetup = false) {
 		return col;
 	};
 
-	this.updateImageBg = debounce((bForce = false) => {
-		if (!this.imageBackground.enabled) { this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.art.id = null; }
-		let handle;
-		if (this.imageBackground.mode === 0) { // Selection
-			handle = fb.GetFocusItem(true);
-		} else if (this.imageBackground.mode === 1) { // Now Playing
-			handle = fb.GetNowPlaying() || fb.GetFocusItem(true);
-		}
-		if (!bForce && (handle && this.imageBackground.handle === handle.RawPath || this.imageBackground.handle === this.imageBackground.art.path)) { return; }
-		let id = null;
-		if (this.imageBackground.bCacheAlbum && handle) {
-			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
-			id = tf.EvalWithMetadb(handle);
-			if (!bForce && id === this.imageBackground.art.id) { return; }
-		}
-		const promise = this.imageBackground.mode === 2 && this.imageBackground.art.path.length
-			? gdi.LoadImageAsyncV2('', this.imageBackground.art.path)
-			: handle
-				? utils.GetAlbumArtAsyncV2(void (0), handle, 0, true, false, false)
-				: Promise.reject(new Error('No handle/art'));
-		promise.then((result) => {
-			if (this.imageBackground.mode === 2) {
-				this.imageBackground.art.image = result;
-				this.imageBackground.handle = this.imageBackground.art.path;
-			} else {
-				if (!result.image) { throw new Error('Image not available'); }
-				this.imageBackground.art.image = result.image;
-				this.imageBackground.art.path = result.path;
-				this.imageBackground.handle = handle.RawPath;
-				this.imageBackground.art.id = id;
-			}
-			if (this.imageBackground.art.image) {
-				this.imageBackground.art.colors = JSON.parse(this.imageBackground.art.image.GetColourSchemeJSON(4));
-			}
-			if (this.imageBackground.art.image && Number.isInteger(this.imageBackground.blur) && this.imageBackground.blur > 0) {
-				this.imageBackground.art.image.StackBlur(this.imageBackground.blur);
-			}
-			return this.listObjects.map((item) => item.repaint());
-		}).catch(() => {
-			this.imageBackground.art.path = ''; this.imageBackground.art.image = null; this.imageBackground.handle = null; this.imageBackground.art.colors = null; this.imageBackground.art.id = null;
-			return this.listObjects.map((item) => item.repaint());
-		});
-	}, 250);
-
-	this.paintImage = (gr, limits = { x: 0, y: 0, w: this.w, h: this.h, offsetH: 0 }, fill = null /* {opacity: 20} */) => { // NOSONAR
-		if (this.imageBackground.enabled && this.imageBackground.art.image) {
-			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
-			const img = this.imageBackground.art.image;
-			if (fill) {
-				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), 0, fill.opacity);
-			} else {
-				if (this.imageBackground.bFill) { // NOSONAR
-					if (this.imageBackground.bProportions) {
-						const prop = limits.w / (limits.h - limits.offsetH);
-						if (prop > 1) {
-							const offsetY = img.Height / prop;
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, (img.Height - offsetY) / 2, img.Width, offsetY, 0, this.imageBackground.opacity);
-						} else {
-							const offsetX = img.Width * prop;
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, (img.Width - offsetX) / 2, 0, offsetX, img.Height, 0, this.imageBackground.opacity);
-						}
-					} else {
-						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, 0, img.Width, img.Height, 0, this.imageBackground.opacity);
-					}
-				} else {
-					let w, h;
-					if (this.imageBackground.bProportions) { w = h = Math.min(limits.w, limits.h - limits.offsetH); }
-					else { [w, h] = [limits.w, limits.h]; }
-					gr.DrawImage(img, (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w, h, 0, 0, img.Width, img.Height, 0, this.imageBackground.opacity);
-				}
-			}
-			gr.SetInterpolationMode(InterpolationMode.Default);
-		}
-	};
-
-	this.paint = (gr, bImage = false, coords) => {
-		const col = this.getColorBackground();
-		if (typeof col !== 'undefined') {
-			if (coords) {
-				gr.FillSolidRect(coords.x, coords.y, coords.w, coords.h, col);
-			} else {
-				gr.FillSolidRect(0, 0, this.w, this.h, col);
-			}
-		}
-		if (bImage) { this.paintImage(gr, { y: 0, w: this.w, h: this.h, offsetH: _scale(1) }); }
-	};
-
 	this.setDefault = ({ all = false, buttonText = false, buttonBar = false, oldColor = null } = {}) => {
 		let bDone = false;
 		const defaultCol = invert(this.getColorBackground());
@@ -225,16 +128,6 @@ function _panel(customBackground = false, bSetup = false) {
 		if (buttonBar || all || oldColor !== null && this.colors.buttonsToolbarColor === oldColor) { this.properties.buttonsToolbarColor[1] = this.colors.buttonsToolbarColor = defaultCol; bDone = true; }
 		if (bDone) { this.colorsChanged(); }
 		return bDone;
-	};
-
-	this.getConfig = () => {
-		const config = clone(this.imageBackground);
-		if (this.imageBackground.mode !== 2) { config.art.path = ''; }
-		config.art.image = null;
-		config.art.id = '';
-		delete config.handle;
-		delete config.art.colors;
-		return config;
 	};
 
 	window.DlgCode = DLGC_WANTALLKEYS;
@@ -269,18 +162,10 @@ function _panel(customBackground = false, bSetup = false) {
 	this.colors.buttonsToolbarOpacity = this.properties.buttonsToolbarOpacity[1];
 	this.colors.bFontOutline = this.properties.bFontOutline[1];
 	this.colors.bBold = this.properties.bBold[1];
-	this.imageBackground = deepAssign()(
-		JSON.parse(this.properties.imageBackground[3]),
-		JSON.parse(
-			this.properties.imageBackground[1],
-			(key, value) => ['image', 'handle', 'colors', 'id'].includes(key) ? null : value
-		)
-	);
 	this.listObjects = [];
 	this.textObjects = [];
 	this.fontChanged();
 	this.colorsChanged();
-	this.updateImageBg();
 	if (bSetup) {
 		const defaultCol = invert(this.getColorBackground());
 		this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground

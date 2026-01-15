@@ -25,7 +25,7 @@ include('helpers\\helpers_xxx_playlists.js');
 include('helpers\\helpers_xxx_playlists_files.js');
 /* global libItemsAbsPaths:writable, libItemsRelPaths:writable, precacheLibraryPathsAsync:readable, precacheLibraryRelPaths:readable, writablePlaylistFormats:readable, playlistDescriptors:readable */
 include('helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, blendColors:readable, isDark:readable, getBrightness:readable, toRGB:readable */
+/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, blendColors:readable, isDark:readable */
 include('helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('helpers\\helpers_xxx_file.js');
@@ -54,6 +54,8 @@ include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global ListenBrainz:readable */
 include('main\\playlist_manager\\playlist_manager_statistics.js');
 /* global _listStatistics:readable */
+include('main\\window\\window_xxx_background.js');
+/* global _background:readable */
 include('main\\window\\window_xxx_dynamic_colors.js');
 /* global dynamicColors:readable, mostContrastColor:readable */
 include('main\\window\\window_xxx_scrollbar.js');
@@ -155,7 +157,6 @@ let properties = {
 		bReversed: false,
 		unit: null
 	}), { func: isJSON, forceDefaults: true }],
-	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
 	categoryState: ['Current categories showed.', JSON.stringify([]), { func: isJSON }], // Description and value filled on list.init() with defaults. Just a placeholder
 	tooltipSettings: ['Tooltip settings', JSON.stringify({
 		bShowTips: true,
@@ -383,6 +384,10 @@ let properties = {
 		bFallbackComponentXSPF: false,
 		bLoadNotTrackedItems: false,
 	}), { func: isJSON, forceDefaults: true }],
+	bDynamicColors: ['Adjust colors to artwork', true, { func: isBoolean }],
+	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
+	bNotifyColors: ['Notify colors to other panels', false, { func: isBoolean }],
+	background: ['Background options', JSON.stringify(_background.defaults()), { func: isJSON, forceDefaults: true }],
 };
 Object.keys(properties).forEach(p => properties[p].push(properties[p][1]));
 setProperties(properties, '', 0);
@@ -440,6 +445,48 @@ checkJsonProperties(properties);
 	}
 }
 // Panel
+const background = new _background({
+	...JSON.parse(properties.background[1]),
+	x: 0, y: 0, w: window.Width, h: window.Height,
+	callbacks: {
+		change: function (config, changeArgs, callbackArgs) {
+			if (callbackArgs && callbackArgs.bSaveProperties) {
+				['x', 'y', 'w', 'h'].forEach((key) => delete config[key]);
+				list.properties.background[1] = JSON.stringify(config);
+				overwriteProperties(list.properties);
+			}
+		},
+		artColors: (colArray, bForced) => {
+			if (!bForced && !list.properties.bDynamicColors[1]) { return; }
+			// else if (colArray) {
+			// 	const { main, sec, note } = dynamicColors(
+			// 		colArray,
+			// 		slider.colors.background !== -1 ? slider.colors.background : background.getAvgPanelColor(),
+			// 		true
+			// 	);
+			// 	const bSwap = slider.style.bar.toLowerCase() !== 'roundedgradient';
+			// 	if (slider.colors.left !== -1) { slider.colors.left = bSwap ? sec : main; }
+			// 	if (slider.colors.right !== -1) { slider.colors.right = bSwap ? main : sec; }
+			// 	if (slider.colors.sel !== -1) { slider.colors.sel = note; }
+			// 	if (slider.colors.buttons !== -1) { slider.colors.buttons = note; }
+			// } else {
+			// 	const defColors = JSON.parse(properties.colors[1]);
+			// 	for (const key in slider.colors) {
+			// 		slider.colors[key] = defColors[key];
+			// 	}
+			// 	background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(properties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
+			// }
+			if (window.IsVisible) { window.Repaint(); }
+		},
+		artColorsNotify: (colArray, bForced = false) => {
+			if (!bForced && !list.properties.bNotifyColors[1]) { return; }
+			else if (colArray) {
+				background.scheme = colArray;
+				window.NotifyOthers('Colors: set color scheme', colArray);
+			}
+		}
+	}
+});
 const bottomToolbar = new _listButtons(properties.bSetup[1]);
 const panel = new _panel(true, properties.bSetup[1]);
 // Popups
@@ -447,7 +494,7 @@ const pop = new _popup({
 	configuration: {
 		border: { enabled: false }, // Just overlay without a popup
 		icon: { enabled: true }, // Enable animation
-		color: { panel: opaqueColor(0xFF4354AF, 30), text: invert(panel.getColorBackground(), true) } // Blue overlay
+		color: { panel: opaqueColor(0xFF4354AF, 30), text: invert(background.getAvgPanelColor(), true) } // Blue overlay
 	}
 });
 // Globals
@@ -633,6 +680,29 @@ const autoSaveTimer = Number(list.properties.autoSave[1]);
 const autoUpdateTimer = Number(list.properties.autoUpdate[1]);
 const autoBackTimer = Number(list.properties.autoBack[1]);
 
+{
+	const callback = () => {
+		if (background.useCover && (!background.coverModeOptions.bNowPlaying || !fb.IsPlaying)) {
+			background.updateImageBg();
+		}
+	};
+	['on_item_focus_change', 'on_selection_changed', 'on_playlists_changed', 'on_playlist_items_added', 'on_playlist_items_removed', 'on_playlist_switch'].forEach((e) => addEventListener(e, callback));
+
+	addEventListener('on_playback_stop', (reason) => {
+		if (reason !== 2) { // Invoked by user or Starting another track
+			if (background.useCover && background.coverModeOptions.bNowPlaying) { background.updateImageBg(); }
+		}
+	});
+
+	addEventListener('on_playback_new_track', () => {
+		if (background.useCover) { background.updateImageBg(); }
+	});
+
+	addEventListener('on_colours_changed', () => {
+		background.colorsChanged();
+	});
+}
+
 if (!list.properties.bSetup[1]) {
 	// Auto-update if there are a different number of items on folder or the total file sizes change
 	// Note tracking it's not perfect... yes, you could change characters on a file without modifying size
@@ -667,8 +737,8 @@ if (!list.properties.bSetup[1]) {
 	scrollBar = list.uiElements['Scrollbar'].enabled ? new _scrollBar({ // eslint-disable-line no-global-assign
 		w: _scale(5),
 		size: _scale(14),
-		bgColor: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.3 : 0.8),
-		color: blendColors(panel.colors.highlight, panel.getColorBackground(), isDark(panel.getColorBackground()) ? 0.1 : 0.6),
+		bgColor: blendColors(panel.colors.highlight, background.getAvgPanelColor(), isDark(background.getAvgPanelColor()) ? 0.3 : 0.8),
+		color: blendColors(panel.colors.highlight, background.getAvgPanelColor(), isDark(background.getAvgPanelColor()) ? 0.1 : 0.6),
 		scrollFunc: ({ current, delta }) => { // eslint-disable-line no-unused-vars
 			list.wheel({ s: delta, bPaint: true, bForce: true, scrollDelta: 1 });
 		},
@@ -777,8 +847,9 @@ if (!list.properties.bSetup[1]) {
 	});
 
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => {
-		if (stats.bEnabled) { return; }
 		if (pop.isEnabled()) { pop.move(x, y, mask); window.SetCursor(IDC_WAIT); return; }
+		background.move(x, y, mask);
+		if (stats.bEnabled) { return; }
 		if (scrollBar && scrollBar.move(x, y)) { list.move(-1, -1); bottomToolbar.on_mouse_leave_buttn(); return; }
 		if (!list.isInternalDrop()) { bottomToolbar.on_mouse_move_buttn(x, y, mask); }
 		if (bottomToolbar.curBtn === null) {
@@ -792,7 +863,9 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_mouse_leave', () => {
 		if (!list.bInit) { return; }
-		if (pop.isEnabled() || stats.bEnabled) { return; }
+		if (pop.isEnabled()) { return; }
+		background.leave();
+		if (stats.bEnabled) { return; }
 		bottomToolbar.on_mouse_leave_buttn();
 		list.onMouseLeaveList(); // Clears index selector
 		scrollBar && scrollBar.move(-1, -1);
@@ -806,7 +879,7 @@ if (!list.properties.bSetup[1]) {
 		}
 		if (list.modeUI === 'traditional' && bottomToolbar.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
-				return createSettingsMenu(list).btn_up(x, y);
+				return createSettingsMenu(list, background).btn_up(x, y);
 			} else { // List menu
 				return createListMenu().btn_up(x, y);
 			}
@@ -826,12 +899,15 @@ if (!list.properties.bSetup[1]) {
 		return true; // left shift + left windows key will bypass this callback and will open default context menu.
 	});
 
-	addEventListener('on_mouse_wheel', (s) => {
+	addEventListener('on_mouse_wheel', (step) => {
 		if (!list.bInit) { return; }
 		if (pop.isEnabled() || stats.bEnabled) { return; }
-		if (list.scrollSettings.bReversed) { s = -s; }
-		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) { list.wheelResize(s); }
-		else { list.wheel({ s }); }
+		if (list.scrollSettings.bReversed) { step = -step; }
+		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {
+			if (utils.IsKeyPressed(VK_SHIFT)) { background.wheelResize(step, void (0), { bSaveProperties: true }); }
+			else { list.wheelResize(step); }
+		} else if (utils.IsKeyPressed(VK_SHIFT)) { background.cycleArtAsync(step); }
+		else { list.wheel({ s: step }); }
 	});
 
 	addEventListener('on_paint', (gr) => {
@@ -839,17 +915,11 @@ if (!list.properties.bSetup[1]) {
 		if (!window.Width || !window.Height) { return; }
 		if (globSettings.bDebugPaint) { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true, Repaint: true }); }
 		else { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true }); }
+		gr.FillSolidRect(0, 0, window.Width, window.Height, panel.getColorBackground());
+		background.paint(gr);
 		list.prePaint();
-		panel.paint(gr);
 		if (!stats.bEnabled) {
 			if (list.bPaintList) {
-				if (panel.imageBackground.bTint && list.uiElements['Bottom toolbar'].enabled) {
-					panel.paintImage(
-						gr,
-						{ w: window.Width, h: bottomToolbar.h, x: 0, y: bottomToolbar.y, offsetH: _scale(1) },
-						{ opacity: (getBrightness(...toRGB(panel.getColorBackground())) < 50 ? 50 : 40) }
-					);
-				}
 				if (list.uiElements['Bottom toolbar'].enabled) { bottomToolbar.on_paint_buttn(gr); }
 			}
 			list.paint(gr);
@@ -868,7 +938,8 @@ if (!list.properties.bSetup[1]) {
 		if (window.debugPainting) { window.drawDebugRectAreas(gr); }
 	});
 
-	addEventListener('on_size', () => {
+	addEventListener('on_size', (width, height) => {
+		background.resize({ w: width, h: height, bPaint: false });
 		panel.size();
 		list.size();
 		bottomToolbar.on_size_buttn();
@@ -878,38 +949,13 @@ if (!list.properties.bSetup[1]) {
 
 	addEventListener('on_playback_new_track', () => { // To show playing now playlist indicator...
 		if (window.IsVisible && list.statusIcons.playing.enabled) { list.repaint(false, 'list'); }
-		if (panel.imageBackground.enabled && panel.imageBackground.mode === 1) { panel.updateImageBg(); }
-	});
-
-	addEventListener('on_selection_changed', () => {
-		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
-			panel.updateImageBg();
-		}
-	});
-
-	addEventListener('on_item_focus_change', () => {
-		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
-			panel.updateImageBg();
-		}
 	});
 
 	addEventListener('on_playlist_switch', () => {
-		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
-			panel.updateImageBg();
-		}
 		if (window.IsVisible && list.statusIcons.active.enabled) { list.repaint(false, 'list'); }
 	});
 
-	addEventListener('on_playback_stop', (/** @type {number} */ reason) => {
-		if (reason !== 2) { // Invoked by user or Starting another track
-			if (panel.imageBackground.enabled && panel.imageBackground.mode === 1) { panel.updateImageBg(); }
-		}
-	});
-
 	addEventListener('on_playlists_changed', () => { // To show/hide loaded playlist indicators...
-		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
-			panel.updateImageBg();
-		}
 		if (window.IsVisible && ['playing', 'active', 'loaded'].some((key) => list.statusIcons[key].enabled)) { list.repaint(false, 'list'); }
 	});
 
@@ -1031,15 +1077,15 @@ if (!list.properties.bSetup[1]) {
 				if (info && list.properties.bOnNotifyColors[1]) {
 					const { main, sec, note, mainAlt, secAlt } = dynamicColors( // eslint-disable-line no-unused-vars
 						clone(info),
-						panel.getColorBackground(),
+						background.getAvgPanelColor(),
 						true
 					);
 					if (panel.colors.mode.colorMode !== 0) {
 						panel.colors.customBackground = main;
 					}
-					if (panel.colors.bCustomText) { panel.colors.customText = blendColors(mostContrastColor(panel.getColorBackground()).color, sec, 0.3); }
-					if (panel.colors.headerButtons !== -1) { panel.colors.headerButtons = blendColors(mostContrastColor(panel.getColorBackground()).color, note, 0.6); }
-					if (panel.colors.buttonsTextColor !== -1) { panel.colors.buttonsTextColor = blendColors(mostContrastColor(panel.getColorBackground()).color, note, 0.6); }
+					if (panel.colors.bCustomText) { panel.colors.customText = blendColors(mostContrastColor(background.getAvgPanelColor()).color, sec, 0.3); }
+					if (panel.colors.headerButtons !== -1) { panel.colors.headerButtons = blendColors(mostContrastColor(background.getAvgPanelColor()).color, note, 0.3); }
+					if (panel.colors.buttonsTextColor !== -1) { panel.colors.buttonsTextColor = blendColors(mostContrastColor(background.getAvgPanelColor()).color, note, 0.3); }
 					if (panel.colors.buttonsToolbarColor !== -1) { panel.colors.buttonsToolbarColor = mainAlt; }
 					panel.colorsChanged();
 					if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); } // Ensure related settings is set properly
@@ -1189,9 +1235,6 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlist_items_removed', (playlistIndex, newCount, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
-		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
-			panel.updateImageBg();
-		}
 		if (!list.isAutosave(name)) { return; }
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_removed, autoSaveTimer, playlistIndex, newCount, name); return; }
@@ -1215,9 +1258,6 @@ if (!list.properties.bSetup[1]) {
 	addEventListener('on_playlist_items_added', (/** @type {number} */ playlistIndex, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
-		if (panel.imageBackground.enabled && (panel.imageBackground.mode === 0 || panel.imageBackground.mode === 1 && !fb.IsPlaying)) {
-			panel.updateImageBg();
-		}
 		if (!list.isAutosave(name)) { return; }
 		// Disable auto-saving on panel cache reload and ensure future update matches the right playlist
 		if (pop.isEnabled() && debouncedUpdate && playlistIndex !== -1) { setTimeout(on_playlist_items_added, autoSaveTimer, playlistIndex, name); return; }
@@ -1468,6 +1508,7 @@ if (!list.properties.bSetup[1]) {
 		return true; // left shift + left windows key will bypass this callback and will open default context menu.
 	});
 	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => { // eslint-disable-line no-unused-vars
+		background.move(x, y, mask);
 		bottomToolbar.on_mouse_move_buttn(x, y, mask);
 		if (bottomToolbar.curBtn === null) {
 			pop.move(x, y, mask);
@@ -1479,20 +1520,22 @@ if (!list.properties.bSetup[1]) {
 		}
 	});
 	addEventListener('on_mouse_leave', () => {
+		background.leave();
 		bottomToolbar.on_mouse_leave_buttn();
 	});
 	addEventListener('on_paint', (gr) => {
 		if (!window.ID) { return; }
 		if (!window.Width || !window.Height) { return; }
-		panel.paint(gr);
+		background.paint(gr);
 		bottomToolbar.on_paint_buttn(gr);
 	});
-	addEventListener('on_size', () => {
+	addEventListener('on_size', (width, height) => {
+		background.resize({ w: width, h: height, bPaint: false });
 		pop.resize();
-		button.w = window.Width / 2;
-		button.h = window.Height / 3;
-		button.x = window.Width / 2 - button.w / 2;
-		button.y = window.Height / 2 - button.h / 2;
+		button.w = width / 2;
+		button.h = height / 3;
+		button.x = width / 2 - button.w / 2;
+		button.y = height / 2 - button.h / 2;
 	});
 }
 globProfiler.Print('callbacks');

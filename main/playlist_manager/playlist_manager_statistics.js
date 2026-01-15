@@ -1,9 +1,9 @@
 ﻿'use strict';
-//25/11/25
+//15/01/26
 
 /* exported _listStatistics */
 
-/* global panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, VK_CONTROL:readable, VK_ALT:readable */
+/* global background:readable, panel:readable, list:readable, overwriteProperties:readable, MF_GRAYED:readable, _b:readable, MF_STRING:readable, VK_CONTROL:readable, VK_ALT:readable */
 include('..\\statistics\\statistics_xxx.js');
 /* global opaqueColor:readable, Chroma:readable, _scale:readable, blendColors:readable, invert:readable, _chart:readable, Input:readable */
 include('..\\statistics\\statistics_xxx_menu.js');
@@ -35,7 +35,6 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		addEventListener('on_paint', (gr) => {
 			if (!window.ID || !this.bEnabled) { return; }
 			if (!window.Width || !window.Height) { return; }
-			panel.paintImage(gr, { w: window.Width, h: window.Height, x: 0, y: 0, offsetH: 0 });
 			charts.forEach((chart) => chart.paint(gr));
 		});
 
@@ -424,8 +423,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			colors: [list.colors.selectedPlaylistColor],
 			margin: { left: _scale(20), right: _scale(20), top: _scale(10), bottom: _scale(15) },
 			axis: {
-				x: { show: true, color: blendColors(panel.colors.highlight, panel.getColorBackground(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Key', bAltLabels: true },
-				y: { show: true, color: blendColors(panel.colors.highlight, panel.getColorBackground(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Playlists' }
+				x: { show: true, color: blendColors(panel.colors.highlight, background.getAvgPanelColor(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Key', bAltLabels: true },
+				y: { show: true, color: blendColors(panel.colors.highlight, background.getAvgPanelColor(), 0.1), width: _scale(2), ticks: 'auto', labels: true, key: 'Playlists' }
 			},
 			x: 0,
 			w: 0,
@@ -438,7 +437,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				display: { onLbtnUp: function (x, y, mask) { return parent.onLbtnUpDisplay.call(this).btn_up(x, y); } }, // eslint-disable-line no-unused-vars
 				custom: { onLbtnUp: parent.exit, tooltip: 'Exit statistics mode...' },
 				config: {
-					backgroundColor: () => [panel.getColorBackground()],
+					backgroundColor: () => [background.getAvgPanelColor()],
 					change: function (config, changeArgs, callbackArgs) {
 						if (callbackArgs && callbackArgs.bSaveProperties) {	saveSettings.call(this); }
 					},

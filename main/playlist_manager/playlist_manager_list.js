@@ -3,7 +3,11 @@
 
 /* exported _list */
 
-/* global bottomToolbar:readable, createSettingsMenu:readable, createListMenu:readable, createFilterSortMenu:readable, switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, backup:readable, Input:readable, clonePlaylistInUI:readable, _menu:readable, checkLBToken:readable, createMulSelMenu:readable, createSelMenu:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, createSearchMenu:readable, createMenuExport:readable, stats:readable, callbacksListener:readable, pop:readable, cacheLib:readable, bottomToolbar:readable, FPL:readable, isFoobarV2:readable, plsRwLock:readable, scrollBar:readable */
+/* global switchLock:readable, renameFolder:readable, renamePlaylist:readable, loadPlaylistsFromFolder:readable,setPlaylist_mbid:readable, switchLock:readable, switchLockUI:readable, getFilePathsFromPlaylist:readable, cloneAsAutoPls:readable, cloneAsSmartPls:readable, clonePlaylistFile:readable, renamePlaylist:readable, cycleCategories:readable, cycleTags:readable, clonePlaylistInUI:readable, checkLBToken:readable, ListenBrainz:readable, XSP:readable, debouncedUpdate:readable, autoBackTimer:readable, delayAutoUpdate:readable, cacheLib:readable, FPL:readable, plsRwLock:readable */
+/* global backup:readable, Input:readable, _menu:readable, callbacksListener:readable, isFoobarV2:readable*/
+/* global createSettingsMenu:readable, createListMenu:readable, createFilterSortMenu:readable, createMulSelMenu:readable, createSelMenu:readable, createSearchMenu:readable, createMenuExport:readable */
+/* global background:readable, stats:readable, pop:readable, bottomToolbar:readable scrollBar:readable */
+
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable */
 include('..\\window\\window_xxx_input.js');
@@ -15,7 +19,7 @@ include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
 /* global drawDottedLine:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
-/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, capitalize:readable, deepAssign:readable, strNumCollator:readable */
+/* global isInt:readable, isBoolean:readable,isString:readable, _p:readable, round:readable, isArrayEqual:readable, isFunction:readable, isArray:readable, _b:readable, isArrayStrings:readable, matchCase:readable, escapeRegExp:readable, range:readable, nextId:readable, require:readable, sanitize:readable, _q:readable, compareObjects:readable, isStringWeak:readable, capitalize:readable, strNumCollator:readable */
 include('..\\..\\helpers\\helpers_xxx_properties.js');
 /* global setProperties:readable, getPropertiesPairs:readable, overwriteProperties:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
@@ -630,12 +634,12 @@ function _list({x, y, w, h, properties} =  {}) {
 		return tooltipText;
 	};
 
-	this.paintHeader = (gr, mode = 'traditional') => {
+	this.paintHeader = (/** @type {GdiGraphics} */ gr, mode = 'traditional') => {
 		let lineY;
 		let lineColor;
 		switch (mode.toLowerCase()) {
 			case 'traditional': {
-				const panelBgColor = panel.getColorBackground();
+				const panelBgColor = background.getAvgPanelColor();
 				const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.hasOwn(this.configFile.ui.icons.category, this.categoryState[0]);
 				const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : iconCharHeader; // Try setting customized button from json
 				const offsetHeader = yOffset / 10;
@@ -661,9 +665,9 @@ function _list({x, y, w, h, properties} =  {}) {
 				break;
 			}
 			case 'modern': {
-				const panelBgColor = panel.getColorBackground();
+				const panelBgColor = background.getAvgPanelColor();
 				const altColorBg = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
-				const altColorSearch = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 5 : 3);
+				const altColorSearch = RGBA(...toRGB(panelBgColor), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
 				const offsetHeader = yOffset / 10;
 				const headerTextH = gr.CalcTextHeight(this.headerText, panel.fonts.normal);
 				// Buttons
@@ -875,7 +879,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft, lineY, this.searchCurrent, 'Search', blendColors(panel.colors.headerButtons, panelBgColor, 0.1), opaqueColor(panelBgColor, 10), opaqueColor(panelBgColor, 10), this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
+						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft, lineY, this.searchCurrent, 'Search', blendColors(panel.colors.headerButtons, panelBgColor, 0.1), opaqueColor(panelBgColor, 5), opaqueColor(panelBgColor, 5), this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
 						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
 							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
 							if (this.searchMethod.text.length) {
@@ -887,14 +891,8 @@ function _list({x, y, w, h, properties} =  {}) {
 					}
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
 					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - LM/ 2, lineY, panel.fonts.inputSize);
+					gr.FillSolidRect(0, 0, panel.w - LM - iconOffsetRight, lineY, opaqueColor(invert(invert(panelBgColor, true)), 10));
 					this.searchInput.paint(gr, LM * 2 + iconOffsetLeft - 1, 0);
-					if (panel.imageBackground.bTint) {
-						panel.paintImage(
-							gr,
-							{ w: this.x + this.w - iconOffsetRight, h: this.searchInput.h, x: 0, y: this.searchInput.y, offsetH: _scale(1) },
-							{ opacity: (getBrightness(...toRGB(panelBgColor)) < 50 ? 50 : 20) }
-						);
-					}
 				} else {
 					const bCatIcon = this.categoryState.length === 1 && this.configFile && Object.hasOwn(this.configFile.ui.icons.category, this.categoryState[0]);
 					const catIcon = bCatIcon ? this.configFile.ui.icons.category[this.categoryState[0]] : null; // Try setting customized button from json
@@ -940,15 +938,15 @@ function _list({x, y, w, h, properties} =  {}) {
 
 	this.paint = (gr) => {
 		// Bg
-		const panelBgColor = panel.getColorBackground();
+		const panelBgColor = background.getAvgPanelColor();
 		// Header
 		const [lineY, lineColor] = this.paintHeader(gr, this.modeUI);
 		if (!this.bPaintList) { return; }
 		// Art
 		if (this.uiElements['Bottom toolbar'].enabled) {
-			panel.paintImage(gr, { w: window.Width, h: this.h - bottomToolbar.h - (lineY - this.y), x: 0, y: lineY + 1, offsetH: 2 });
+			gr.FillSolidRect(0, lineY + 1, panel.w, this.h - bottomToolbar.h - (lineY - this.y), opaqueColor(invert(invert(panelBgColor, true)), 5));
 		} else {
-			panel.paintImage(gr, { w: window.Width, h: this.h + Math.max(this.y - lineY, 0), x: 0, y: lineY + 1, offsetH: 2 });
+			gr.FillSolidRect(0, lineY + 1, panel.w, this.h + Math.max(this.y - lineY, 0), opaqueColor(invert(invert(panelBgColor, true)), 5));
 		}
 		// Line
 		if (lineY > 0) { gr.DrawLine(0, lineY, panel.w, lineY, 1, lineColor); }
@@ -1040,7 +1038,7 @@ function _list({x, y, w, h, properties} =  {}) {
 		const shading = {};
 		if (panel.colors.bFontOutline && rows) {
 			shading.img = gdi.CreateImage(this.w - (bColumnsEnabled ? columnsWidth + columnOffset * Math.max(2, scaleDPI.factor) : 0), rows * panel.rowHeight);
-			shading.bPanelArt = panel.imageBackground.enabled && panel.imageBackground.art.image;
+			shading.bPanelArt = background.showCover && !!background.coverImg.art.image;
 			shading.outColor = shading.bPanelArt ? RGB(0, 0, 0) : invert(panelBgColor, true);
 			shading.gr = shading.img.GetGraphics();
 			shading.gr.SetTextRenderingHint(TextRenderingHint.TextRenderingHintSingleBitPerPixel);
@@ -1311,7 +1309,7 @@ function _list({x, y, w, h, properties} =  {}) {
 		if (panel.colors.bFontOutline && shading.img) {
 			// Paint shade
 			shading.img.StackBlur(0);
-			if (shading.bPanelArt && getBrightness(...toRGB(panel.imageBackground.art.colors[0].col)) < 100) { shading.img = shading.img.InvertColours(); } // Due to GDI bug, painting white doesn't work properly..
+			if (shading.bPanelArt && getBrightness(...toRGB(background.getAvgArtColor())) < 100) { shading.img = shading.img.InvertColours(); } // Due to GDI bug, painting white doesn't work properly..
 			gr.DrawImage(shading.img, this.x, this.y + yOffset, shading.img.Width, shading.img.Height, 0, 0, shading.img.Width, shading.img.Height, 0, 100);
 			shading.img.ReleaseGraphics(shading.gr);
 			// And text
@@ -1393,7 +1391,7 @@ function _list({x, y, w, h, properties} =  {}) {
 					case bToSameFolder && !bValid: { dragDropText = 'Can not move to same folder...'; break; }
 				}
 				if (dragDropText.length) {
-					const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+					const popupCol = opaqueColor(lightenColor(background.getAvgPanelColor() || RGB(0, 0, 0), 20), 80);
 					const borderCol = opaqueColor(invert(popupCol), 50);
 					const sizeX = gr.CalcTextWidth(dragDropText, panel.fonts.normal) + _scale(4);
 					const sizeY = gr.CalcTextHeight(dragDropText, panel.fonts.normal) + _scale(2);
@@ -1410,7 +1408,7 @@ function _list({x, y, w, h, properties} =  {}) {
 		}
 		// Char popup as animation
 		if (this.lastCharsPressed.bDraw) {
-			const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+			const popupCol = opaqueColor(lightenColor(background.getAvgPanelColor() || RGB(0, 0, 0), 20), 80);
 			const borderCol = opaqueColor(invert(popupCol), 50);
 			const textCol = panel.colors.text;
 			const scaleX = 0.75;
@@ -1458,7 +1456,7 @@ function _list({x, y, w, h, properties} =  {}) {
 		}
 		// Draw a tooltip box on drag n drop
 		if (this.bIsDragDrop && this.dragDropText && this.dragDropText.length) {
-			const popupCol = opaqueColor(lightenColor(panel.getColorBackground() || RGB(0, 0, 0), 20), 80);
+			const popupCol = opaqueColor(lightenColor(background.getAvgPanelColor() || RGB(0, 0, 0), 20), 80);
 			const borderCol = opaqueColor(invert(popupCol), 50);
 			const sizeX = gr.CalcTextWidth(this.dragDropText, panel.fonts.normal) + _scale(4);
 			const sizeY = gr.CalcTextHeight(this.dragDropText, panel.fonts.normal) + _scale(2);
@@ -2022,7 +2020,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				if (!bButtonTrace) {
 					const buttons = this.uiElements['Header buttons'].elements;
 					if (!buttons['Settings menu'].enabled && !buttons['Power actions'].enabled || bActionButton) {
-						return createSettingsMenu(this).btn_up(x, y);
+						return createSettingsMenu(this, background).btn_up(x, y);
 					}
 				}
 			}
@@ -2548,14 +2546,14 @@ function _list({x, y, w, h, properties} =  {}) {
 							if (getKeyboardMask() === kMask.shift) {
 								createListMenu().btn_up(this.mX, this.mY);
 							} else {
-								createSettingsMenu(this).btn_up(this.mX, this.mY);
+								createSettingsMenu(this, background).btn_up(this.mX, this.mY);
 							}
 							return true;
 						case 'f11': // Help
 							if (getKeyboardMask() === kMask.shift) {
 								this.headerButtons.help.func(void (0), void (0), MK_SHIFT);
 							} else {
-								createSettingsMenu(this).btn_up(this.mX, this.mY, void (0), 'Open documentation...');
+								createSettingsMenu(this, background).btn_up(this.mX, this.mY, void (0), 'Open documentation...');
 							}
 							return true;
 						case 'f12': // Tracked folder
@@ -7151,7 +7149,7 @@ function _list({x, y, w, h, properties} =  {}) {
 			this.updatePlaylistIcons();
 			this.updateUIElements();
 			// Panel
-			const defaultButtonsCol = invert(panel.getColorBackground());
+			const defaultButtonsCol = invert(background.getAvgPanelColor());
 			['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground'].forEach((key) => {
 				panel.properties[key][1] = !!settings[key][1];
 				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = panel.properties[key][1]; }
@@ -7161,15 +7159,6 @@ function _list({x, y, w, h, properties} =  {}) {
 				if (Object.hasOwn(panel.colors, key)) { panel.colors[key] = Number(panel.properties[key][1]); }
 			});
 			panel.properties['fontSize'][1] = panel.fonts.size = Number(settings['fontSize'][1]);
-			panel.imageBackground = deepAssign()(
-				JSON.parse(panel.properties.imageBackground[3]),
-				JSON.parse(
-					settings.imageBackground[1],
-					(key, value) => ['image', 'handle', 'colors', 'id'].includes(key) ? null : value
-				)
-			);
-			panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-			panel.updateImageBg(true);
 			panel.colorsChanged();
 			panel.fontChanged();
 			// Save
@@ -7449,7 +7438,7 @@ function _list({x, y, w, h, properties} =  {}) {
 			});
 			this.properties['listColors'][1] = convertObjectToString(this.colors);
 			// Delete unused values and save as is, then fill with missing colors without saving to properties
-			const bgColor = panel.getColorBackground();
+			const bgColor = background.getAvgPanelColor();
 			const bDark = isDark(...toRGB(bgColor));
 			const textColorBw = bPreferBgColor || !panel.colors.bCustomText
 				? bDark ? invert(bgColor, true) : invert(invert(bgColor, true))
@@ -7476,9 +7465,9 @@ function _list({x, y, w, h, properties} =  {}) {
 			bDone = true;
 		}
 		if (this.searchInput) {
-			this.searchInput.textColor = blendColors(panel.colors.headerButtons, panel.getColorBackground(), 0.1);
-			this.searchInput.backColor = panel.getColorBackground();
-			this.searchInput.borderColor = panel.getColorBackground();
+			this.searchInput.textColor = blendColors(panel.colors.headerButtons, background.getAvgPanelColor(), 0.1);
+			this.searchInput.backColor = opaqueColor(background.getAvgPanelColor(), 5);
+			this.searchInput.borderColor = opaqueColor(background.getAvgPanelColor(), 5);
 			this.searchInput.backSelectionColor = this.colors.selectedPlaylist;
 		}
 		// Drag n drop and search
@@ -8295,7 +8284,7 @@ function _list({x, y, w, h, properties} =  {}) {
 				if (!this.bLiteMode && mask === MK_SHIFT) {
 					this.switchTracking(void (0), true);
 				} else {
-					createSettingsMenu(this).btn_up(x, y);
+					createSettingsMenu(this, background).btn_up(x, y);
 				}
 			},
 			highlighting: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
@@ -8428,7 +8417,7 @@ function _list({x, y, w, h, properties} =  {}) {
 						'\n• Ctrl + Win + R. Click: open script panel menu.'
 						, window.FullPanelName + ': Quick help');
 				} else {
-					createSettingsMenu(this).btn_up(x, y, void (0), 'Open documentation...');
+					createSettingsMenu(this, background).btn_up(x, y, void (0), 'Open documentation...');
 				}
 			}
 		},

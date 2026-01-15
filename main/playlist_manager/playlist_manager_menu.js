@@ -49,6 +49,8 @@ include('..\\playlists\\playlist_revive.js');
 /* global playlistRevive:readable, selectDeadItems:readable , getDeadItems:readable */
 include('..\\playlists\\import_text_playlist.js');
 /* global ImportTextPlaylist:readable */
+include('..\\window\\window_xxx_background_menu.js');
+/* global createBackgroundMenu:readable */
 
 // Menus
 const menuRbtn = new _menu();
@@ -2757,7 +2759,7 @@ function createListMenu() {
 	return menu;
 }
 
-function createSettingsMenu(parent) {
+function createSettingsMenu(parent, parentBackground) {
 	// Constants
 	const z = (parent.index !== -1) ? parent.index : parent.getCurrentItemIndex();
 	const menu = menuRbtnTop;
@@ -4131,7 +4133,7 @@ function createSettingsMenu(parent) {
 			if (parent.uiElements['Bottom toolbar'].enabled) {
 				menu.newSeparator(subMenuName);
 				{	// Filter bottom toolbar
-					const defaultCol = invert(panel.getColorBackground());
+					const defaultCol = invert(parentBackground.getAvgPanelColor());
 					const subMenuSecondName = menu.newMenu('Bottom toolbar', subMenuName);
 					const options = ['Use default', 'Custom'];
 					const optionsLength = options.length;
@@ -4167,7 +4169,7 @@ function createSettingsMenu(parent) {
 					});
 				}
 				{	// Buttons' Text color
-					const defaultCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
+					const defaultCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(parentBackground.getAvgPanelColor());
 					const subMenuSecondName = menu.newMenu('Buttons\' text', subMenuName);
 					const options = ['Use default', 'Custom'];
 					const optionsLength = options.length;
@@ -4189,47 +4191,6 @@ function createSettingsMenu(parent) {
 					});
 					menu.newCheckMenuLast(() => (panel.colors.buttonsTextColor === defaultCol ? 0 : 1), optionsLength);
 				}
-			}
-			menu.newSeparator(subMenuName);
-			{	// Background color
-				const defaultButtonsCol = invert(panel.getColorBackground());
-				const subMenuSecondName = menu.newMenu('Background', subMenuName);
-				if (panel.customBackground) {
-					const options = [(window.InstanceType ? 'Use default UI setting' : 'Use columns UI setting'), 'Splitter', 'Custom'];
-					const optionsLength = options.length;
-					options.forEach((item, i) => {
-						menu.newEntry({
-							menuName: subMenuSecondName, entryText: item + (i == 2 ? '\t' + _b(getColorName(panel.colors.customBackground)) : ''), func: () => {
-								panel.colors.mode = i;
-								panel.properties.colorsMode[1] = panel.colors.mode;
-								if (panel.colors.mode === 2) {
-									panel.colors.customBackground = utils.ColourPicker(window.ID, panel.colors.customBackground);
-									console.log('Playlist Manager: Selected color ->\n\t Android: ' + panel.colors.customBackground + ' - RGB: ' + Chroma(panel.colors.customBackground).rgb());
-									panel.properties.customBackground[1] = panel.colors.customBackground;
-								}
-								overwriteProperties(panel.properties);
-								panel.colorsChanged();
-								list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
-								// Set defaults again
-								if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); }
-								list.repaint();
-							}
-						});
-					});
-					menu.newCheckMenuLast(() => panel.colors.mode, optionsLength);
-				}
-				menu.newSeparator(subMenuSecondName);
-				menu.newEntry({
-					menuName: subMenuSecondName, entryText: 'Alternate rows background color', func: () => {
-						panel.colors.bAltRowsColor = !panel.colors.bAltRowsColor;
-						panel.properties['bAltRowsColor'][1] = panel.colors.bAltRowsColor;
-						overwriteProperties(panel.properties);
-						panel.colorsChanged();
-						list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
-						list.repaint();
-					}
-				});
-				menu.newCheckMenuLast(() => panel.colors.bAltRowsColor);
 			}
 			menu.newSeparator(subMenuName);
 			{	// Presets
@@ -4286,8 +4247,8 @@ function createSettingsMenu(parent) {
 					menu.newCheckMenuLast(() => {
 						return preset.name.toLowerCase() === 'default'
 							? panel.colors.mode === 0
-								&& panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground())
-								&& panel.colors.buttonsTextColor === invert(panel.getColorBackground())
+								&& panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(parentBackground.getAvgPanelColor())
+								&& panel.colors.buttonsTextColor === invert(parentBackground.getAvgPanelColor())
 								&& panel.colors.bCustomText === false
 								&& parent.colors.autoPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6) // At list.checkConfig
 								&& parent.colors.smartPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6)
@@ -4349,7 +4310,7 @@ function createSettingsMenu(parent) {
 			});
 		}
 		if (parent.uiElements['Bottom toolbar'].enabled) {	// Buttons' toolbar
-			const defaultButtonsCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(panel.getColorBackground());
+			const defaultButtonsCol = panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(parentBackground.getAvgPanelColor());
 			const subMenuName = menu.newMenu('Bottom toolbar', menuName);
 			const options = ['Use default (toolbar)', 'Use no background buttons', 'Use background buttons (theme manager)'];
 			const optionsLength = options.length;
@@ -4368,126 +4329,14 @@ function createSettingsMenu(parent) {
 			});
 			menu.newCheckMenuLast(() => (panel.colors.bToolbar ? 0 : (panel.colors.bButtonsBackground ? 2 : 1)), optionsLength);
 		}
-		{	// Panel background
-			const subMenuName = menu.newMenu('Panel background', menuName);
-			const options = ['Use front cover', 'Use color background'];
-			const optionsLength = options.length;
-			options.forEach((item, i) => {
-				menu.newEntry({
-					menuName: subMenuName, entryText: item, func: () => {
-						panel.imageBackground.enabled = i === 0;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-						if (panel.imageBackground.enabled) { // Add shadows by default
-							const answer = WshShell.Popup('Add font shading to improve readability?\n(it may heavily affect performance on some systems)', 0, window.FullPanelName, popup.question + popup.yes_no);
-							panel.colors.bFontOutline = answer === popup.yes;
-						} else {
-							panel.colors.bFontOutline = false;
-						}
-						panel.properties.bFontOutline[1] = panel.colors.bFontOutline;
-						overwriteProperties(panel.properties);
-						panel.updateImageBg(true);
-						list.repaint();
-					}
-				});
-			});
-			menu.newCheckMenuLast(() => (panel.imageBackground.enabled ? 0 : 1), optionsLength);
-			menu.newSeparator(subMenuName);
-			{
-				const subMenuNameTwo = menu.newMenu('Selection mode', subMenuName);
-				const options = ['Follow selection', 'Follow now playing', 'External file...'];
-				const optionsLength = options.length;
-				options.forEach((item, i) => {
-					menu.newEntry({
-						menuName: subMenuNameTwo, entryText: item, func: () => {
-							if (i === 2) {
-								const input = Input.string(
-									'string',
-									panel.imageBackground.mode === 2
-										? panel.imageBackground.art.path
-										: JSON.parse(panel.properties.imageBackground[1]).art.path || '',
-									'Set file path:\n(relative paths have as root the foobar2000 folder with the exe)',
-									window.FullPanelName,
-									'myfile.jpg'
-								);
-								if (input === null) { return; }
-								panel.imageBackground.art.path = input;
-							}
-							panel.imageBackground.mode = i;
-							panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-							overwriteProperties(panel.properties);
-							panel.updateImageBg(true);
-							list.repaint();
-						}
-					});
-				});
-				menu.newCheckMenuLast(() => panel.imageBackground.mode, optionsLength);
-				menu.newSeparator(subMenuNameTwo);
-				menu.newEntry({
-					menuName: subMenuNameTwo, entryText: 'Cache same album\'s tracks art', func: () => {
-						panel.imageBackground.bCacheAlbum = !panel.imageBackground.bCacheAlbum;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-						overwriteProperties(panel.properties);
-					}, flags: panel.imageBackground.mode !== 2 ? MF_STRING : MF_GRAYED
-				});
-				menu.newCheckMenuLast(() => panel.imageBackground.bCacheAlbum);
-			}
-			menu.newSeparator(subMenuName);
-			{
-				const subMenuNameTwo = menu.newMenu('Display mode', subMenuName);
-				menu.newEntry({
-					menuName: subMenuNameTwo, entryText: 'Maintain proportions', func: () => {
-						panel.imageBackground.bProportions = !panel.imageBackground.bProportions;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-						overwriteProperties(panel.properties);
-						panel.updateImageBg();
-						list.repaint();
-					}
-				});
-				menu.newCheckMenuLast(() => panel.imageBackground.bProportions);
-				menu.newEntry({
-					menuName: subMenuNameTwo, entryText: 'Fill panel', func: () => {
-						panel.imageBackground.bFill = !panel.imageBackground.bFill;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-						overwriteProperties(panel.properties);
-						panel.updateImageBg();
-						list.repaint();
-					}
-				});
-				menu.newCheckMenuLast(() => panel.imageBackground.bFill);
-				menu.newSeparator(subMenuNameTwo);
-				menu.newEntry({
-					menuName: subMenuNameTwo, entryText: 'Tint all UI elements', func: () => {
-						panel.imageBackground.bTint = !panel.imageBackground.bTint;
-						panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-						overwriteProperties(panel.properties);
-						list.repaint();
-					}
-				});
-				menu.newCheckMenuLast(() => panel.imageBackground.bTint);
-			}
-			menu.newSeparator(subMenuName);
-			menu.newEntry({
-				menuName: subMenuName, entryText: 'Set opacity...\t' + _b(panel.imageBackground.opacity), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.opacity, 'Set opacity:\n0 is transparent, 100 is opaque.\n(integer number ≥0 and ≤100)', window.FullPanelName, 50, [(n) => n >= 0 && n <= 100]);
-					if (input === null) { return; }
-					panel.imageBackground.opacity = input;
-					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-					overwriteProperties(panel.properties);
-					panel.updateImageBg();
-					list.repaint();
-				}
-			});
-			menu.newEntry({
-				menuName: subMenuName, entryText: 'Set blur...\t' + _b(panel.imageBackground.blur), func: () => {
-					let input = Input.number('int positive', panel.imageBackground.blur, 'Set blur:\n(integer number ≥0)', window.FullPanelName, 10);
-					if (input === null) { return; }
-					panel.imageBackground.blur = input;
-					panel.properties.imageBackground[1] = JSON.stringify(panel.getConfig());
-					overwriteProperties(panel.properties);
-					panel.updateImageBg(true);
-					list.repaint();
-				}
-			});
+		if (parentBackground) {
+			menu.newSeparator(menuName);
+			createBackgroundMenu.call(
+				parentBackground,
+				{ menuName: menu.newMenu('Background', menuName), subMenuFrom: menuName },
+				menu,
+				{ nameColors: true }
+			);
 		}
 		menu.newSeparator(menuName);
 		{	// Tooltip
