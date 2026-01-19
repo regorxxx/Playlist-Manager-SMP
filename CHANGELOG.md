@@ -76,6 +76,7 @@
 ### Removed
 - UI: removed multiple old settings related to background colors and art, which are no longer available and replaced by new features. Note old and new UI will not necessarily match after update.
 ### Fixed
+- UI: multiple fixes to color presets application and menu checks.
 
 ## [1.0.0-beta.8] - 2026-01-12
 ### Added

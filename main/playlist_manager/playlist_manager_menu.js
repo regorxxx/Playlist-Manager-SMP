@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/01/26
+//16/01/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, importSettingsMenu, createMenuExport */
 
@@ -2759,6 +2759,16 @@ function createListMenu() {
 	return menu;
 }
 
+/**
+ * Description
+ *
+ * @function
+ * @name createSettingsMenu
+ * @kind function
+ * @param {_list} parent
+ * @param {_background} parentBackground
+ * @returns {_menu}
+ */
 function createSettingsMenu(parent, parentBackground) {
 	// Constants
 	const z = (parent.index !== -1) ? parent.index : parent.getCurrentItemIndex();
@@ -4196,14 +4206,34 @@ function createSettingsMenu(parent, parentBackground) {
 			{	// Presets
 				const subMenuSecondName = menu.newMenu('Presets', subMenuName);
 				const presets = [ /*[autoPlaylist, smartPlaylist, smartPlaylist, lockedPlaylist, selectedPlaylist, standard text, buttons, background ]*/
-					{ name: 'Color Blindness (light)', colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.white[0]] },
-					{ name: 'Color Blindness (dark)', colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2]] },
+					{
+						name: 'Color Blindness (light)',
+						colors: [colorBlind.yellow[2], colorBlind.yellow[2], colorBlind.blue[0], colorBlind.blue[1], colorBlind.blue[1], colorBlind.black[2], colorBlind.white[0], colorBlind.white[1]]
+					},
+					{
+						name: 'Color Blindness (dark)',
+						colors: [colorBlind.yellow[1], colorBlind.yellow[1], colorBlind.yellow[2], colorBlind.blue[1], colorBlind.blue[2], colorBlind.white[1], colorBlind.black[2], colorBlind.black[0]]
+					},
 					{ name: 'sep' },
-					{ name: 'Gray Scale (dark)', colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.white[0], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0], colorBlind.black[0]] },
-					{ name: 'Gray Scale (light)', colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.black[0], colorBlind.black[1], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0]] },
+					{
+						name: 'Gray Scale (dark)',
+						colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.white[0], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0], colorBlind.black[0], colorBlind.black[1]]
+					},
+					{
+						name: 'Gray Scale (light)',
+						colors: [colorBlind.black[1], colorBlind.black[1], colorBlind.black[0], colorBlind.black[1], colorBlind.black[2], colorBlind.black[2], colorBlind.white[0], colorBlind.white[1]]
+					},
 					{ name: 'sep' },
-					{ name: 'Dark theme', colors: [blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFFFF629B)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF65CC32)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF00AFFD)), 0.8), RGB(...toRGB(0xFFDC143C)), RGB(...toRGB(0xFF0080C0)), RGB(170, 170, 170), RGB(30, 30, 30)] },
-					{ name: 'Dark theme (red)', colors: [blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFFFF629B)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF65CC32)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF00AFFD)), 0.8), RGB(...toRGB(0xFFDC143C)), RGB(236, 47, 47), blendColors(RGB(236, 47, 47), RGB(170, 170, 170), 0.2), RGB(30, 30, 30)], buttonColors: [blendColors(RGB(236, 47, 47), invert(RGB(30, 30, 30)), 0.2), RGB(236, 47, 47)] },
+					{
+						name: 'Dark theme',
+						colors: [blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFFFF629B)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF65CC32)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF00AFFD)), 0.8), RGB(...toRGB(0xFFDC143C)), RGB(...toRGB(0xFF0080C0)), RGB(170, 170, 170), RGB(30, 30, 30), RGB(45, 45, 45)],
+						buttonColors: [RGB(190, 190, 190), RGB(170, 170, 170)]
+					},
+					{
+						name: 'Dark theme (red)',
+						colors: [blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFFFF629B)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF65CC32)), 0.6), blendColors(RGB(157, 158, 163), RGB(...toRGB(0xFF00AFFD)), 0.8), RGB(...toRGB(0xFFDC143C)), RGB(236, 47, 47), blendColors(RGB(236, 47, 47), RGB(170, 170, 170), 0.2), RGB(30, 30, 30), RGB(45, 45, 45)],
+						buttonColors: [blendColors(RGB(236, 47, 47), invert(RGB(30, 30, 30)), 0.2), RGB(236, 47, 47)]
+					},
 					{ name: 'sep' },
 					{ name: 'Default' }
 				];
@@ -4213,18 +4243,17 @@ function createSettingsMenu(parent, parentBackground) {
 						menuName: subMenuSecondName, entryText: preset.name, func: () => {
 							// Panel and list
 							if (preset.name.toLowerCase() === 'default') {
-								panel.properties.colorsMode[1] = panel.colors.mode = 0;
+								parentBackground.changeConfig({ config: { colorModeOptions: { color: JSON.parse(parent.properties.background[3]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: true } });
 								panel.properties.bCustomText[1] = panel.colors.bCustomText = false;
 								parent.colors = {};
 							}
 							else {
-								panel.properties.colorsMode[1] = panel.colors.mode = 2;
-								panel.properties.customBackground[1] = panel.colors.customBackground = preset.colors[6];
+								parentBackground.changeConfig({ config: { colorModeOptions: { color: [preset.colors[6], preset.colors[7]] } }, callbackArgs: { bSaveProperties: true } });
 								panel.properties.bCustomText[1] = panel.colors.bCustomText = true;
 								panel.properties.customText[1] = panel.colors.customText = preset.colors[5];
 								parent.colors.autoPlaylist = preset.colors[0];
 								parent.colors.smartPlaylist = preset.colors[1];
-								parent.colors.smartPlaylist = preset.colors[2];
+								parent.colors.uiPlaylist = preset.colors[2];
 								parent.colors.lockedPlaylist = preset.colors[3];
 								parent.colors.selectedPlaylist = preset.colors[4];
 								parent.colors.folder = preset.colors[5];
@@ -4234,7 +4263,10 @@ function createSettingsMenu(parent, parentBackground) {
 							panel.setDefault({ all: true });
 							// Buttons
 							if (Object.hasOwn(preset, 'buttonColors') && preset.buttonColors.length) {
-								if (preset.buttonColors[0] !== null) { panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor = preset.buttonColors[0]; }
+								if (preset.buttonColors[0] !== null) {
+									panel.properties.buttonsTextColor[1] = panel.colors.buttonsTextColor = preset.buttonColors[0];
+									panel.properties.headerButtonsColor[1] = panel.colors.headerButtons = preset.buttonColors[0];
+								}
 								if (preset.buttonColors[1] !== null) { panel.properties.buttonsToolbarColor[1] = panel.colors.buttonsToolbarColor = preset.buttonColors[1]; }
 								panel.colorsChanged();
 							}
@@ -4246,32 +4278,32 @@ function createSettingsMenu(parent, parentBackground) {
 					});
 					menu.newCheckMenuLast(() => {
 						return preset.name.toLowerCase() === 'default'
-							? panel.colors.mode === 0
-								&& panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(parentBackground.getAvgPanelColor())
+							? panel.colors.buttonsTextColor === panel.colors.bButtonsBackground ? panel.colors.default.buttonsTextColor : invert(parentBackground.getAvgPanelColor())
 								&& panel.colors.buttonsTextColor === invert(parentBackground.getAvgPanelColor())
 								&& panel.colors.bCustomText === false
 								&& parent.colors.autoPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFFFF629B)), 0.6) // At list.checkConfig
 								&& parent.colors.smartPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFF65CC32)), 0.6)
-								&& parent.colors.smartPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8)
+								&& parent.colors.uiPlaylist === blendColors(panel.colors.text, RGB(...toRGB(0xFF00AFFD)), 0.8)
 								&& parent.colors.lockedPlaylist === RGB(...toRGB(0xFFDC143C))
 								&& parent.colors.selectedPlaylist === RGB(...toRGB(0xFF0080C0))
-							&& parent.colors.folder === panel.colors.text
-							: panel.colors.mode === 2
-							&& panel.colors.customBackground === preset.colors[6]
+								&& parent.colors.folder === panel.colors.text
+							: parentBackground.colorModeOptions.color[0] === preset.colors[6] && parentBackground.colorModeOptions.color[1] === preset.colors[7]
 							&& panel.colors.bCustomText === true
 							&& panel.colors.customText === preset.colors[5]
 							&& parent.colors.autoPlaylist === preset.colors[0]
 							&& parent.colors.smartPlaylist === preset.colors[1]
-							&& parent.colors.smartPlaylist === preset.colors[2]
+							&& parent.colors.uiPlaylist === preset.colors[2]
 							&& parent.colors.lockedPlaylist === preset.colors[3]
 							&& parent.colors.selectedPlaylist === preset.colors[4]
 							&& parent.colors.folder === preset.colors[5]
 							&& (
 								Object.hasOwn(preset, 'buttonColors') && preset.buttonColors.length
 								&& (
-									(preset.buttonColors[0] !== null && panel.colors.buttonsTextColor === preset.buttonColors[0] || preset.buttonColors[0] === null)
+									(preset.buttonColors[0] === null || panel.colors.buttonsTextColor === preset.buttonColors[0])
 									&&
-									(preset.buttonColors[1] !== null && panel.colors.buttonsToolbarColor === preset.buttonColors[1] || preset.buttonColors[1] === null)
+									(preset.buttonColors[0] === null || panel.colors.headerButtons === preset.buttonColors[0])
+									&&
+									(preset.buttonColors[1] === null || panel.colors.buttonsToolbarColor === preset.buttonColors[1])
 								)
 								|| !Object.hasOwn(preset, 'buttonColors')
 							);
@@ -4282,22 +4314,83 @@ function createSettingsMenu(parent, parentBackground) {
 			{
 				const subMenuSecondName = menu.newMenu('Dynamic colors', subMenuName);
 				menu.newEntry({
-					menuName: subMenuSecondName, entryText: 'Listen to color-servers', func: () => {
-						parent.properties.bOnNotifyColors[1] = !parent.properties.bOnNotifyColors[1];
+					menuName: subMenuSecondName, entryText: 'Dynamic (background art mode)', func: () => {
+						parent.properties.bDynamicColors[1] = !(parent.properties.bDynamicColors[1] && parentBackground.useCoverColors);
+						if (parent.properties.bDynamicColors[1] && parent.properties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are doing.', window.ScriptInfo.Name + ': Dynamic colors'); }
 						overwriteProperties(parent.properties);
+						if (parent.properties.bDynamicColors[1]) {
+							// Ensure it's applied with compatible settings
+							parentBackground.changeConfig({
+								bRepaint: false, callbackArgs: { bSaveProperties: true },
+								config: !parentBackground.useCover
+									? { coverMode: parentBackground.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } }
+									: { coverModeOptions: { bProcessColors: true } },
+							});
+							parentBackground.updateImageBg(true);
+							panel.colorsChanged();
+							parent.repaint(true);
+						} else {
+							parentBackground.callbacks.artColors(void (0), true);
+						}
+					},
+					checkFunc: () => parent.properties.bDynamicColors[1] && parentBackground.useCoverColors,
+				});
+				menu.newEntry({
+					menuName: subMenuSecondName, entryText: 'Also apply to background color', func: () => {
+						parent.properties.bDynamicColorsBg[1] = !parent.properties.bDynamicColorsBg[1];
+						if (!parent.properties.bDynamicColorsBg[1]) {
+							parentBackground.changeConfig({ config: { colorModeOptions: { color: JSON.parse(parent.properties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
+						}
+						overwriteProperties(parent.properties);
+						parentBackground.updateImageBg(true);
+						panel.colorsChanged();
 						if (parent.properties.bOnNotifyColors[1]) {
 							window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
 							window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
 						}
+						parent.repaint(true);
+					}, flags: parent.properties.bDynamicColors[1] || parent.properties.bOnNotifyColors[1] ? MF_STRING : MF_GRAYED
+				});
+				menu.newCheckMenuLast(() => parent.properties.bDynamicColorsBg[1]);
+				menu.newSeparator(subMenuSecondName);
+				menu.newEntry({
+					menuName: subMenuSecondName, entryText: 'Listen to color-servers', func: () => {
+						parent.properties.bOnNotifyColors[1] = !parent.properties.bOnNotifyColors[1];
+						if (parent.properties.bDynamicColors[1] && parent.properties.bOnNotifyColors[1]) { fb.ShowPopupMessage('Warning: Dynamic colors (background art mode) and Color-server listening are enabled at the same time.\n\nThis setting may probably produce glitches since 2 color sources are being used, while one tries to override the other.\n\nIt\'s recommended to only use one of these features, unless you know what you are doing.', window.ScriptInfo.Name + ': Dynamic colors'); }
+						overwriteProperties(parent.properties);
+						if (parent.properties.bOnNotifyColors[1]) {
+							window.NotifyOthers('Colors: ask color scheme', window.ScriptInfo.Name + ': set color scheme');
+							window.NotifyOthers('Colors: ask color', window.ScriptInfo.Name + ': set colors');
+						} else if (!parent.properties.bDynamicColors[1]) {
+							parentBackground.callbacks.artColors(void (0), true);
+						}
 					}
 				});
 				menu.newCheckMenuLast(() => parent.properties.bOnNotifyColors[1]);
+				menu.newEntry({
+					menuName: subMenuSecondName, entryText: 'Act as color-server', func: () => {
+						parent.properties.bNotifyColors[1] = !(parent.properties.bNotifyColors[1] && parentBackground.useCoverColors);
+						overwriteProperties(parent.properties);
+						if (parent.properties.bNotifyColors[1]) {
+							if (parentBackground.scheme) { window.NotifyOthers('Colors: set color scheme', parentBackground.scheme); }
+							else if (!parentBackground.useCoverColors) {
+								parentBackground.changeConfig({
+									bRepaint: false, callbackArgs: { bSaveProperties: true },
+									config: !parentBackground.useCover
+										? { coverMode: parentBackground.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } }
+										: { coverModeOptions: { bProcessColors: true } },
+								});
+							}
+						}
+					},
+					checkFunc: () => parent.properties.bNotifyColors[1] && parentBackground.useCoverColors
+				});
 			}
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Reset all to default', func: () => {
 					parent.properties.listColors[1] = convertObjectToString({});
-					panel.properties.colorsMode[1] = panel.colors.mode = 0;
+					parent.properties.background[1] = parent.properties.background[3];
 					panel.properties.bCustomText[1] = panel.colors.bCustomText = false;
 					panel.properties.headerButtonsColor[1] = panel.colors.headerButtons = -1;
 					panel.colorsChanged();
