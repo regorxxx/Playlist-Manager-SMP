@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/01/26
+//16/01/26
 
 /* exported _list */
 
@@ -43,14 +43,12 @@ include('playlist_manager_helpers.js');
 
 /**
  * Playlist Manager
+ *
+ * @class
  * @name _list
- * @constructor
- * @param {number} x
- * @param {number} y
- * @param {number} w
- * @param {number} h
+ * @param {{ x: number, y: number, w: number, h: number}} {x, y, w, h}?
  */
-function _list({x, y, w, h, properties} =  {}) {
+function _list({ x, y, w, h, properties } = {}) {
 	const bDebug = false;
 	// Pls Keys
 	const defPls = new PlaylistObj();
@@ -890,7 +888,7 @@ function _list({x, y, w, h, properties} =  {}) {
 						this.searchInput.autoValidation = this.searchMethod.bAutoSearch;
 					}
 					this.searchInput.emptyText = this.isFilterActive('Playlist') ? 'Results' : 'Search';
-					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - LM/ 2, lineY, panel.fonts.inputSize);
+					this.searchInput.setSize(panel.w - (LM * 2) - iconOffsetLeft - iconOffsetRight - LM / 2 - LM / 2, lineY, panel.fonts.inputSize);
 					gr.FillSolidRect(0, 0, panel.w - LM - iconOffsetRight, lineY, opaqueColor(invert(invert(panelBgColor, true)), 10));
 					this.searchInput.paint(gr, LM * 2 + iconOffsetLeft - 1, 0);
 				} else {
@@ -7101,9 +7099,9 @@ function _list({x, y, w, h, properties} =  {}) {
 	};
 	this.shareUiSettings = (mode = 'popup') => {
 		const settings = Object.fromEntries([
-			...['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements', 'listColors']
+			...['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements', 'listColors', 'background', 'bDynamicColors', 'bDynamicColorsBg', 'bOnNotifyColors', 'bNotifyColors']
 				.map((key) => [key, clone(this.properties[key].slice(0, 2))]),
-			...['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground', 'customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarOpacity', 'buttonsTextColor', 'customBackground', 'fontSize', 'imageBackground']
+			...['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground', 'customText', 'headerButtonsColor', 'buttonsToolbarColor', 'buttonsToolbarOpacity', 'buttonsTextColor', 'fontSize']
 				.map((key) => [key, clone(panel.properties[key].slice(0, 2))])
 		]);
 		switch (mode.toLowerCase()) {
@@ -7135,8 +7133,9 @@ function _list({x, y, w, h, properties} =  {}) {
 			? popup.yes
 			: WshShell.Popup('Apply current settings to highlighted panel?\nCheck UI.', 0, window.FullPanelName + ': Playlist Manager', popup.question + popup.yes_no);
 		if (answer === popup.yes) {
+			const newBg = JSON.parse(String(settings.background[1]));
 			// List
-			['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle'].forEach((key) => {
+			['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'bDynamicColors', 'bDynamicColorsBg', 'bOnNotifyColors', 'bNotifyColors'].forEach((key) => {
 				this.properties[key][1] = !!settings[key][1];
 				if (Object.hasOwn(this, key)) { this[key] = this.properties[key][1]; }
 			});
@@ -7149,6 +7148,7 @@ function _list({x, y, w, h, properties} =  {}) {
 			this.updatePlaylistIcons();
 			this.updateUIElements();
 			// Panel
+			background.changeConfig({ config: newBg, bRepaint: false, callbackArgs: { bSaveProperties: true } });
 			const defaultButtonsCol = invert(background.getAvgPanelColor());
 			['bBold', 'bFontOutline', 'bCustomText', 'bAltRowsColor', 'bToolbar', 'bButtonsBackground'].forEach((key) => {
 				panel.properties[key][1] = !!settings[key][1];
@@ -7166,6 +7166,7 @@ function _list({x, y, w, h, properties} =  {}) {
 			overwriteProperties(this.properties);
 			this.checkConfigPostUpdate(this.checkConfig({ bResetColors: true })); // Ensure related config is set properly
 			if (panel.setDefault({ oldColor: defaultButtonsCol })) { overwriteProperties(panel.properties); } // Set defaults again
+			if (stats.bEnabled) { stats.exit(); stats.init(); }
 		}
 		if (pop.isEnabled('settings')) { pop.disable(true); }
 		window.highlight = false;

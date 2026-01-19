@@ -1,24 +1,24 @@
 ﻿'use strict';
-//15/01/26
+//16/01/26
 
 /* exported _panel */
 
-/* global bottomToolbar:readable */
+/* global bottomToolbar:readable, background:readable */
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global globFonts:readable, FontStyle:readable, DLGC_WANTALLKEYS:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isInt:readable, isBoolean:readable, isJSON:readable, isInt:readable, deepAssign:readable*/
 include('..\\..\\helpers\\helpers_xxx_properties.js');
-/* global overwriteProperties:readable, setProperties:readable, getPropertiesPairs:readable */
+/* global overwriteProperties:readable, setProperties:readable, getPropertiesPairs:readable, getPropertiesValues:readable, deleteProperties:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global RGB:readable, _scale:readable, invert:readable, blendColors:readable, _gdiFont:readable */
 
-function _panel(customBackground = false, bSetup = false) {
+function _panel(bSetup = false) {
 
 	const panelProperties = {
 		fontSize: ['Font size', _scale(10), { func: isInt }],
-		colorsMode: ['Background color mode', 0, { func: isInt, range: [[0, 2]] }],
-		customBackground: ['Custom background color', RGB(30, 30, 30), { func: isInt }], // Black
+		placeholder0: ['placerholder0', 0, { func: isInt }],
+		placeholder1: ['placerholder1', 0, { func: isInt }], // Black
 		bCustomText: ['Text custom color mode', false, { func: isBoolean }],
 		customText: ['Custom text color', RGB(157, 158, 163), { func: isInt }], // Gray
 		buttonsTextColor: ['Buttons\' text color', bottomToolbar.config.textColor, { func: isInt }],
@@ -27,7 +27,7 @@ function _panel(customBackground = false, bSetup = false) {
 		bButtonsBackground: ['Use buttons background', false, { func: isBoolean }],
 		buttonsToolbarColor: ['Buttons\' toolbar color', RGB(0, 0, 0), { func: isInt }],
 		buttonsToolbarOpacity: ['Buttons\' toolbar opacity', 5, { func: isInt, range: [[0, 100]] }],
-		placeholder: ['placerholder', 0, { func: isInt }],
+		placeholder2: ['placerholder2', 0, { func: isInt }],
 		bFontOutline: ['Add shadows to font', false, { func: isBoolean }],
 		bBold: ['Use bold font', false, { func: isBoolean }],
 		headerButtonsColor: ['Header buttons\' toolbar color', -1, { func: isJSON }],
@@ -40,25 +40,31 @@ function _panel(customBackground = false, bSetup = false) {
 		}), -1, { func: isInt }],
 	};
 	for (let key in panelProperties) { panelProperties[key][3] = panelProperties[key][1]; }
-	setProperties(panelProperties, 'panel_');
+	// setProperties(panelProperties, 'panel_');
+	{ 	// Change internals for next releases
+		if (getPropertiesValues(panelProperties, 'panel_').filter(Boolean).length === 0) {
+			setProperties(panelProperties, 'panel', 0);
+			this.properties = getPropertiesPairs(panelProperties, 'panel', 0);
+		} else {
+			setProperties(panelProperties, 'panel_');
+			this.properties = getPropertiesPairs(panelProperties, 'panel_');
+			deleteProperties(this.properties);
+			for (let key in this.properties) { this.properties[key][0] = this.properties[key][0].replace(/panel_\d\d\./, 'panel.'); }
+			overwriteProperties(this.properties);
+		}
+	}
 
 	this.colorsChanged = () => {
 		if (window.InstanceType) {
-			this.colors.background = window.GetColourDUI(1);
-			// Workaround for foo_flowin using DUI and not matching global CUI theme (at least on foobar v1.6)
-			if (window.IsDark && this.colors.background === 4293059298) {
-				this.colors.background = RGB(25, 25, 25);
-			}
 			this.colors.text = this.colors.bCustomText ? this.colors.customText : window.GetColourDUI(0);
 			this.colors.highlight = window.GetColourDUI(2);
 		} else {
-			this.colors.background = window.GetColourCUI(3);
 			this.colors.text = this.colors.bCustomText ? this.colors.customText : window.GetColourCUI(0);
 			this.colors.highlight = blendColors(this.colors.text, this.colors.background, 0.4);
 		}
 		// Change default text color to the inverse of the background
-		if (!this.colors.bCustomText && invert(this.getColorBackground(), true) === invert(this.colors.text, true)) {
-			this.colors.text = invert(this.getColorBackground(), true);
+		if (!this.colors.bCustomText && invert(background.getAvgPanelColor(), true) === invert(this.colors.text, true)) {
+			this.colors.text = invert(background.getAvgPanelColor(), true);
 			this.colors.highlight = blendColors(this.colors.text, this.colors.background, 0.4);
 		}
 		this.colors.header = this.colors.highlight & 0x45FFFFFF;
@@ -97,32 +103,14 @@ function _panel(customBackground = false, bSetup = false) {
 		this.h = window.Height;
 	};
 
-	this.getColorBackground = () => {
-		let col;
-		switch (true) {
-			case !this.customBackground:
-			case this.colors.mode === 0:
-				col = this.colors.background;
-				break;
-			case this.colors.mode === 1:
-				col = window.InstanceType
-					? window.GetColourDUI(1)
-					: window.GetColourCUI(3, '{DA66E8F3-D210-4AD2-89D4-9B2CC58D0235}');
-				break;
-			case this.colors.mode === 2:
-				col = this.colors.customBackground;
-				break;
-		}
-		return col;
-	};
-
 	this.setDefault = ({ all = false, buttonText = false, buttonBar = false, oldColor = null } = {}) => {
 		let bDone = false;
-		const defaultCol = invert(this.getColorBackground());
+		const defaultCol = invert(background.getAvgPanelColor());
 		if (buttonText || all || oldColor !== null && this.colors.buttonsTextColor === oldColor) {
 			this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground
 				? this.colors.default.buttonsTextColor // In case the buttons theme manager is used, the text is black by default
 				: defaultCol;
+			this.properties.headerButtonsColor[1] = this.colors.headerButtons = defaultCol;
 			bDone = true;
 		}
 		if (buttonBar || all || oldColor !== null && this.colors.buttonsToolbarColor === oldColor) { this.properties.buttonsToolbarColor[1] = this.colors.buttonsToolbarColor = defaultCol; bDone = true; }
@@ -131,7 +119,7 @@ function _panel(customBackground = false, bSetup = false) {
 	};
 
 	window.DlgCode = DLGC_WANTALLKEYS;
-	this.properties = getPropertiesPairs(panelProperties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
+	// this.properties = getPropertiesPairs(panelProperties, 'panel_'); // Load once! [0] = descriptions, [1] = values set by user (not defaults!)
 	this.fonts = {};
 	this.colors = {};
 	this.colors.default = {};
@@ -143,13 +131,6 @@ function _panel(customBackground = false, bSetup = false) {
 		JSON.parse(this.properties.fontScale[3]),
 		JSON.parse(this.properties.fontScale[1])
 	);
-	if (customBackground) {
-		this.customBackground = true;
-		this.colors.mode = this.properties.colorsMode[1];
-		this.colors.customBackground = this.properties.customBackground[1];
-	} else {
-		this.customBackground = false;
-	}
 	this.colors.bCustomText = this.properties.bCustomText[1];
 	this.colors.customText = this.properties.customText[1];
 	this.colors.buttonsTextColor = this.properties.buttonsTextColor[1];
@@ -167,7 +148,7 @@ function _panel(customBackground = false, bSetup = false) {
 	this.fontChanged();
 	this.colorsChanged();
 	if (bSetup) {
-		const defaultCol = invert(this.getColorBackground());
+		const defaultCol = invert(background.getAvgPanelColor());
 		this.properties.buttonsTextColor[1] = this.colors.buttonsTextColor = this.colors.bButtonsBackground
 			? this.colors.default.buttonsTextColor
 			: defaultCol;

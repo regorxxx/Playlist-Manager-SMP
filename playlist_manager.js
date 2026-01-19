@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/01/26
+//16/01/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -25,7 +25,7 @@ include('helpers\\helpers_xxx_playlists.js');
 include('helpers\\helpers_xxx_playlists_files.js');
 /* global libItemsAbsPaths:writable, libItemsRelPaths:writable, precacheLibraryPathsAsync:readable, precacheLibraryRelPaths:readable, writablePlaylistFormats:readable, playlistDescriptors:readable */
 include('helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, blendColors:readable, isDark:readable */
+/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, blendColors:readable, isDark:readable, RGB:readable */
 include('helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('helpers\\helpers_xxx_file.js');
@@ -53,7 +53,7 @@ include('main\\playlist_manager\\playlist_manager_helpers.js');
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
 /* global ListenBrainz:readable */
 include('main\\playlist_manager\\playlist_manager_statistics.js');
-/* global _listStatistics:readable */
+/* global _listStatistics:readable, Chroma:readable */
 include('main\\window\\window_xxx_background.js');
 /* global _background:readable */
 include('main\\window\\window_xxx_dynamic_colors.js');
@@ -385,6 +385,7 @@ let properties = {
 		bLoadNotTrackedItems: false,
 	}), { func: isJSON, forceDefaults: true }],
 	bDynamicColors: ['Adjust colors to artwork', true, { func: isBoolean }],
+	bDynamicColorsBg: ['Adjust colors to artwork (bg)', false, { func: isBoolean }],
 	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],
 	bNotifyColors: ['Notify colors to other panels', false, { func: isBoolean }],
 	background: ['Background options', JSON.stringify(_background.defaults()), { func: isJSON, forceDefaults: true }],
@@ -458,24 +459,31 @@ const background = new _background({
 		},
 		artColors: (colArray, bForced) => {
 			if (!bForced && !list.properties.bDynamicColors[1]) { return; }
-			// else if (colArray) {
-			// 	const { main, sec, note } = dynamicColors(
-			// 		colArray,
-			// 		slider.colors.background !== -1 ? slider.colors.background : background.getAvgPanelColor(),
-			// 		true
-			// 	);
-			// 	const bSwap = slider.style.bar.toLowerCase() !== 'roundedgradient';
-			// 	if (slider.colors.left !== -1) { slider.colors.left = bSwap ? sec : main; }
-			// 	if (slider.colors.right !== -1) { slider.colors.right = bSwap ? main : sec; }
-			// 	if (slider.colors.sel !== -1) { slider.colors.sel = note; }
-			// 	if (slider.colors.buttons !== -1) { slider.colors.buttons = note; }
-			// } else {
-			// 	const defColors = JSON.parse(properties.colors[1]);
-			// 	for (const key in slider.colors) {
-			// 		slider.colors[key] = defColors[key];
-			// 	}
-			// 	background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(properties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
-			// }
+			else if (colArray) {
+				const bChangeBg = list.properties.bDynamicColorsBg[1] && background.useColors && !background.useColorsBlend;
+				const { main, sec, note, mainAlt, secAlt } = dynamicColors( // eslint-disable-line no-unused-vars
+					colArray,
+					bChangeBg ? RGB(122, 122, 122) : background.getAvgPanelColor(),
+					true
+				);
+				if (bChangeBg) {
+					const gradient = [Chroma(note).saturate(2).luminance(0.005).android(), note];
+					const bgColor = Chroma.scale(gradient).mode('lrgb')
+						.colors(background.colorModeOptions.color.length, 'android')
+						.reverse();
+					background.changeConfig({ config: { colorModeOptions: { color: bgColor } }, callbackArgs: { bSaveProperties: false } });
+				}
+				if (panel.colors.bCustomText) { panel.colors.customText = blendColors(mostContrastColor(background.getAvgPanelColor()).color, sec, 0.3); }
+				if (panel.colors.headerButtons !== -1) { panel.colors.headerButtons = blendColors(mostContrastColor(background.getAvgPanelColor()).color, note, 0.3); }
+				if (panel.colors.buttonsTextColor !== -1) { panel.colors.buttonsTextColor = blendColors(mostContrastColor(background.getAvgPanelColor()).color, note, 0.3); }
+				if (panel.colors.buttonsToolbarColor !== -1) { panel.colors.buttonsToolbarColor = mainAlt; }
+				panel.colorsChanged();
+				if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); }
+			} else {
+				background.changeConfig({ config: { colorModeOptions: { color: JSON.parse(list.properties.background[1]).colorModeOptions.color } }, callbackArgs: { bSaveProperties: false } });
+				panel.setDefault({ all: true });
+				if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); }
+			}
 			if (window.IsVisible) { window.Repaint(); }
 		},
 		artColorsNotify: (colArray, bForced = false) => {
@@ -915,7 +923,7 @@ if (!list.properties.bSetup[1]) {
 		if (!window.Width || !window.Height) { return; }
 		if (globSettings.bDebugPaint) { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true, Repaint: true }); }
 		else { extendGR(gr, { DrawRoundRect: true, FillRoundRect: true }); }
-		gr.FillSolidRect(0, 0, window.Width, window.Height, panel.getColorBackground());
+		gr.FillSolidRect(0, 0, window.Width, window.Height, background.getAvgUiColor());
 		background.paint(gr);
 		list.prePaint();
 		if (!stats.bEnabled) {
@@ -1059,8 +1067,8 @@ if (!list.properties.bSetup[1]) {
 					const colors = clone(info);
 					const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'text', 'headerButtons', 'buttonsText', 'buttonsToolbar'].indexOf(key)];
 					const hasColor = (key) => typeof getColor(key) !== 'undefined';
-					if (panel.colors.mode.colorMode !== 0 && hasColor('background')) {
-						panel.colors.customBackground = getColor('background');
+					if (background.useColors && hasColor('background')) {
+						background.changeConfig({ config: { colorModeOptions: { color: getColor('background') } }, callbackArgs: { bSaveProperties: false } });
 					}
 					if (panel.colors.bCustomText && hasColor('text')) { panel.colors.customText = getColor('text'); }
 					if (panel.colors.headerButtons !== -1 && hasColor('headerButtons')) { panel.colors.headerButtons = getColor('headerButtons'); }
@@ -1074,22 +1082,12 @@ if (!list.properties.bSetup[1]) {
 			}
 			case 'Colors: set color scheme':
 			case window.ScriptInfo.Name + ': set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
-				if (info && list.properties.bOnNotifyColors[1]) {
-					const { main, sec, note, mainAlt, secAlt } = dynamicColors( // eslint-disable-line no-unused-vars
-						clone(info),
-						background.getAvgPanelColor(),
-						true
-					);
-					if (panel.colors.mode.colorMode !== 0) {
-						panel.colors.customBackground = main;
-					}
-					if (panel.colors.bCustomText) { panel.colors.customText = blendColors(mostContrastColor(background.getAvgPanelColor()).color, sec, 0.3); }
-					if (panel.colors.headerButtons !== -1) { panel.colors.headerButtons = blendColors(mostContrastColor(background.getAvgPanelColor()).color, note, 0.3); }
-					if (panel.colors.buttonsTextColor !== -1) { panel.colors.buttonsTextColor = blendColors(mostContrastColor(background.getAvgPanelColor()).color, note, 0.3); }
-					if (panel.colors.buttonsToolbarColor !== -1) { panel.colors.buttonsToolbarColor = mainAlt; }
-					panel.colorsChanged();
-					if (list.checkConfig({ bResetColors: true, bPreferBgColor: true })) { overwriteProperties(list.properties); } // Ensure related settings is set properly
-					if (window.IsVisible) { list.repaint(); }
+				if (info && list.properties.bOnNotifyColors[1]) { background.callbacks.artColors(clone(info), true); }
+				break;
+			}
+			case 'Colors: ask color scheme': {
+				if (info && list.properties.bNotifyColors[1] && background.scheme) {
+					window.NotifyOthers(String(info), background.scheme);
 				}
 				break;
 			}
