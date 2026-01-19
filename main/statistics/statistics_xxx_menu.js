@@ -96,6 +96,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	const filterBetween = (lim) => Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';');
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
+	const switchedGraphs = new Set(['horizontal-bars']);
 	// Header
 	menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
 	menu.newSeparator();
@@ -368,28 +369,37 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		{
 			const subMenuTwo = menu.newMenu('Grid', subMenu);
 			[
-				{ isEq: null, key: this.grid.x.show, value: null, newValue: { show: !this.grid.x.show }, entryText: (this.grid.x.show ? 'Hide' : 'Show') + ' X grid' }
+				{ isEq: null, key: this.grid.x.show, value: null, newValue: { show: !this.grid.x.show }, entryText: (this.grid.x.show ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' grid' }
 			].forEach(createMenuOption('grid', 'x', subMenuTwo, false));
 			[
-				{ isEq: null, key: this.grid.y.show, value: null, newValue: { show: !this.grid.y.show }, entryText: (this.grid.y.show ? 'Hide' : 'Show') + ' Y grid' }
+				{ isEq: null, key: this.grid.y.show, value: null, newValue: { show: !this.grid.y.show }, entryText: (this.grid.y.show ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' grid' }
 			].forEach(createMenuOption('grid', 'y', subMenuTwo, false));
 		}
 		{
 			const subMenuTwo = menu.newMenu('Axis', subMenu);
 			[
-				{ isEq: null, key: this.axis.x.show, value: null, newValue: { show: !this.axis.x.show }, entryText: (this.axis.x.show ? 'Hide' : 'Show') + ' X axis' }
+				{ isEq: null, key: this.axis.x.show, value: null, newValue: { show: !this.axis.x.show }, entryText: (this.axis.x.show ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' axis' }
 			].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
 			[
-				{ isEq: null, key: this.axis.y.show, value: null, newValue: { show: !this.axis.y.show }, entryText: (this.axis.y.show ? 'Hide' : 'Show') + ' Y axis' }
+				{ isEq: null, key: this.axis.y.show, value: null, newValue: { show: !this.axis.y.show }, entryText: (this.axis.y.show ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' axis' }
+			].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
+		}
+		{
+			const subMenuTwo = menu.newMenu('Ticks', subMenu);
+			[
+				{ isEq: null, key: this.axis.x.showTicks, value: null, newValue: { showTicks: !this.axis.x.showTicks }, entryText: (this.axis.x.showTicks ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' axis' }
+			].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
+			[
+				{ isEq: null, key: this.axis.y.showTicks, value: null, newValue: { showTicks: !this.axis.y.showTicks }, entryText: (this.axis.y.showTicks ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' axis' }
 			].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
 		}
 		{
 			const subMenuTwo = menu.newMenu('Labels', subMenu);
 			[
-				{ isEq: null, key: this.axis.x.labels, value: null, newValue: { labels: !this.axis.x.labels }, entryText: (this.axis.x.labels ? 'Hide' : 'Show') + ' X labels' }
+				{ isEq: null, key: this.axis.x.labels, value: null, newValue: { labels: !this.axis.x.labels }, entryText: (this.axis.x.labels ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' labels' }
 			].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
 			[
-				{ isEq: null, key: this.axis.y.labels, value: null, newValue: { labels: !this.axis.y.labels }, entryText: (this.axis.y.labels ? 'Hide' : 'Show') + ' Y labels' }
+				{ isEq: null, key: this.axis.y.labels, value: null, newValue: { labels: !this.axis.y.labels }, entryText: (this.axis.y.labels ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' labels' }
 			].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
 			menu.newSeparator(subMenuTwo);
 			[
@@ -404,10 +414,10 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		{
 			const subMenuTwo = menu.newMenu('Titles', subMenu);
 			[
-				{ isEq: null, key: this.axis.x.showKey, value: null, newValue: { showKey: !this.axis.x.showKey }, entryText: (this.axis.x.showKey ? 'Hide' : 'Show') + ' X title' }
+				{ isEq: null, key: this.axis.x.showKey, value: null, newValue: { showKey: !this.axis.x.showKey }, entryText: (this.axis.x.showKey ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' title' }
 			].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
 			[
-				{ isEq: null, key: this.axis.y.showKey, value: null, newValue: { showKey: !this.axis.y.showKey }, entryText: (this.axis.y.showKey ? 'Hide' : 'Show') + ' Y title' }
+				{ isEq: null, key: this.axis.y.showKey, value: null, newValue: { showKey: !this.axis.y.showKey }, entryText: (this.axis.y.showKey ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' title' }
 			].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
 		}
 		{

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/01/26
+//19/01/26
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues, checkJsonProperties */
 
@@ -239,16 +239,17 @@ function checkJsonProperties(propertiesDescriptor) {
 			bSave = true;
 			console.log(window.FullPanelName + ': Adding missing key (' + key + ') to property \'' + info + '\'');
 			return true;
-		} else if (typeof def[key] === 'object' && !Array.isArray(def[key])) {
+		} else if (def[key] && typeof def[key] === 'object' && !Array.isArray(def[key])) {
 			let bReplace = false;
-			if (typeof obj[key] !== 'object' || Array.isArray(obj[key])) {
+			if (!obj[key] || typeof obj[key] !== 'object' || Array.isArray(obj[key])) {
 				obj[key] = def[key];
 				bReplace = true;
 				bSave = true;
 				console.log(window.FullPanelName + ': Adding mismatched variable (' + key + ') to property \'' + info + '\'');
-			}
-			for (let subKey in def[key]) {
-				if (checkChild(obj[key], def[key], subKey, info)) { bReplace = true; };
+			} else {
+				for (let subKey in def[key]) {
+					if (checkChild(obj[key], def[key], subKey, info)) { bReplace = true; };
+				}
 			}
 			return bReplace;
 
