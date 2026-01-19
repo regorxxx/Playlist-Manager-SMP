@@ -1,12 +1,12 @@
 ﻿'use strict';
-//23/12/25
+//16/01/26
 
 /* exported ImportTextPlaylist */
 
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global folders:readable, globTags:readable, globQuery:readable  */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global sanitizeTagTfo:readable, queryJoin:readable, queryCache:readable, checkQuery:readable, sanitizeQueryVal:readable, fallbackTagsQuery:readable */
+/* global sanitizeTagTfo:readable, queryJoin:readable, sanitizeQueryVal:readable, fallbackTagsQuery:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global capitalize:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -260,6 +260,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 	 * @returns {{handleList: FbMetadbHandleList, handleArr: FbMetadbHandle[], notFound: {idx, identifier, title, creator, tags}[]}}
 	 */
 	contentResolver: function contentResolver(tags, queryFilters, sortBias = globQuery.remDuplBias) {
+		fb.queryCache.clear();
 		const handleArr = [];
 		const notFound = [];
 		const queryFiltersLength = queryFilters.length;
@@ -310,17 +311,8 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				if (!queriesFromTags.length) { return; }
 				const query = queryJoin(queriesFromTags, 'AND');
 				if (this.bDebug) { console.log(query); }
-				const handles = queryCache.has(query) // TODO: fb.GetQueryItemsCheck
-					? queryCache.get(query)
-					: (
-						checkQuery(query, true)
-							? fb.GetQueryItems(fb.GetLibraryItems(), query)
-							: null
-					);
-				if (handles && !queryCache.has(query)) {
-					if (sortBiasTF) { handles.OrderByFormat(sortBiasTF, -1); }
-					queryCache.set(query, handles);
-				}
+				const handles = fb.GetQueryItemsCheck(fb.GetLibraryItems(), query, true);
+				if (handles && !fb.queryCacheUsed && sortBiasTF) { handles.OrderByFormat(sortBiasTF, -1); }
 				let bDone = false;
 				if (handles && handles.Count) { // Filter the results step by step to see which ones satisfy more conditions
 					if (queryFiltersLength) {
@@ -353,7 +345,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				}
 			}
 		});
-		queryCache.clear(); // TODO: fb.GetQueryItemsCheck
+		fb.queryCache.clear();
 		return { handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound };
 	},
 	bDebug: false,
