@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/25
+//16/01/26
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2, _isTrack */
 
@@ -15,11 +15,11 @@ include('helpers_xxx_tags.js');
 include('helpers_xxx_playlists.js');
 /* global getHandlesFromUIPlaylists:readable */
 include('helpers_xxx_playlists_files_xspf.js');
-/* global XSPF:readable*/
+/* global XSPF:readable, htmlEntities:readable */
 include('helpers_xxx_playlists_files_xsp.js');
-/* global XSP:readable*/
+/* global XSP:readable */
 include('helpers_xxx_playlists_files_fpl.js');
-/* global FPL:readable*/
+/* global FPL:readable */
 
 /*
 	Global Variables
@@ -64,10 +64,6 @@ const fplCache = new Map(); // {PATH: FPL playlist}
 
 // XML Dom cache
 const xmlDomCache = new Map(); // {PATH: XSPF.XMLfromString() -> JSPF playlist}
-
-// Query cache (Library)
-// Makes consecutive playlist loading by queries much faster (for ex. .xspf fuzzy matching)
-const queryCache = new Map(); // NOSONAR[{Query: handleList}]
 
 // Path TitleFormat to compare tracks against library
 const pathTF = '$puts(path,$replace($if($strstr(%_PATH_RAW%,file:$char(47)$char(47)),%_PATH_RAW%,%PATH%),.zip|,.zip$char(92),.rar|,.rar$char(92),.7z|,.7z$char(92),$char(47),$char(92)))$puts(ext,$lower($ext($get(path))))$replace($get(path),file:$char(92)$char(92),)$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))';
@@ -426,16 +422,22 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>$put(path,%_PATH_RAW%)</location>$crlf()$tab(3)<title>%TITLE%</title>$crlf()$tab(3)<creator>%ARTIST%</creator>$crlf()$tab(3)<album>%ALBUM%</album>$crlf()$tab(3)<duration>' + durationTF + '</duration>$crlf()$tab(3)<trackNum>%TRACK%</trackNum>$crlf()$tab(3)<identifier>%MUSICBRAINZ_TRACKID%</identifier>$if($stricmp($ext($get(path)),iso),$crlf()$tab(3)<subSong>%subsong%<subSong>,)$crlf()$tab(2)</track>');
 				let newTrackText = tfo.EvalWithMetadbs(handleList);
 				const bRel = !!relPath.length;
-				let trackPath = '';
-				let pre = '', post = '';
+				let pre = '', trackVal = '', post = '';
+				['title', 'creator', 'album', 'identifier'].forEach((key) => {
+					newTrackText = newTrackText.map((item) => { // Escape HTML chars
+						[pre, trackVal, post] = item.split(new RegExp('<' + key + '>|<\\/' + key + '>'));
+						trackVal = htmlEntities(trackVal, 'string');
+						return pre + '<' + key + '>' + trackVal + '</' + key + '>' + post;
+					});
+				});
 				newTrackText = newTrackText.map((item) => { // Encode file paths as URI
-					[pre, trackPath, post] = item.split(/<location>|<\/location>/);
-					const bLink = _isLink(trackPath);
-					trackPath = resolveTrackRelativePath(trackPath.replace(fileRegex, ''));
-					trackPath = bRel && !bLink
-						? getRelPath(trackPath, relPathSplit)
-						: trackPath; // Relative path conversion
-					return pre + '<location>' + (bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/')) + '</location>' + post;
+					[pre, trackVal, post] = item.split(/<location>|<\/location>/);
+					const bLink = _isLink(trackVal);
+					trackVal = resolveTrackRelativePath(trackVal.replace(fileRegex, ''));
+					trackVal = bRel && !bLink
+						? getRelPath(trackVal, relPathSplit)
+						: trackVal; // Relative path conversion
+					return pre + '<location>' + (bLink ? '' : 'file:///') + encodeURIComponent(trackVal.replace(/\\/g, '/')) + '</location>' + post;
 				});
 				trackText = [...newTrackText, ...trackText];
 				// Update size
@@ -955,8 +957,8 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			}
 		}
 		let count = 0;
-		let notFound = new Set();
-		let bXSPF = extension === '.xspf';
+		const notFound = new Set();
+		const bXSPF = extension === '.xspf';
 		for (let i = 0; i < playlistLength; i++) {
 			if (pathPool.has(filePaths[i])) {
 				const idx = pathPool.get(filePaths[i]);
@@ -1026,10 +1028,9 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 					for (let condition of conditions) {
 						if (condition.every((tag) => { return Object.hasOwn(lookup, tag); })) {
 							query = condition.map((tag) => { return lookup[tag]; }).join(' AND ');
-							const matches = queryCache.has(query) ? queryCache.get(query) : (checkQuery(query, true) ? fb.GetQueryItems(poolItems, query) : null);
-							if (!queryCache.has(query)) { queryCache.set(query, matches); }
+							const matches = fb.GetQueryItemsCheck(poolItems, query, true);
 							if (matches && matches.Count) {
-								if (sortTF) { matches.OrderByFormat(sortTF, -1); }
+								if (sortTF && !fb.queryCacheUsed) { matches.OrderByFormat(sortTF, -1); }
 								handlePlaylist[i] = matches[0];
 								locationsByOrder.push(matches[0]);
 								notFound.delete(i);
@@ -1098,6 +1099,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			if (relPath.length && (!Object.hasOwn(libItemsRelPaths, relPath) || !libItemsRelPaths[relPath].length)) { libItemsRelPaths[relPath] = newLibItemsRelPaths; }
 		}
 	}
+	if (fb.queryCache.size > 1000) { fb.queryCache.clear(); } // Store cache unless it takes too much memory
 	if (test) { test.Print(); }
 	return (bReturnNotFound ? { handlePlaylist, pathsNotFound, locationsByOrder } : handlePlaylist);
 }
