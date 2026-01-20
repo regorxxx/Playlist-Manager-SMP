@@ -1,7 +1,7 @@
 ﻿'use strict';
-//01/01/26
+//19/01/26
 
-/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask */
+/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
@@ -313,91 +313,103 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 	Colors
 */
 
+function clampRGB(c) {
+	return Math.max(Math.min(c, 255), 0);
+}
+
 function RGBA(r, g, b, a) {
-	const res = 0xff000000 | (r << 16) | (g << 8) | (b);
-	if (typeof a !== 'undefined') { return (res & 0x00ffffff) | (a << 24); }
-	return res;
+	const c = 0xff000000 | (clampRGB(r) << 16) | (clampRGB(g) << 8) | (clampRGB(b));
+	if (typeof a !== 'undefined') { return (c & 0x00ffffff) | (clampRGB(a) << 24); }
+	return c;
 }
 
 function RGB(r, g, b) {
-	const c = (0xff000000 | (r << 16) | (g << 8) | (b));
+	const c = 0xff000000 | (clampRGB(r) << 16) | (clampRGB(g) << 8) | (clampRGB(b));
 	return c < 0 ? 4294967296 + c : c;
 }
 
 function toRGB(color) { // returns an array like [192, 0, 0]
 	const a = color - 0xFF000000;
-	return [a >> 16 & 0xFF, a >> 8 & 0xFF, a & 0xFF];
+	return [clampRGB((a >> 16) & 0xff), clampRGB((a >> 8) & 0xFF), clampRGB(a & 0xFF)];
 }
 
-function blendColors(color1, color2, f) {
+function toRGBA(color) { // returns an array like [192, 0, 0, 25]
+	const a = color - 0xFF000000;
+	return [clampRGB((a >> 16) & 0xff), clampRGB((a >> 8) & 0xFF), clampRGB(a & 0xFF), clampRGB((a >> 24) & 0xff)];
+}
+
+function blendColors(color1, color2, f, bUseAlpha = false) {
+	f = Math.max(Math.min(f, 1), 0);
 	// When factor is 0, result is 100% color1, when factor is 1, result is 100% color2.
-	const [c1, c2] = [toRGB(color1), toRGB(color2)];
-	return RGB(...c1.map((_, i) => Math.round(c1[i] + f * (c2[i] - c1[i]))));
+	const [c1, c2] = [toRGBA(color1), toRGBA(color2)];
+	return (bUseAlpha ? RGBA : RGB)(...c1.map((_, i) => clampRGB(Math.round(c1[i] + f* (c2[i] - c1[i])))));
 }
 
 function getAlpha(color) {
-	return ((color >> 24) & 0xff);
+	return clampRGB((color >> 24) & 0xff);
 }
 
 function getRed(color) {
-	return ((color >> 16) & 0xff);
+	return clampRGB((color >> 16) & 0xff);
 }
 
 function getGreen(color) {
-	return ((color >> 8) & 0xff);
+	return clampRGB((color >> 8) & 0xff);
 }
 
 function getBlue(color) {
-	return (color & 0xff);
+	return clampRGB(color & 0xff);
 }
 
-function lightenColor(color, percent) {
-	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
-	return RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color));
+function lightenColor(color, percent, bUseAlpha = false) {
+	const [r, g, b, a] = toRGBA(color);
+	return RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), bUseAlpha ? a : 255);
 }
 
-function darkenColor(color, percent) {
-	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
-	return RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));
+function darkenColor(color, percent, bUseAlpha = false) {
+	const [r, g, b, a] = toRGBA(color);
+	return RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), bUseAlpha ? a : 255);
 }
 
-function tintColor(color, percent) {
-	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
+function tintColor(color, percent, bUseAlpha = false) {
+	const [r, g, b, a] = toRGBA(color);
 	return isDark(r, g, b)
-		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), getAlpha(color))
-		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), getAlpha(color));
+		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), bUseAlpha ? a : 255)
+		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), bUseAlpha ? a : 255);
 }
 
 function darkenColorVal(color, percent) {
 	const shift = Math.max(color * percent / 100, percent / 2);
 	const val = Math.round(color - shift);
-	return Math.max(val, 0);
+	return clampRGB(val);
 }
 
 function lightenColorVal(color, percent) {
 	const val = Math.round(color + ((255 - color) * (percent / 100)));
-	return Math.min(val, 255);
+	return clampRGB(val);
 }
 
 function opaqueColor(color, percent) {
-	return RGBA(...toRGB(color), Math.min(255, 255 * (percent / 100)));
+	return RGBA(...toRGB(color), clampRGB(255 * (percent / 100)));
 }
 
 function getBrightness(r, g, b) { // https://www.w3.org/TR/AERT/#color-contrast
-	return (r * 0.299 + g * 0.587 + b * 0.114);
+	return arguments.length === 1
+		? getBrightness(...toRGB(r))
+		: (r * 0.299 + g * 0.587 + b * 0.114);
 }
 
 function isDark(r, g, b) {
-	return (getBrightness(r, g, b) < 186);
+	return arguments.length === 1
+		? getBrightness(...toRGB(r)) < 186
+		: getBrightness(r, g, b) < 186;
 }
 
-function invert(color, bBW = false) {
-	const [r, g, b] = [getRed(color), getGreen(color), getBlue(color)];
-	if (bBW) {
-		return (isDark(r, g, b) ? RGB(255, 255, 255) : RGB(0, 0, 0));
-	} else {
-		return RGB(255 - r, 255 - g, 255 - b);
-	}
+function invert(color, bBW = false, bUseAlpha = false) {
+	const [r, g, b, a] = toRGBA(color);
+	return bBW
+		? (isDark(r, g, b) ? RGBA(255, 255, 255, bUseAlpha ? a : 255) : RGBA(0, 0, 0, bUseAlpha ? a : 255))
+		: RGBA(255 - r, 255 - g, 255 - b, bUseAlpha ? a : 255);
 }
 
 /*
@@ -461,7 +473,7 @@ function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
 function applyMask(img, maskCallback, bInvertMask) {
 	const mask = gdi.CreateImage(img.Width, img.Height);
 	const maskGr = mask.GetGraphics();
-	maskGr.FillSolidRect(0, 0, img.Width, img.Height, bInvertMask ? 0xFFFFFFFF : 0xFF000000 );
+	maskGr.FillSolidRect(0, 0, img.Width, img.Height, bInvertMask ? 0xFFFFFFFF : 0xFF000000);
 	maskCallback(mask, maskGr, img.Width, img.Height);
 	mask.ReleaseGraphics(maskGr);
 	img.ApplyMask(mask);

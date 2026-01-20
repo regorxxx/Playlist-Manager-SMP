@@ -97,6 +97,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
 	const switchedGraphs = new Set(['horizontal-bars']);
+	const gradientGraphs =  new Set(['horizontal-bars', 'bars', 'timeline', 'fill']);
 	// Header
 	menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
 	menu.newSeparator();
@@ -405,6 +406,11 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			[
 				{ isEq: null, key: this.axis.x.bAltLabels, value: null, newValue: !this.axis.x.bAltLabels, entryText: 'Alt. X labels' },
 			].forEach(createMenuOption('axis', ['x', 'bAltLabels'], subMenuTwo, true));
+			if (switchedGraphs.has(this.graph.type)) {
+				[
+					{ isEq: null, key: this.axis.x.mergeLabels, value: null, newValue: !this.axis.x.mergeLabels, entryText: 'Merge X-Y labels' },
+				].forEach(createMenuOption('axis', ['x', 'mergeLabels'], subMenuTwo, true));
+			}
 			if (this.graph.type === 'timeline' && this.graph.multi) {
 				[
 					{ isEq: null, key: this.graphSpecs.timeline.bAxisCenteredX, value: null, newValue: !this.graphSpecs.timeline.bAxisCenteredX, entryText: 'Center X tick' },
@@ -509,6 +515,10 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 				return { isEq: null, key: this.graph.pointAlpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
 			}).forEach(createMenuOption('graph', 'pointAlpha', configSubMenu));
 		}
+		menu.newSeparator(subMenu);
+		[
+			{ isEq: null, key: this.configuration.bGradientPoints, value: null, newValue: !this.configuration.bGradientPoints, entryText: 'Use color gradients', flags: gradientGraphs.has(this.graph.type) ? MF_STRING : MF_GRAYED },
+		].forEach(createMenuOption('configuration', 'bGradientPoints', subMenu, true));
 	}
 	return menu;
 }
