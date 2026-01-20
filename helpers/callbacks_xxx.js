@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //08/01/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */

@@ -1,10 +1,10 @@
 ﻿'use strict';
-//01/10/25
+//19/01/26
 
 /* exported _button */
 
 include('window_xxx_helpers.js');
-/* global RGBA:readable, toRGB:readable, getBrightness:readable, debounce:readable, _gdiFont:readable, _tt:readable, RGBA:readable,  */
+/* global RGBA:readable, toRGB:readable, getBrightness:readable, debounce:readable, _gdiFont:readable, _tt:readable  */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global SF_CENTRE:readable, IDC_HAND:readable  */
 
