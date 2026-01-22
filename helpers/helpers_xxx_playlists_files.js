@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/26
+//22/01/26
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2, _isTrack */
 
@@ -77,7 +77,7 @@ const pathTF = '$puts(path,$replace($if($strstr(%_PATH_RAW%,file:$char(47)$char(
 //		... (set rules) ...
 //		const xspText = XSP.toXSP(jspPls);
 //		_save(path, xspText.join('\r\n'));
-function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', bBOM = false, bExtendedM3U = true }) {
+function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', playlistName = '', UUID = null, useUUID = null, bLocked = false, category = '', tags = [], relPath = '', trackTags = [], playlist_mbid = '', author = window.ScriptInfo.Name, description = '', bBOM = false, bExtendedM3U = true }) {
 	if ((playlistIndex === -1 || typeof playlistIndex === 'undefined' || playlistIndex === null) && !handleList) {
 		console.log('savePlaylist(): invalid sources ' + _p(playlistIndex + ', handleList === false'));
 		return false;
@@ -87,6 +87,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		console.log('savePlaylist(): Wrong extension set \'' + extension + '\', only allowed ' + [...writablePlaylistFormats].join(', '));
 		return false;
 	}
+	const bHasAuthor = author && author.length && author !== window.ScriptInfo.Name;
 	playlistPath = _resolvePath(playlistPath);
 	if (!_isFile(playlistPath)) {
 		if (!handleList) { handleList = plman.GetPlaylistItems(playlistIndex); }
@@ -114,7 +115,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 				playlistText.push('#PLAYLISTSIZE:');
 				playlistText.push('#DURATION:');
 				playlistText.push('#PLAYLIST_MBID:' + playlist_mbid);
-				playlistText.push('#AUTHOR:' + author);
+				playlistText.push('#AUTHOR:' + (bHasAuthor ? author + ' - ' : '') + window.ScriptInfo.Name);
 				playlistText.push('#DESCRIPTION:' + description);
 			}
 			// Tracks text
@@ -183,16 +184,16 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		} else if (extension === '.xspf') {
 			const jspf = XSPF.emptyJSPF();
 			const playlist = jspf.playlist;
-			const bHasAuthor = author && author.length;
+			const bHasMBID = playlist_mbid && playlist_mbid.length;
 			const bHasAnnotation = description && description.length;
 			// Header text
 			let totalDuration = 0; // In s
 			playlist.title = playlistName;
-			playlist.creator = (bHasAuthor ? author + ' - ' : '') + 'Playlist-Manager-SMP';
+			playlist.creator = (bHasAuthor ? author + ' - ' : '') + window.ScriptInfo.Name;
 			playlist.date = new Date().toISOString();
 			playlist.identifier = playlist_mbid.length ? 'https://listenbrainz.org/playlist/' + playlist_mbid : '';
 			playlist.location = playlist.identifier;
-			if (bHasAuthor) { playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/'; }
+			if (bHasAuthor && bHasMBID) { playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/'; }
 			if (bHasAnnotation) { playlist.annotation = description; }
 			playlist.meta = [
 				{ uuid: (useUUID ? nextId(useUUID) : '') },

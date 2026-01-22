@@ -2203,7 +2203,7 @@ function createListMenu() {
 															if (answer === popup.no) { return false; }
 															_renameFile(playlistPath, backPath);
 														}
-														bDone = savePlaylist({ handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
+														bDone = savePlaylist({ handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author, description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 														// Restore backup in case something goes wrong
 														if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 														else if (_isFile(backPath)) { _deleteFile(backPath); }
@@ -2225,7 +2225,7 @@ function createListMenu() {
 												if (answer === popup.no) { return false; }
 												_renameFile(playlistPath, backPath);
 											}
-											bDone = savePlaylist({ handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author: author + ' - Playlist-Manager-SMP', description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
+											bDone = savePlaylist({ handleList, playlistPath, ext: list.playlistsExtension, playlistName, category, tags, playlist_mbid, author, description: playlist.description, useUUID, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 											// Restore backup in case something goes wrong
 											if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
 											else if (_isFile(backPath)) { _deleteFile(backPath); }

@@ -76,6 +76,8 @@
 ### Removed
 - UI: removed multiple old settings related to background colors and art, which are no longer available and replaced by new features. Note old and new UI will not necessarily match after update.
 ### Fixed
+- Playlist formats: multiple fixes to 'author' playlist metadata saving. It had no impact on functionality.
+- XSPF: fixes to 'info' playlist metadata saving in some cases. It had no impact on functionality.
 - XSPF: fixed malformed .xspf playlists when adding tracks with special HTML chars using mouse actions. The standard saving was safe though.
 - UI: multiple fixes to color presets application and menu checks.
 
