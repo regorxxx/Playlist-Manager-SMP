@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/26
+//22/01/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, importSettingsMenu, createMenuExport */
 
@@ -2615,10 +2615,10 @@ function createListMenu() {
 				menuName: subMenuName, entryText: 'Subsong items...', func: () => {
 					let answer = WshShell.Popup('Scan all playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players).\n\nAutoPlaylists are skipped since they only work within foobar2000, but beware when converting them to other formats. Use the options for AutoPlaylists in such case.', 0, window.FullPanelName, popup.question + popup.yes_no);
 					if (answer !== popup.yes) { return; }
-					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.'); }
+					if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subSong items...\nPanel will be disabled during the process.'); }
 					findSubSongs('pls').then(({ found, report }) => {
 						if (found.length) { list.filter({ plsState: found }); }
-						fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.FullPanelName);
+						fb.ShowPopupMessage('Found these playlists with subSong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.FullPanelName);
 						pop.disable(true);
 					});
 				}
@@ -2628,10 +2628,10 @@ function createListMenu() {
 					menuName: subMenuName, entryText: 'Subsong items (AutoPlaylists)...', func: () => {
 						let answer = WshShell.Popup('Scan all AutoPlaylists and Smart playlists to check for items associated by \'Subsong index\' -for ex. ISO files- (it may break playlist on other players after exporting them).', 0, window.FullPanelName, popup.question + popup.yes_no);
 						if (answer !== popup.yes) { return; }
-						if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subsong items...\nPanel will be disabled during the process.'); }
+						if (!pop.isEnabled()) { pop.enable(true, 'Checking...', 'Checking subSong items...\nPanel will be disabled during the process.'); }
 						findSubSongs('autopls').then(({ found, report }) => {
 							if (found.length) { list.filter({ plsState: found }); }
-							fb.ShowPopupMessage('Found these playlists with subsong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.FullPanelName);
+							fb.ShowPopupMessage('Found these playlists with subSong items:\n\n' + (report.length ? report.join('\n') : 'None.'), window.FullPanelName);
 							pop.disable(true);
 						});
 					}

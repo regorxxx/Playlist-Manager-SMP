@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/12/25
+//22/01/26
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -2025,7 +2025,7 @@ function findSubSongs(mode = 'pls' /* all|pls|autopls */) {
 							report.push((bUI || playlist.isAutoPlaylist ? playlist.nameId : playlist.path) + ' ' + _p(count + ' items'));
 						}
 						const progress = total ? Math.round(i / total * 10) * 10 : 100;
-						if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking subsong items ' + progress + '%.'); }
+						if (progress > prevProgress) { prevProgress = progress; console.log('Playlist Manager: Checking subSong items ' + progress + '%.'); }
 					});
 			},
 			60
