@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/12/25
+//22/01/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
 
@@ -943,6 +943,6 @@ function isSubsong(handle, ext = '') {
  */
 function isSubsongPath(path, ext = '') {
 	const blackList = new Set(['dsf']);
-	const subsong = path.split(',').pop();
-	return subsongRegex.test(path) && subsong !== '0' && !blackList.has(ext || path.split('.').pop().replace(',' + subsong, ''));
+	const subSong = path.split(',').pop();
+	return subsongRegex.test(path) && subSong !== '0' && !blackList.has(ext || path.split('.').pop().replace(',' + subSong, ''));
 }
