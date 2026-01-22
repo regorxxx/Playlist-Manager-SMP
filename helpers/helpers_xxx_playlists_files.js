@@ -216,7 +216,7 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 					const duration = Math.round(Number(tags[4][i][0] * 1000)); // In ms
 					totalDuration += Math.round(Number(tags[4][i][0])); // In s
 					const bLink = _isLink(tags[5][i][0]);
-					const trackPath = resolveTrackRelativePath(tags[5][i][0].replace(fileRegex, ''));
+					const trackPath = bLink ? tags[5][i][0] : resolveTrackRelativePath(tags[5][i][0].replace(fileRegex, ''));
 					const location = [
 						relPath.length && !bLink
 							? getRelPath(trackPath, relPathSplit)
@@ -419,27 +419,59 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 				}
 				// ---------------- XSPF
 			} else if (extension === '.xspf') {
-				const durationTF = '$puts(l,%LENGTH_SECONDS_FP%)$puts(d,$strchr($get(l),.))$puts(i,$substr($get(l),0,$sub($get(d),1)))$puts(f,$substr($get(l),$add($get(d),1),$add($get(d),3)))$add($mul($get(i),1000),$get(f))';
-				const tfo = fb.TitleFormat('$tab(2)<track>$crlf()$tab(3)<location>$put(path,%_PATH_RAW%)</location>$crlf()$tab(3)<title>%TITLE%</title>$crlf()$tab(3)<creator>%ARTIST%</creator>$crlf()$tab(3)<album>%ALBUM%</album>$crlf()$tab(3)<duration>' + durationTF + '</duration>$crlf()$tab(3)<trackNum>%TRACK%</trackNum>$crlf()$tab(3)<identifier>%MUSICBRAINZ_TRACKID%</identifier>$if($stricmp($ext($get(path)),iso),$crlf()$tab(3)<subSong>%subsong%<subSong>,)$crlf()$tab(2)</track>');
-				let newTrackText = tfo.EvalWithMetadbs(handleList);
+				const sep = '|‎|';
 				const bRel = !!relPath.length;
-				let pre = '', trackVal = '', post = '';
-				['title', 'creator', 'album', 'identifier'].forEach((key) => {
-					newTrackText = newTrackText.map((item) => { // Escape HTML chars
-						[pre, trackVal, post] = item.split(new RegExp('<' + key + '>|<\\/' + key + '>'));
-						trackVal = htmlEntities(trackVal, 'string');
-						return pre + '<' + key + '>' + trackVal + '</' + key + '>' + post;
+				const tags = [
+					{ key: 'location', type: 'path', tf: '$put(path,%_PATH_RAW%)' },
+					{ key: 'title', type: 'string', tf: '%TITLE%' },
+					{ key: 'creator', type: 'string', tf: '%ARTIST%' },
+					{ key: 'album', type: 'string', tf: '%ALBUM%' },
+					{ key: 'duration', type: 'int+', tf: '$puts(l,%LENGTH_SECONDS_FP%)$puts(d,$strchr($get(l),.))$puts(i,$substr($get(l),0,$sub($get(d),1)))$puts(f,$substr($get(l),$add($get(d),1),$add($get(d),3)))$add($mul($get(i),1000),$get(f))' },
+					{ key: 'trackNum', type: 'int+', tf: '%TRACK%' },
+					{ key: 'identifier', type: 'uri', tf: '%MUSICBRAINZ_TRACKID%' },
+					{ key: 'subSong', type: 'int+', bMeta: true, tf: '$puts(ext,$lower($ext($get(path))))$if($if($stricmp($get(ext),dsf),$not(0),$if($stricmp($get(ext),wv),$if($strstr($lower($info(codec)),dst),$not(0),$if($strstr($lower($info(codec)),dsd),$not(0),)))),,$ifequal(%SUBSONG%,0,,\',\'%SUBSONG%))' },
+				];
+				const newTrackText = [], item = [];
+				let key = '', trackVal;
+				fb.TitleFormat(tags.map((t) => t.tf).join(sep))
+					.EvalWithMetadbs(handleList).forEach((tagVal) => {
+						item.length = 0;
+						item.push('\t'.repeat(2) + '<track>');
+						tagVal = tagVal.split(sep);
+						tags.forEach((t, i) => {
+							if (Object.hasOwn(t, 'key')) {
+								key = t.key;
+								trackVal = tagVal[i];
+								if (typeof trackVal !== 'undefined' && trackVal.length) {
+									if (t.type === 'string' || !t.type) { // Escape HTML chars
+										trackVal = htmlEntities(trackVal, 'string');
+									} else if (t.type === 'int+') { // XML Schema nonNegativeInteger
+										trackVal = Number(trackVal);
+										if (Number.isNaN(trackVal) || trackVal < 0) { trackVal = null; }
+									}  else if (t.type === 'uri') { // URI
+										trackVal = encodeURI(trackVal);
+									} else if (t.type === 'path') { // URI path/link
+										if (_isLink(trackVal)) {
+											trackVal = encodeURI(trackVal);
+										} else {
+											trackVal = resolveTrackRelativePath(trackVal.replace(fileRegex, ''));
+											trackVal = bRel ? getRelPath(trackVal, relPathSplit) : trackVal;
+											trackVal = 'file:///' + encodeURIComponent(trackVal.replace(/\\/g, '/'));
+										}
+									}
+									if (trackVal !== null) {
+										if (t.bMeta) {
+											item.push('\t'.repeat(3) + '<meta rel="' + key + '">' + trackVal + '</meta>');
+										} else {
+											item.push('\t'.repeat(3) + '<' + key + '>' + trackVal + '</' + key + '>');
+										}
+									}
+								}
+							}
+						});
+						item.push('\t'.repeat(2) + '</track>');
+						if (item.length > 2) { newTrackText.push(item.join('\r\n')); }
 					});
-				});
-				newTrackText = newTrackText.map((item) => { // Encode file paths as URI
-					[pre, trackVal, post] = item.split(/<location>|<\/location>/);
-					const bLink = _isLink(trackVal);
-					trackVal = resolveTrackRelativePath(trackVal.replace(fileRegex, ''));
-					trackVal = bRel && !bLink
-						? getRelPath(trackVal, relPathSplit)
-						: trackVal; // Relative path conversion
-					return pre + '<location>' + (bLink ? '' : 'file:///') + encodeURIComponent(trackVal.replace(/\\/g, '/')) + '</location>' + post;
-				});
 				trackText = [...newTrackText, ...trackText];
 				// Update size
 				let idx = originalText.findIndex((line) => line.includes('<meta rel="playlistSize">'));
@@ -597,7 +629,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 								path = loc;
 							}
 							if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
-							if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for containers
+							if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subSong for containers
 								const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 								if (metaSubSong) { path += ',' + metaSubSong.subSong; }
 							}
@@ -636,7 +668,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 						path = row.location;
 					}
 					if (!_isLink(path)) { path = path.replace(/\//g, '\\'); }
-					if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subsong for containers
+					if (Object.hasOwn(row, 'meta') && row.meta && row.meta.length) { // Add subSong for containers
 						const metaSubSong = row.meta.find((obj) => { return Object.hasOwn(obj, 'subSong'); });
 						if (metaSubSong) { path += ',' + metaSubSong.subSong; }
 					}
