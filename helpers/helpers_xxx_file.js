@@ -1,12 +1,12 @@
 ﻿'use strict';
-//04/01/25
+//26/01/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
 include('helpers_xxx_basic_js.js');
-/* global tryMethod:readable */
+/* global tryMethod:readable, dateFormatter:readable */
 include('helpers_xxx_prototypes.js');
 /* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */ /* window.FullPanelName:readable */
 
@@ -283,6 +283,7 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 	if (!folder.length) { return false; }
 	folder = _resolvePath(folder);
 	if (!_isFolder(folder) && !_isFile(folder)) {
+		if (utils.CreateFolder) { return utils.CreateFolder(folder); }
 		if (!folder.endsWith('\\')) { folder += '\\'; }
 		const subFolders = new Set(folder.split('\\').map((_, i, arr) => {
 			return i ? arr.slice(0, i).reduce((path, name) => { return path + '\\' + name; }) : _;
@@ -305,6 +306,7 @@ function _createFolder(folder) { // Creates complete dir tree if needed up to th
 // Delete. Can not be undone.
 function _deleteFile(file, bForce = true) {
 	file = _resolvePath(file);
+	if (utils.RemovePath) { return utils.RemovePath(file) > 0; }
 	if (_isFile(file)) {
 		try {
 			fso.DeleteFile(file, bForce);
@@ -320,6 +322,7 @@ function _deleteFile(file, bForce = true) {
 // Delete. Can not be undone.
 function _deleteFolder(folder, bForce = true) {
 	folder = _resolvePath(folder);
+	if (utils.RemovePath) { return utils.RemovePath(folder) > 0; }
 	if (_isFolder(folder)) {
 		if (folder.endsWith('\\')) { folder = folder.slice(0, -1); }
 		try {
@@ -339,6 +342,7 @@ function _renameFile(oldFilePath, newFilePath) {
 	oldFilePath = _resolvePath(oldFilePath);
 	newFilePath = _resolvePath(newFilePath);
 	if (_comparePaths(oldFilePath, newFilePath)) { return true; }
+	if (utils.RenamePath) { return utils.RenamePath(oldFilePath, newFilePath); }
 	if (!_isFile(newFilePath)) {
 		if (_isFile(oldFilePath)) {
 			const filePath = utils.SplitFilePath(newFilePath)[0];
@@ -372,8 +376,9 @@ function _renameFolder(oldFolderPath, newFolderPath) {
 	if (!newFolderPath.length) { return; }
 	oldFolderPath = _resolvePath(oldFolderPath);
 	newFolderPath = _resolvePath(newFolderPath);
-	const source = oldFolderPath.replace(/\*$/i, '');
 	if (_comparePaths(oldFolderPath, newFolderPath)) { return true; }
+	if (utils.RenamePath) { return utils.RenamePath(oldFolderPath, newFolderPath); }
+	const source = oldFolderPath.replace(/\*$/i, '');
 	if (!source.endsWith('\\') || !_isFolder(newFolderPath)) {
 		if (_isFolder(source)) {
 			_createFolder(newFolderPath);
@@ -691,8 +696,10 @@ function _runCmd(command, bWait = false, iShow = 0) {
 	}
 }
 
-function _exec(command) {
+function _exec(command, rate = 50) {
 	const execObj = WshShell.Exec(command);
+	const parentId = getProcessID('foobar2000.exe');
+	if (parentId !== null) { WshShell.AppActivate(parentId); }
 	return new Promise((res, rej) => {
 		const intervalID = setInterval(() => {
 			switch (execObj.Status) {
@@ -701,8 +708,19 @@ function _exec(command) {
 				default: return; // do nothing
 			}
 			clearInterval(intervalID);
-		}, 50);
+		}, rate);
 	});
+}
+
+function getProcessID(name) {
+	const locator = new ActiveXObject('WbemScripting.SWbemLocator');
+	const objWMIService = locator.ConnectServer('.', 'root\\cimv2');
+	objWMIService.Security_.ImpersonationLevel = 3;
+	const colProcess = objWMIService.ExecQuery('SELECT  * from Win32_Process WHERE name=\'foobar2000.exe\'');
+	for (let objProcess of colProcess) {
+		if (objProcess && objProcess.ActiveX_Get('Name') === name) { return objProcess.ActiveX_Get('ProcessId'); }
+	}
+	return null;
 }
 
 // Replace once originalString from a file
@@ -856,6 +874,7 @@ function UUID() {
 function lastModified(file, bParse = false) {
 	file = _resolvePath(file);
 	if (!_isFile(file)) { return -1; }
+	if (utils.GetLastModified) { return bParse ? utils.GetLastModified(file) : dateFormatter.format(new Date(utils.GetLastModified(file))); }
 	return bParse ? Date.parse(fso.GetFile(file).DateLastModified) : fso.GetFile(file).DateLastModified;
 }
 

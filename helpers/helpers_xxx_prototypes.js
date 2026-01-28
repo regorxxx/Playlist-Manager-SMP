@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/01/26
+//26/01/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal */
 
@@ -475,9 +475,16 @@ if (!String.prototype.replaceAll) {
 
 if (!String.prototype.count) {
 	String.prototype.count = function count(c) { // NOSONAR
-		let result = 0, i = 0;
-		for (i; i < this.length; i++) {
-			if (this[i] == c) { result++; }
+		let result = 0, i = 0, len = this.length;
+		if (typeof c === 'string') {
+			for (i; i < len; i++) {
+				if (c === this[i]) { result++; }
+			}
+		} else {
+			c = new Set(c);
+			for (i; i < len; i++) {
+				if (c.has(this[i])) { result++; }
+			}
 		}
 		return result;
 	};

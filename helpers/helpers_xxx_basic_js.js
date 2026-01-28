@@ -1,7 +1,7 @@
 ﻿'use strict';
-//01/12/25
+//26/01/26
 
-/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator */
+/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator, dateFormatter */
 
 // https://github.com/angus-c/just
 /*
@@ -306,6 +306,7 @@ function MapReplacer(key, value) {
 }
 
 const strNumCollator = new Intl.Collator(void (0), { sensitivity: 'base', numeric: true });
+const dateFormatter = new Intl.DateTimeFormat('en-gb' , { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
 /*
 	Script including
