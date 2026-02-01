@@ -1,7 +1,7 @@
 ﻿'use strict';
-//26/01/26
+//31/01/26
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable, strNumCollator:readable */
@@ -899,15 +899,23 @@ if (!Set.prototype.differenceSize) {
 */
 
 function isInt(n) {
-	return Number(n) === n && Number.isFinite(n) && n <= Number.MAX_SAFE_INTEGER && n % 1 === 0;
+	return Number(n) === n && Number.isSafeInteger(n) && n % 1 === 0;
+}
+
+function isIntInf(n) {
+	return Number(n) === n && (!Number.isFinite(n) || Number.isSafeInteger(n) && n % 1 === 0);
 }
 
 function isFloat(n) {
-	return Number(n) === n && Number.isFinite(n) && n % 1 !== 0;
+	return Number(n) === n && n < Number.MAX_SAFE_INTEGER && n > Number.MIN_SAFE_INTEGER && n % 1 !== 0;
+}
+
+function isFloatInf(n) {
+	return Number(n) === n && (!Number.isFinite(n) || n < Number.MAX_SAFE_INTEGER && n > Number.MIN_SAFE_INTEGER && n % 1 !== 0);
 }
 
 function isReal(n) {
-	return isFloat(n) || isInt(n);
+	return Number(n) === n && (!Number.isFinite(n) || n < Number.MAX_SAFE_INTEGER && n > Number.MIN_SAFE_INTEGER);
 }
 
 // Adds/subtracts 'offset' to 'reference' considering the values must follow cyclic logic within 'limits' range (both values included)
