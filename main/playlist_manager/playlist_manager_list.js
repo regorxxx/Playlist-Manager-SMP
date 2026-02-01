@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/02C/26
+//01/02/26
 
 /* exported _list */
 
@@ -1430,7 +1430,8 @@ function _list({ x, y, w, h, properties } = {}) {
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
 			gr.GdiDrawText(
 				this.lastCharsPressed.bAnyPosition ? 'Contains:' : 'Starts with:',
-				panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX
+				panel.fonts.small,
+				lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX
 			);
 			// Draw the letter
 			if (idxHighlight === -1) { // Stroked out when not found

@@ -73,6 +73,7 @@
 - UI: added background framework found in all my other scripts, which can be tweaked at the background submenu within the toolbar menu (R. Click). By default is set to to not display any color or art, looking like previous releases. Note any setting at 'Colors' submenu is applied on top of the background, so the toolbar color, transparency or panel pseudo-transparency settings may also override background drawing. As a bonus, all features related to dynamic colors and color servers are also included, so it will work in conjunction with all other scripts making use of this feature.
 ### Changed
 - Quick-search: shift/ctrl modifiers to perform lookup at any position instead of only the start of strings is now applied only once at first key pressed, so there is no need to keep pressing the modifier key while typing the other chars.
+- Quick-search: minor UI adjustments.
 - Settings: internal changes at properties for future releases. Upgrading from [1.0.0-beta.8](#100-beta8---2026-01-12) will work seamlessly, but previous versions are not supported (settings will be reset).
 ### Removed
 - UI: removed multiple old settings related to background colors and art, which are no longer available and replaced by new features. Note old and new UI will not necessarily match after update.
