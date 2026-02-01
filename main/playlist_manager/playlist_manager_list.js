@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/01/26
+//01/02C/26
 
 /* exported _list */
 
@@ -1428,14 +1428,10 @@ function _list({ x, y, w, h, properties } = {}) {
 			// Draw the box
 			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
-			switch (this.lastCharsPressed.mask) { // NOSONAR
-				case kMask.ctrl:
-				case kMask.shift:
-					gr.GdiDrawText('Contains:', panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-					break;
-				default:
-					gr.GdiDrawText('Starts with:', panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX);
-			}
+			gr.GdiDrawText(
+				this.lastCharsPressed.bAnyPosition ? 'Contains:' : 'Starts with:',
+				panel.fonts.normal, lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX
+			);
 			// Draw the letter
 			if (idxHighlight === -1) { // Stroked out when not found
 				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylist, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
@@ -2601,7 +2597,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				if (showMenus['Quick-search'] && keyChar && keyChar.length === 1 && quickSearchRe.test(keyChar)) {
 					this.quickSearch(keyChar);
 				} else {
-					this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
+					this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false };
 					return false;
 				}
 			}
@@ -2610,12 +2606,16 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.quickSearch = (keyChar, next = 0) => {
 		if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
-		if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false }; }
+		if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false }; }
 		let method = this.methodState.split('\t')[0].replace('By ', '');
 		if (method === 'name' || this.properties.bQuickSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 		let bNext = false;
 		let bPrev = false;
 		const bCycle = this.properties.bQuickSearchCycle[1];
+		if (this.lastCharsPressed.str.length === 0) {
+			this.lastCharsPressed.mask = getKeyboardMask();
+			if (this.lastCharsPressed.mask === kMask.shift || this.lastCharsPressed.mask === kMask.ctrl) { this.lastCharsPressed.bAnyPosition = true; }
+		}
 		if (next !== 0) {
 			if (next > 0) { bNext = true; }
 			else if (next < 0) { bPrev = true; }
@@ -2634,10 +2634,8 @@ function _list({ x, y, w, h, properties } = {}) {
 				if (bArray && !pls[method].length) { return false; }
 				const val = bArray ? pls[method][0] : pls[method];
 				const type = typeof val;
-				this.lastCharsPressed.mask = getKeyboardMask();
-				const bAnyPosition = this.lastCharsPressed.mask === kMask.shift || this.lastCharsPressed.mask === kMask.ctrl;
 				if (type === 'string' && val.length || type === 'number') {
-					return (bAnyPosition
+					return (this.lastCharsPressed.bAnyPosition
 						? val.toString().toLowerCase().includes(this.lastCharsPressed.str)
 						: val.toString().toLowerCase().startsWith(this.lastCharsPressed.str)
 					);
@@ -7232,7 +7230,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.folderStack = [];
 		this.clearSelPlaylistCache();
 		this.deleteMainMenuDynamic();
-		this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
+		this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false };
 		this.lockStates = this.constLockStates();
 		this.autoPlaylistStates = this.constAutoPlaylistStates();
 		this.categoryState = JSON.parse(this.properties['categoryState'][1]);
@@ -8104,7 +8102,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.trackedFolderChanged = false;
 	this.bIsDragDrop = false;
 	this.dragDropText = '';
-	this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false };
+	this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false };
 	this.selPaths = { pls: new Set(), sel: [] };
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 	this.autoUpdateDelayTimer = (() => { // Timer should be at least 1/100 autoupdate timer to work reliably
