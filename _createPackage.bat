@@ -627,6 +627,7 @@ CALL :copy_file _TIPS.txt
 REM main
 CALL :copy_folder main\autobackup
 CALL :copy_folder main\bio
+CALL :copy_folder main\checksum
 CALL :copy_folder main\filter_and_query
 CALL :copy_folder main\fingerprint
 CALL :copy_folder main\last_list
