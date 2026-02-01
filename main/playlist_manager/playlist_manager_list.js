@@ -1428,20 +1428,16 @@ function _list({ x, y, w, h, properties } = {}) {
 			// Draw the box
 			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
-			gr.GdiDrawText(
-				this.lastCharsPressed.bAnyPosition ? 'Contains:' : 'Starts with:',
-				panel.fonts.small,
-				lightenColor(borderCol, 75), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, DT_CENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX
-			);
 			// Draw the letter
+			const text = (this.lastCharsPressed.bAnyPosition ? '*' : '') +  this.lastCharsPressed.str.toUpperCase();
 			if (idxHighlight === -1) { // Stroked out when not found
-				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylist, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
-				const textW = Math.min(gr.CalcTextWidth(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title), sizeX - textOffset) + 10;
+				gr.GdiDrawText(text, panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylist, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				const textW = Math.min(gr.CalcTextWidth(text, panel.fonts.title), sizeX - textOffset) + 10;
 				const lineX = Math.max(popX + sizeX / 2 - textW / 2 - 1, popX + textOffset / 2);
 				const lineW = Math.min(popX + sizeX / 2 + textW / 2 - 1, popX + sizeX - textOffset / 2);
 				gr.DrawLine(lineX, popY + sizeY / 2, lineW, popY + sizeY / 2, 1, invert(opaqueColor(this.colors.selectedPlaylist, 70)));
 			} else { // when found
-				gr.GdiDrawText(this.lastCharsPressed.str.toUpperCase(), panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
+				gr.GdiDrawText(text, panel.fonts.title, textCol, popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 			}
 			this.lastCharsPressed.bDraw = false;
 			animation.fRepaint = setTimeout(() => {
