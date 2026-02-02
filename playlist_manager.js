@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/26
+//02/02/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -47,7 +47,7 @@ include('main\\playlist_manager\\playlist_manager_panel.js');
 include('main\\playlist_manager\\playlist_manager_buttons.js');
 /* global createFilterMenu:readable, createSortMenu:readable, _listButtons */
 include('main\\playlist_manager\\playlist_manager_menu.js');
-/* global createSettingsMenu:readable, createListMenu:readable, importSettingsMenu:readable */
+/* global createSettingsMenu:readable, createListMenu:readable, onRbtnUpImportSettings:readable */
 include('main\\playlist_manager\\playlist_manager_helpers.js');
 /* global backup:readable, switchLock:readable, clonePlaylistInUI:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable */
 include('main\\playlist_manager\\playlist_manager_listenbrainz.js');
@@ -883,7 +883,7 @@ if (!list.properties.bSetup[1]) {
 		if (!list.bInit) { return true; }
 		if (pop.isEnabled() || stats.bEnabled) { return true; }
 		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
-			return importSettingsMenu().btn_up(x, y);
+			return onRbtnUpImportSettings.call(list).btn_up(x, y);
 		}
 		if (list.modeUI === 'traditional' && bottomToolbar.curBtn === null) {
 			if (list.traceHeader(x, y)) { // Header menu
@@ -1501,7 +1501,7 @@ if (!list.properties.bSetup[1]) {
 	});
 	addEventListener('on_mouse_rbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
 		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
-			return importSettingsMenu().btn_up(x, y);
+			return onRbtnUpImportSettings.call(list).btn_up(x, y);
 		}
 		return true; // left shift + left windows key will bypass this callback and will open default context menu.
 	});

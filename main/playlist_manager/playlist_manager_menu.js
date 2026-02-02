@@ -1,7 +1,7 @@
 ﻿'use strict';
-//22/01/26
+//02/02/26
 
-/* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, importSettingsMenu, createMenuExport */
+/* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable, scrollBar:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
@@ -6303,20 +6303,21 @@ function quickSearchMenu(menu, menuName) {
 	}
 }
 
-function importSettingsMenu() {
+function onRbtnUpImportSettings(properties = this.properties || {}) {
 	const menu = new _menu();
 	menu.newEntry({ entryText: 'Panel menu: ' + window.Name, flags: MF_GRAYED });
+	menu.newEntry({ entryText: 'Version: ' + window.ScriptInfo.Version, flags: MF_GRAYED });
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Export panel settings...', func: () => {
 			const bData = WshShell.Popup('Also export playlists files and data?', 0, window.ScriptInfo.Name + ': Export panel settings', popup.question + popup.yes_no) === popup.yes;
-			const playlistFilesMask = bData && list.playlistsPath.length
-				? Array.from(loadablePlaylistFormats, (ext) => list.playlistsPath + '*' + ext)
+			const playlistFilesMask = bData && this.playlistsPath.length
+				? Array.from(loadablePlaylistFormats, (ext) => this.playlistsPath + '*' + ext)
 				: [];
 			exportSettings(
-				list.properties,
+				properties,
 				bData
-					? [...playlistFilesMask, list.filename, list.filename + '.old', list.filename.replace('.json', '_sorting.json'), list.filename.replace('.json', '_config.json')]
+					? [...playlistFilesMask, this.filename, this.filename + '.old', this.filename.replace('.json', '_sorting.json'), this.filename.replace('.json', '_config.json')]
 					: [],
 				window.ScriptInfo.Name
 			);
@@ -6370,7 +6371,7 @@ function importSettingsMenu() {
 						return bDone;
 					}
 				},
-				{ playlistsPath: list.playlistsPath },
+				{ playlistsPath: this.playlistsPath },
 				window.ScriptInfo.Name
 			);
 		}
@@ -6378,7 +6379,7 @@ function importSettingsMenu() {
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Share UI settings...', func: () => {
-			list.shareUiSettings('popup');
+			this.shareUiSettings('popup');
 		}
 	});
 	menu.newSeparator();
@@ -6388,6 +6389,29 @@ function importSettingsMenu() {
 	menu.newEntry({
 		entryText: 'Panel properties...', func: () => window.ShowProperties()
 	});
+	menu.newSeparator();
+	{
+		const menuName = menu.newMenu('Updates');
+		menu.newEntry({
+			menuName, entryText: 'Automatically check for updates', func: () => {
+				this.properties.bAutoUpdateCheck[1] = !this.properties.bAutoUpdateCheck[1];
+				overwriteProperties(this.properties);
+				if (this.properties.bAutoUpdateCheck[1]) {
+					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+					setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
+				}
+			}
+		});
+		menu.newCheckMenuLast(() => this.properties.bAutoUpdateCheck[1]);
+		menu.newSeparator(menuName);
+		menu.newEntry({
+			menuName, entryText: 'Check for updates...', func: () => {
+				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
+					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.FullPanelName + ': Update check'));
+			}
+		});
+	}
 	menu.newSeparator();
 	menu.newEntry({
 		entryText: 'Reload panel', func: () => window.Reload()
