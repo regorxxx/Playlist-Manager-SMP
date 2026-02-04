@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/02/26
+//04/02/26
 
 /* exported _list */
 
@@ -8411,7 +8411,8 @@ function _list({ x, y, w, h, properties } = {}) {
 						'\n----------------------' +
 						'\n• Shift + Win + R. Click: open SMP panel menu.' +
 						'\n• Ctrl + Win + R. Click: open script panel menu.'
-						, window.FullPanelName + ': Quick help');
+						, window.PanelName + ': Quick help'
+					);
 				} else {
 					createSettingsMenu(this, background).btn_up(x, y, void (0), 'Open documentation...');
 				}
