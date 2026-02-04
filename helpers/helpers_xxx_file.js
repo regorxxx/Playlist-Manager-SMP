@@ -704,14 +704,14 @@ function _explorer(fileOrFolder) {
 		return true; // There is no way to know if the explorer window got opened at the right path...
 	} else if (_isFile(fileOrFolder)) { // File
 		if (bLongPath) {
-			console.log('_recycleFile: ' + fileOrFolder + '\n\t Error: Path longer than 260 chars.');
+			console.log('_explorer: ' + fileOrFolder + '\n\t Error: Path longer than 260 chars.');
 			return false;
 		}
 		WshShell.Run('explorer /select,' + _q(fileOrFolder));
 		return true;
 	} else if (_isFolder(fileOrFolder)) { // Folder
 		if (bLongPath) {
-			console.log('_recycleFile: ' + fileOrFolder + '\n\t Error: Path longer than 260 chars.');
+			console.log('_explorer: ' + fileOrFolder + '\n\t Error: Path longer than 260 chars.');
 			return false;
 		}
 		WshShell.Run('explorer /e,' + _q(fileOrFolder));

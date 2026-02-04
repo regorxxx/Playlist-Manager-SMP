@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/25
+//03/02/26
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS, focusOnItem */
 
@@ -263,6 +263,7 @@ function getSource(type, arg) {
 		case 'activePlaylist': return plman.ActivePlaylist !== -1
 			? plman.GetPlaylistItems(plman.ActivePlaylist)
 			: new FbMetadbHandleList();
+		case 'panel':
 		case 'handleList': return arg;
 		case 'library':
 		default: return fb.GetLibraryItems();

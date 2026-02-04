@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/08/25
+//04/02/26
 
 /*
 	Remove duplicates
@@ -255,7 +255,6 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 	}
 	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) { bPreserveSort = false; }
 	const test = bProfile ? new FbProfiler('removeDuplicates') : null;
-	let copyHandleList, copyHandleListUnsorted;
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
@@ -266,11 +265,11 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 	if (handleList === null) {
 		if (plman.ActivePlaylist === -1) { console.log('removeDuplicates: No active playlist'); return null; }
 		bActivePlaylist = true;
-		copyHandleList = plman.GetPlaylistItems(plman.ActivePlaylist);
-	} else {
-		copyHandleList = handleList.Clone();
+		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	}
 	let items = [];
+	let copyHandleListUnsorted;
+	let copyHandleList  = handleList.Clone();
 
 	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
@@ -401,13 +400,15 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
  * @param {FbMetadbHandleList?} o.handleList - [=null] Input handle List, null will use the active playlist
  * @param {string?} o.sortOutput - Output sorting. Omitting this will sort list by checkKeys unless bPreserveSort is used.
  * @param {string[]} o.checkKeys - Tag checking for duplicates. i.e. ['DATE', 'ARTIST', 'TITLE']
+ * @param {string?} o.sortBias - Bias to chose the output track when there are duplicates. Recommended globQuery.remDuplBias
+ * @param {boolean} o.bPreserveSort - Set to true to force original sorting at output
  * @param {boolean} o.bAdvTitle - Parse titles with RegExp to find duplicates (defined at globRegExp)
  * @param {boolean} o.bMultiple - Parse multi-value tags separately (by ', '), requiring a single match
  * @param {boolean} o.bTagsCache - Use tag cache file
  * @param {boolean} o.bProfile - Log profiling
  * @returns {Promise.<FbMetadbHandleList?>}
  */
-async function removeDuplicatesAsync({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, bAdvTitle = false, bMultiple = true, bTagsCache = false, bProfile = false } = {}) {
+async function removeDuplicatesAsync({ handleList = null, sortOutput = null, checkKeys = globTags.remDupl, sortBias = null /* globQuery.remDuplBias */, bPreserveSort = (sortOutput === null && sortBias && sortBias.length), bAdvTitle = false, bMultiple = true, bTagsCache = false, bProfile = false } = {}) {
 	// Check input
 	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicatesAsync: checkKeys [' + checkKeys + '] was null, empty or not an array');
@@ -421,6 +422,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 			}
 		}
 	}
+	if (bPreserveSort && (sortOutput !== null || !sortBias || !sortBias.length)) { bPreserveSort = false; }
 	const test = bProfile ? new FbProfiler('removeDuplicatesAsync') : null;
 
 	// Only use RegExp title matching when the tags contain title!
@@ -438,36 +440,44 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
 	}
 	let items = [];
-	let copy = handleList.Clone();
+	let copyHandleListUnsorted;
+	let copyHandleList = handleList.Clone();
 
 	const sep = '|‎|'; // Contains U+200E invisible char
 	let sortInput; // Sorting
-	let tags = [];
-	const count = copy.Count;
-	const checkLength = checkKeys.length;
-	for (let i = 0; i < checkLength; i++) {
+	let checkLength = checkKeys.length;
+	let i = 0;
+	while (i < checkLength) {
 		let key = _t(checkKeys[i]);
 		if (i === 0) { sortInput = key; }
 		else { sortInput += sep + key; }
+		i++;
+	}
+	if (sortBias && sortBias.length) { // In case of duplicates, prefer high rating non-live tracks
+		if (bPreserveSort) { copyHandleListUnsorted = copyHandleList.Convert(); }
+		const biasTF = fb.TitleFormat(sortBias);
+		copyHandleList.OrderByFormat(biasTF, -1); // 600 ms on 80K tracks
 	}
 	let tfo = fb.TitleFormat(sortInput);
+	let tags = [];
 	if (bTagsCache) {
 		const tagNames = checkKeys.map((tagName) => _t(tagName));
-		const tagsVal = await tagsCache.getTags(tagNames, handleList.Convert());
+		const tagsVal = await tagsCache.getTags(tagNames, copyHandleList.Convert());
 		for (let i = 0; i < count; i++) {
 			let id = '';
 			tagNames.forEach((tag, j) => { id += (j ? sep : '') + tagsVal[tag][i].join(', '); });
 			tags.push(id);
 		}
 	} else {
-		tags = await tfo.EvalWithMetadbsAsync(copy);
+		tags = await tfo.EvalWithMetadbsAsync(copyHandleList);
 	}
 
-	let set = new Set();
+	i = 0;
+	const count = copyHandleList.Count;
+	const set = new Set();
 	if (bMultiple) {
 		const dictionaries = Array.from({ length: checkLength }, () => new Set());
 		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
-		let i = 0;
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
@@ -480,7 +490,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 				});
 				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dictionaries[j].has(subStr)));
 				if (!bFound) {
-					items.push(copy[i]);
+					items.push(copyHandleList[i]);
 					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dictionaries[j].add(subStr)));
 				}
 				i++;
@@ -494,7 +504,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 				});
 				const bFound = strArr.every((subStrArr, j) => subStrArr.some((subStr) => dictionaries[j].has(subStr)));
 				if (!bFound) {
-					items.push(copy[i]);
+					items.push(copyHandleList[i]);
 					strArr.forEach((subStrArr, j) => subStrArr.forEach((subStr) => dictionaries[j].add(subStr)));
 				}
 				i++;
@@ -505,24 +515,30 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
 			const titleReV3 = globRegExp.ingVerbs.re;
-			for (let i = 0; i < count; i++) {
+			while (i < count) {
 				const str = tags[i]
 					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
 					.trim();
 				if (!set.has(str)) {
 					set.add(str);
-					items.push(copy[i]);
+					items.push(copyHandleList[i]);
 				}
+				i++;
 			}
 		} else {
-			for (let i = 0; i < count; i++) {
+			while (i < count) {
 				const str = tags[i];
 				if (!set.has(str)) {
 					set.add(str);
-					items.push(copy[i]);
+					items.push(copyHandleList[i]);
 				}
+				i++;
 			}
 		}
+	}
+
+	if (bPreserveSort) { // 600 ms on 80K tracks
+		items = FbMetadbHandleList.partialSort(items, copyHandleListUnsorted);
 	}
 	items = new FbMetadbHandleList(items); // Converting the entire array is faster than directly adding to a handle list
 
