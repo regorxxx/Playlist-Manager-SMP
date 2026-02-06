@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/26
+//05/02/26
 
 /* exported _list */
 
@@ -2734,6 +2734,102 @@ function _list({ x, y, w, h, properties } = {}) {
 			else if (options.bParen) { shortcut = ' ' + shortcut; }
 		}
 		return shortcut;
+	};
+
+	this.autoTagsHelp = () => {
+		return 'AutoTags and Actions:' +
+			'\n---------------------' +
+			'\nEnable actions at settings menu (playlists behavior), otherwise tags may' +
+			'\nbe present at files but are simply ignored. Special tags available:' +
+			'\n' +
+			'\n• bAutoLoad: playlist is automatically loaded (on UI) at panel init.' +
+			'\n• bAutoLock: playlist is automatically locked at panel init.' +
+			'\n• bMirrorChanges: playlist is automatically reloaded on external changes.' +
+			'\n• bSkipMenuTag: skips dynamic main menu creation (single entries).' +
+			'\n• bMultMenu: includes playlist at \'tagged\' dynamic main menu entries.' +
+			'\n• bPinnedFirst: shows the playlist pinned at top (manual sorting).' +
+			'\n• bPinnedLast: shows the playlist pinned at bottom (manual sorting).';
+	};
+
+	this.quickHelp = () => {
+		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		return 'Global shortcuts:' +
+			'\n-----------------' +
+			this.listGlobalShortcuts(void (0), false) +
+			'\n• ' + this.getGlobalShortcut('columns', { bTab: false, bParen: false }) + ': hide/show the playlist\'s metadata columns.' +
+			'\n• ' + this.getGlobalShortcut('flat view', { bTab: false, bParen: false }) + ': flat/folders view' +
+			'\n• ' + this.getGlobalShortcut('delete', { bTab: false, bParen: false }) + ': delete playlist.' +
+			(this.searchInput ? '\n• ' + this.getGlobalShortcut('search', { bTab: false, bParen: false }) + ': focus on search box.' : '') +
+			'\n(*) Also apply to multiple selection and recursively to folders.' +
+			'\n' +
+			(showMenus['Quick-search']
+				? '\nQuick-search:' +
+				'\n-------------' +
+				(this.properties.bQuickSearchName[1]
+					? '\nPress any letter / number to jump to items matched by name' +
+					'\n(there is also a switch setting to use current sorting method).'
+					: '\nPress any letter / number to jump to items matched by current sorting' +
+					'\n(i.e. sorting by category jumps by it instead of item name).'
+				) +
+				'\nPressing Shift/Ctrl matches at any position, not only from the beginning.' +
+				'\n'
+				: '') +
+			'\nDrag n\' drop (tracks):' +
+			'\n----------------------' +
+			'\n• Standard: move selection to playlist / folder (recursive).' +
+			'\n• Ctrl: copy selection to playlist / folder (recursive).' +
+			'\n• Alt: move selection to new playlist' +
+			'\n• Alt + Ctrl: copy selection to new playlist' +
+			(this.searchInput ? '\n• On Search Filter: search tracks within playlists (path/query/tags).' : '') +
+			'\n' +
+			'\nDrag n\' drop (internal):' +
+			'\n------------------------' +
+			'\n• Manual sorting: move item to new position (check cursor).' +
+			'\n• General: move items out of/into selected folder (check cursor).' +
+			'\n' +
+			'\nTooltip:' +
+			'\n--------' +
+			'\nShift / Ctrl over buttons / playlists will show the associated action.' +
+			'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
+			'\n' +
+			(this.uiElements['Bottom toolbar'].enabled
+				? '\nFilter/sorting bottom toolbar:' +
+				'\n------------------------------' +
+				'\nLeft click on button to apply current method.' +
+				'\nRight click on button to configure available methods.' +
+				'\n'
+				: ''
+			) +
+			(this.searchInput
+				? '\nSearch Filter:' +
+				'\n--------------' +
+				'\nRight click on button to configure search method.' +
+				'\nWildcards (*) are allowed. i.e. \'My * playlist\'.' +
+				'\nRegExp are allowed in /[expression]/[flags] form.' +
+				'\nTracks drag n\' drop will search playlists by (priority configurable):' +
+				this.searchMethod.dragDropPriority
+					.map((method, i) => '\n\t' + (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')))
+					.join('') +
+				'\n'
+				: ''
+			) +
+			'\nList view shortcuts:' +
+			'\n--------------------' +
+			'\n• Up / Down: scroll down / up.' +
+			'\n• Re Pag / Av Pag: scroll down / up page.' +
+			'\n• Home / End: scroll to top / bottom.' +
+			'\n' +
+			'\n' +
+			this.autoTagsHelp() +
+			'\n' +
+			'\nUI:' +
+			'\n----------------------' +
+			'\n• Ctrl + Alt + Mouse Wheel to resize UI elements under mouse.' +
+			'\n' +
+			'\nSMP / JSplitter Panel:' +
+			'\n----------------------' +
+			'\n• Shift + Win + R. Click: open SMP panel menu.' +
+			'\n• Ctrl + Win + R. Click: open script panel menu.';
 	};
 
 	this.playlistMenu = (z, x, y) => {
@@ -8324,95 +8420,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			func: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				if (mask === MK_SHIFT) {
 					// Enabled menus
-					const showMenus = JSON.parse(this.properties.showMenus[1]);
-					fb.ShowPopupMessage(
-						'Global shortcuts:' +
-						'\n-----------------' +
-						this.listGlobalShortcuts(void (0), false) +
-						'\n• ' + this.getGlobalShortcut('columns', { bTab: false, bParen: false }) + ': hide/show the playlist\'s metadata columns.' +
-						'\n• ' + this.getGlobalShortcut('flat view', { bTab: false, bParen: false }) + ': flat/folders view' +
-						'\n• ' + this.getGlobalShortcut('delete', { bTab: false, bParen: false }) + ': delete playlist.' +
-						(this.searchInput ? '\n• ' + this.getGlobalShortcut('search', { bTab: false, bParen: false }) + ': focus on search box.' : '') +
-						'\n(*) Also apply to multiple selection and recursively to folders.' +
-						'\n' +
-						(showMenus['Quick-search']
-							? '\nQuick-search:' +
-							'\n-------------' +
-							(this.properties.bQuickSearchName[1]
-								? '\nPress any letter / number to jump to items matched by name' +
-								'\n(there is also a switch setting to use current sorting method).'
-								: '\nPress any letter / number to jump to items matched by current sorting' +
-								'\n(i.e. sorting by category jumps by it instead of item name).'
-							) +
-							'\nPressing Shift/Ctrl matches at any position, not only from the beginning.' +
-							'\n'
-							: '') +
-						'\nDrag n\' drop (tracks):' +
-						'\n----------------------' +
-						'\n• Standard: move selection to playlist / folder (recursive).' +
-						'\n• Ctrl: copy selection to playlist / folder (recursive).' +
-						'\n• Alt: move selection to new playlist' +
-						'\n• Alt + Ctrl: copy selection to new playlist' +
-						(this.searchInput ? '\n• On Search Filter: search tracks within playlists (path/query/tags).' : '') +
-						'\n' +
-						'\nDrag n\' drop (internal):' +
-						'\n------------------------' +
-						'\n• Manual sorting: move item to new position (check cursor).' +
-						'\n• General: move items out of/into selected folder (check cursor).' +
-						'\n' +
-						'\nTooltip:' +
-						'\n--------' +
-						'\nShift / Ctrl over buttons / playlists will show the associated action.' +
-						'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
-						'\n' +
-						(this.uiElements['Bottom toolbar'].enabled
-							? '\nFilter/sorting bottom toolbar:' +
-							'\n------------------------------' +
-							'\nLeft click on button to apply current method.' +
-							'\nRight click on button to configure available methods.' +
-							'\n'
-							: ''
-						) +
-						(this.searchInput
-							? '\nSearch Filter:' +
-							'\n--------------' +
-							'\nRight click on button to configure search method.' +
-							'\nWildcards (*) are allowed. i.e. \'My * playlist\'.' +
-							'\nRegExp are allowed in /[expression]/[flags] form.' +
-							'\nTracks drag n\' drop will search playlists by (priority configurable):' +
-							this.searchMethod.dragDropPriority
-								.map((method, i) => '\n\t' + (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')))
-								.join('') +
-							'\n'
-							: ''
-						) +
-						'\nList view shortcuts:' +
-						'\n--------------------' +
-						'\n• Up / Down: scroll down / up.' +
-						'\n• Re Pag / Av Pag: scroll down / up page.' +
-						'\n• Home / End: scroll to top / bottom.' +
-						'\n' +
-						'\nAutoTags and Actions:' +
-						'\n---------------------' +
-						'\nEnabled on settings menu (playlists behavior). Special tags available:' +
-						'\n• bAutoLoad: playlist is loaded within automatically (on UI).' +
-						'\n• bAutoLock: playlist is locked automatically.' +
-						'\n• bMirrorChanges: playlist is reloaded on external changes.' +
-						'\n• bSkipMenuTag: skips dynamic main menu creation for playlist.' +
-						'\n• bMultMenu: associates playlist to dynamic main menu entries.' +
-						'\n• bPinnedFirst: show the playlist pinned at top.' +
-						'\n• bPinnedLast: show the playlist pinned at bottom.' +
-						'\n' +
-						'\nUI:' +
-						'\n----------------------' +
-						'\n• Ctrl + Alt + Mouse Wheel to resize UI elements under mouse.' +
-						'\n' +
-						'\nSMP / JSplitter Panel:' +
-						'\n----------------------' +
-						'\n• Shift + Win + R. Click: open SMP panel menu.' +
-						'\n• Ctrl + Win + R. Click: open script panel menu.'
-						, window.PanelName + ': Quick help'
-					);
+					fb.ShowPopupMessage(this.quickHelp(), window.PanelName + ': Quick help');
 				} else {
 					createSettingsMenu(this, background).btn_up(x, y, void (0), 'Open documentation...');
 				}

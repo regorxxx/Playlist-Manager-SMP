@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/02/26
+//05/02/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -395,19 +395,32 @@ function createSelMenu(forcedIndex = -1) {
 					});
 					menu.newSeparator(menuName);
 					let bAddInvisibleIds = false;
-					list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
+					const menuTag = (tag, i, menuName, bAutoTag) => {
 						if (menu.isSeparator(tag)) { menu.newSeparator(menuName); bAddInvisibleIds = true; return; } // Add invisible id for entries after separator to duplicate check marks
 						menu.newEntry({
 							menuName, entryText: tag, func: () => {
 								let tags;
-								if (i === 0) { tags = []; }
-								else if (pls.tags.includes(tag)) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
+								if (i === 0) {
+									if (bAutoTag) { tags = [...new Set(pls.tags).difference(new Set(autoTags))]; }
+									else { tags = []; }
+								} else if (pls.tags.includes(tag)) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
 								else { tags = [...pls.tags, tag]; }
 								setTag(tags, list, z);
 							}, bAddInvisibleIds
 						});
 						menu.newCheckMenuLast(() => (i ? pls.tags.includes(tag) : pls.tags.length === 0));
-					});
+					};
+					list.tags().forEach((tag, i) => menuTag(tag, i, menuName));
+					menu.newSeparator(menuName);
+					const subMenuName = menu.newMenu('AutoTags' + (list.bApplyAutoTags ? '' : ' [disabled]'), menuName);
+					menu.newEntry({	menuName: subMenuName, entryText: 'For automatic actions:', flags: MF_GRAYED });
+					menu.newSeparator(subMenuName);
+					[list.tags(0), ...autoTags].forEach((tag, i) => menuTag(tag, i, subMenuName, true));
+					menu.newSeparator(subMenuName);
+					menu.newEntry({	menuName: subMenuName, entryText: 'Open readme...', func: () => {
+						fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
+					}});
+
 				}
 				// Adds track tag(s)
 				menu.newEntry({
@@ -1443,7 +1456,7 @@ function createMulSelMenu(forcedIndexes = []) {
 			});
 			menu.newSeparator(menuName);
 			let bAddInvisibleIds = false;
-			list.tags().concat(['sep', ...autoTags]).forEach((tag, i) => {
+			const menuTag = (tag, i, menuName, bAutoTag) => {
 				const count = playlists.reduce((total, pls) => { return ((i === 0 ? pls.tags.length === 0 : pls.tags.includes(tag)) ? total + 1 : total); }, 0);
 				if (menu.isSeparator(tag)) { menu.newSeparator(menuName); bAddInvisibleIds = true; return; } // Add invisible id for entries after separator to duplicate check marks
 				menu.newEntry({
@@ -1453,8 +1466,10 @@ function createMulSelMenu(forcedIndexes = []) {
 						indexes.forEach((z, j) => {
 							const pls = playlists[j];
 							if (!isLockPls(pls) && isPlsEditable(pls)) {
-								if (i === 0) { tags = []; }
-								else if (pls.tags.includes(tag)) {
+								if (i === 0) {
+									if (bAutoTag) { tags = [...new Set(pls.tags).difference(new Set(autoTags))]; }
+									else { tags = []; }
+								} else if (pls.tags.includes(tag)) {
 									if (bAll) { tags = [...new Set(pls.tags).difference(new Set([tag]))]; }
 									else { return; }
 								} else { tags = [...pls.tags, tag]; }
@@ -1464,7 +1479,18 @@ function createMulSelMenu(forcedIndexes = []) {
 					}, bAddInvisibleIds
 				});
 				menu.newCheckMenuLast(() => (playlists.length === count));
-			});
+			};
+			list.tags().forEach((tag, i) => menuTag(tag, i, menuName));
+			menu.newSeparator(menuName);
+			const subMenuName = menu.newMenu('AutoTags' + (list.bApplyAutoTags ? '' : ' [disabled]'), menuName);
+			menu.newEntry({	menuName: subMenuName, entryText: 'For automatic actions:', flags: MF_GRAYED });
+			menu.newSeparator(subMenuName);
+			[list.tags(0), ...autoTags].forEach((tag, i) => menuTag(tag, i, subMenuName, true));
+			menu.newSeparator(subMenuName);
+			menu.newEntry({	menuName: subMenuName, entryText: 'Open readme...', func: () => {
+				fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
+			}});
+
 		}
 		if (showMenus['Tags']) {	// Adds track tag(s)
 			menu.newEntry({
