@@ -71,11 +71,15 @@
 ## [Unreleased][]
 ### Added
 - UI: added background framework found in all my other scripts, which can be tweaked at the background submenu within the toolbar menu (R. Click). By default is set to to not display any color or art, looking like previous releases. Note any setting at 'Colors' submenu is applied on top of the background, so the toolbar color, transparency or panel pseudo-transparency settings may also override background drawing. As a bonus, all features related to dynamic colors and color servers are also included, so it will work in conjunction with all other scripts making use of this feature.
+- Help: added custom user shortcuts to quickhelp.
+- Help: added multiple selection actions (if any) to list view shortcuts.
 ### Changed
 - UI: improved 'Set playlist tag(s)' submenu, separating common tags and AutoTags (related to special automatic actions). All AutoTags can now be deleted in a single click without affecting common ones. Additionally, the submenu has an entry to show a readme related to AutoTags usage and actions.
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - Quick-search: Shift/Ctrl modifiers to perform lookup at any position instead of only the start of strings is now applied only once at first key pressed, so there is no need to keep pressing the modifier key while typing the other chars.
 - Quick-search: minor UI adjustments.
+- Help: cleanup of quickhelp.
+- Shortcuts: some changes to shortcuts display, previously set shortcuts may need to be reassigned in some cases (or defaults restored).
 - Settings: internal changes at properties for future releases. Upgrading from [1.0.0-beta.8](#100-beta8---2026-01-12) will work seamlessly, but previous versions are not supported (settings will be reset).
 - Helpers: support for long paths (>260 chars) in multiple internal file handling functions.
 ### Removed

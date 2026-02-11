@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/02/26
+//09/02/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -224,10 +224,10 @@ let properties = {
 	iDynamicMenus: ['Show dynamic menus', 1, { func: isInt, range: [[0, 2]] }],
 	lShortcuts: ['L. click modifiers', JSON.stringify({
 		Ctrl: 'Copy selection to playlist',
-		Shift: 'Load / show playlist',
+		Shift: 'Load|Show playlist',
 		'Ctrl + Shift': 'Clone playlist in UI',
 		'Single Click': '- None -',
-		'Double Click': 'Load / show playlist'
+		'Double Click': 'Load|Show playlist'
 	}), { func: isJSON, forceDefaults: true }],
 	mShortcuts: ['M. click modifiers', JSON.stringify({
 		Ctrl: '- None -',
@@ -254,7 +254,7 @@ let properties = {
 		Ctrl: '- None -',
 		Shift: '- None -',
 		'Ctrl + Shift': '- None -',
-		'Single Click': 'Show current / playing playlist',
+		'Single Click': 'Show Current|Playing playlist',
 		'Double Click': 'Cycle categories'
 	}), { func: isJSON, forceDefaults: true }],
 	showMenus: ['Show menus configuration', JSON.stringify({

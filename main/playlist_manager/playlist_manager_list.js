@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/02/26
+//09/02/26
 
 /* exported _list */
 
@@ -601,7 +601,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			});
 		}
 		if (pls.extension === '.ui' && !Object.hasOwn(lShortcuts, mask)) { // Change text for UI-ony playlists
-			const ignoreActions = ['Lock/unlock playlist file'];
+			const ignoreActions = ['Lock|Unlock playlist file'];
 			ignoreActions.forEach((t) => {
 				tooltipText = tooltipText.replace(new RegExp('\\n\\(.*' + escapeRegExp(t) + '\\)', 'gi'), '');
 			});
@@ -1429,7 +1429,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			gr.FillRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, popupCol);
 			gr.DrawRoundRect(popX, popY, sizeX, sizeY, sizeX / 6, sizeY / 2, 1, borderCol);
 			// Draw the letter
-			const text = (this.lastCharsPressed.bAnyPosition ? '*' : '') +  this.lastCharsPressed.str.toUpperCase();
+			const text = (this.lastCharsPressed.bAnyPosition ? '*' : '') + this.lastCharsPressed.str.toUpperCase();
 			if (idxHighlight === -1) { // Stroked out when not found
 				gr.GdiDrawText(text, panel.fonts.title, invert(blendColors(textCol, this.colors.selectedPlaylist, 0.5)), popX + textOffset, popY, sizeX - textOffset * 2, sizeY, CENTRE);
 				const textW = Math.min(gr.CalcTextWidth(text, panel.fonts.title), sizeX - textOffset) + 10;
@@ -2753,6 +2753,11 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.quickHelp = () => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
+		const getMask = (action) => {
+			if (action.mask === 'SG_CLICK') { return ''; }
+			else if (action.mask === 'DB_CLICK')  { return 'Double '; }
+			else { return action.maskName + ' + '; }
+		};
 		return 'Global shortcuts:' +
 			'\n-----------------' +
 			this.listGlobalShortcuts(void (0), false) +
@@ -2760,18 +2765,19 @@ function _list({ x, y, w, h, properties } = {}) {
 			'\n• ' + this.getGlobalShortcut('flat view', { bTab: false, bParen: false }) + ': flat/folders view' +
 			'\n• ' + this.getGlobalShortcut('delete', { bTab: false, bParen: false }) + ': delete playlist.' +
 			(this.searchInput ? '\n• ' + this.getGlobalShortcut('search', { bTab: false, bParen: false }) + ': focus on search box.' : '') +
-			'\n(*) Also apply to multiple selection and recursively to folders.' +
+			'\n' +
+			'\n(*) Also applies to multiple selection and recursively to folders.' +
 			'\n' +
 			(showMenus['Quick-search']
 				? '\nQuick-search:' +
 				'\n-------------' +
 				(this.properties.bQuickSearchName[1]
-					? '\nPress any letter / number to jump to items matched by name' +
+					? '\n• Press any letter / number to jump to items matched by name' +
 					'\n(there is also a switch setting to use current sorting method).'
-					: '\nPress any letter / number to jump to items matched by current sorting' +
+					: '\n• Press any letter / number to jump to items matched by current sorting' +
 					'\n(i.e. sorting by category jumps by it instead of item name).'
 				) +
-				'\nPressing Shift/Ctrl matches at any position, not only from the beginning.' +
+				'\n• Pressing Shift/Ctrl matches at any position, not only from the beginning.' +
 				'\n'
 				: '') +
 			'\nDrag n\' drop (tracks):' +
@@ -2789,24 +2795,24 @@ function _list({ x, y, w, h, properties } = {}) {
 			'\n' +
 			'\nTooltip:' +
 			'\n--------' +
-			'\nShift / Ctrl over buttons / playlists will show the associated action.' +
-			'\nFont can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
+			'\n• Shift / Ctrl over buttons / playlists will show the associated action.' +
+			'\n• Font can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
 			'\n' +
 			(this.uiElements['Bottom toolbar'].enabled
 				? '\nFilter/sorting bottom toolbar:' +
 				'\n------------------------------' +
-				'\nLeft click on button to apply current method.' +
-				'\nRight click on button to configure available methods.' +
+				'\n• Left click on button to apply current method.' +
+				'\n• Right click on button to configure available methods.' +
 				'\n'
 				: ''
 			) +
 			(this.searchInput
 				? '\nSearch Filter:' +
 				'\n--------------' +
-				'\nRight click on button to configure search method.' +
-				'\nWildcards (*) are allowed. i.e. \'My * playlist\'.' +
-				'\nRegExp are allowed in /[expression]/[flags] form.' +
-				'\nTracks drag n\' drop will search playlists by (priority configurable):' +
+				'\n• Right click on button to configure search method.' +
+				'\n• Wildcards (*) are allowed. i.e. \'My * playlist\'.' +
+				'\n• RegExp are allowed in /[expression]/[flags] form.' +
+				'\n• Tracks drag n\' drop will search playlists by (priority configurable):' +
 				this.searchMethod.dragDropPriority
 					.map((method, i) => '\n\t' + (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')))
 					.join('') +
@@ -2815,9 +2821,24 @@ function _list({ x, y, w, h, properties } = {}) {
 			) +
 			'\nList view shortcuts:' +
 			'\n--------------------' +
-			'\n• Up / Down: scroll down / up.' +
-			'\n• Re Pag / Av Pag: scroll down / up page.' +
-			'\n• Home / End: scroll to top / bottom.' +
+			'\n• Up|Down: Scroll up|Scroll down .' +
+			'\n• Page Up|Page Down: Scroll Up|Scroll down (page).' +
+			'\n• Home|End: Scroll to top|Scroll to bottom.' +
+			['L', 'M', 'R'].map((m) => {
+				const actions = Object.values(this.getShortcuts(m, 'LIST'))
+					.filter((entry) => entry.key.startsWith('Multiple selection'));
+				return actions.map((action) => '\n• ' + getMask(action) + m + '. Click' + ': ' + action.key + '.')
+					.join('');
+			}).filter(Boolean).join('') +
+			'\n' +
+			'\nCustom user shortcuts:' +
+			'\n----------------------' +
+			['L', 'M', 'R'].map((m) => {
+				const actions = Object.values(this.getShortcuts(m, 'LIST'));
+				return actions.filter((action) => action.key !== '- None -')
+					.map((action) => '\n• ' + getMask(action) + m + '. Click' + ': ' + action.key + '.')
+					.join('');
+			}).filter(Boolean).join('') +
 			'\n' +
 			'\n' +
 			this.autoTagsHelp() +
@@ -3093,8 +3114,8 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.isValidAction = (action) => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		switch (true) {
-			case !showMenus['File locks'] && action === 'Lock/unlock playlist file':
-			case !showMenus['UI playlist locks'] && action === 'Lock/unlock UI playlist':
+			case !showMenus['File locks'] && action === 'Lock|Unlock playlist file':
+			case !showMenus['UI playlist locks'] && action === 'Lock|Unlock UI playlist':
 			case !showMenus['Category'] && action === 'Cycle categories':
 			case !showMenus['Tags'] && action === 'Cycle tags':
 			case this.bLiteMode && action.includes('Manual saving'):
@@ -3215,7 +3236,7 @@ function _list({ x, y, w, h, properties } = {}) {
 						{ key: '- None -', func: () => { void (0); } },
 						{ key: 'Manage playlist', func: this.playlistMenu },
 						{ key: 'Playlist\'s items menu', func: this.contextMenu },
-						{ key: 'Load / show playlist', func: this.loadPlaylistOrShow },
+						{ key: 'Load|Show playlist', func: this.loadPlaylistOrShow },
 						{
 							key: 'Copy selection to playlist',
 							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: false }), bStandAlone: true
@@ -3226,8 +3247,8 @@ function _list({ x, y, w, h, properties } = {}) {
 						},
 						{ key: 'Clone playlist in UI', func: clonePlaylistInUI.bind(this, this) },
 						{ key: 'Recycle playlist', func: this.removePlaylist },
-						{ key: 'Lock/unlock playlist file', func: switchLock.bind(this, this) },
-						{ key: 'Lock/unlock UI playlist', func: switchLockUI.bind(this, this) },
+						{ key: 'Lock|Unlock playlist file', func: switchLock.bind(this, this) },
+						{ key: 'Lock|Unlock UI playlist', func: switchLockUI.bind(this, this) },
 						{ key: 'Multiple selection', func: this.multSelect },
 						{ key: 'Multiple selection (range)', func: this.multSelectRange }
 					];
@@ -3236,7 +3257,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				case 'HEADER': {
 					shortcuts.actions = [
 						{ key: '- None -', func: () => { void (0); } },
-						{ key: 'Show current / playing playlist', func: () => { this.showCurrPls() || this.showCurrPls({ bPlayingPls: true }); } },
+						{ key: 'Show Current|Playing playlist', func: () => { this.showCurrPls() || this.showCurrPls({ bPlayingPls: true }); } },
 						{ key: 'Multiple selection (all)', func: this.multSelectAll },
 						{ key: 'Cycle categories', func: cycleCategories.bind(this, this) },
 						{ key: 'Cycle tags', func: cycleTags.bind(this, this) },
@@ -3281,10 +3302,10 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		if (prop) {
 			for (let key in prop) {
-				const mask = (options.find((obj) => { return obj.key === key; }) || {}).mask || 'none';
+				const { mask, key: maskName } = (options.find((obj) => { return obj.key === key; }) || { key: 'none', mask: 'none' });
 				const action = prop[key];
 				const func = (actions.find((obj) => { return obj.key === action; }) || {}).func || (() => { console.popup('Shortcut not properly set: ' + mouseBtn + ' ' + key + ' --> ' + action, window.FullPanelName); });
-				shortcuts[mask] = { key: action, func };
+				shortcuts[mask] = { key: action, func, mask, maskName };
 			}
 		}
 		return shortcuts;
