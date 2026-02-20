@@ -756,14 +756,16 @@ if (!list.properties.bSetup[1]) {
 		tt: 'Double L. click to Show active or now playing playlist'
 	}) : null;
 
-	scrollBar.resize = function () {
-		this.x = window.Width - this.w;
-		this.y = list.getHeaderSize().h;
-		this.h = list.h - (this.y - list.y) - 1;
-		if (list.uiElements['Bottom toolbar'].enabled) { this.h -= bottomToolbar.h - _scale(1); }
-		this.rows = Math.max(list.items - list.rows, 0);
-		this.rowsPerPage = list.rows;
-	};
+	if (scrollBar) {
+		scrollBar.resize = function () {
+			this.x = window.Width - this.w;
+			this.y = list.getHeaderSize().h;
+			this.h = list.h - (this.y - list.y) - 1;
+			if (list.uiElements['Bottom toolbar'].enabled) { this.h -= bottomToolbar.h - _scale(1); }
+			this.rows = Math.max(list.items - list.rows, 0);
+			this.rowsPerPage = list.rows;
+		};
+	}
 
 	// Tracking a network drive?
 	if (!_hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0])) {
@@ -951,7 +953,9 @@ if (!list.properties.bSetup[1]) {
 		panel.size();
 		list.size();
 		bottomToolbar.on_size_buttn();
-		scrollBar.resize();
+		if (scrollBar && scrollBar.resize) {
+			scrollBar.resize();
+		}
 		pop.resize();
 	});
 
