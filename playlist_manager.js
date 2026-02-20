@@ -953,7 +953,7 @@ if (!list.properties.bSetup[1]) {
 		panel.size();
 		list.size();
 		bottomToolbar.on_size_buttn();
-		if (scrollBar && scrollBar.resize) {
+		if (scrollBar) {
 			scrollBar.resize();
 		}
 		pop.resize();
