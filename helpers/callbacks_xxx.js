@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/26
+//20/02/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
 
@@ -212,14 +212,33 @@ function moveEventListener(evenListener, pos = 0) { // eslint-disable-line no-re
 */
 const fireEvents = function (event) {
 	return function () {
-		let bReturn = event === 'on_mouse_rbtn_up' && callbacks[event].listeners.length; // To be used by on_mouse_rbtn_up to disable default menu
-		callbacks[event].listeners.forEach((eventListener) => {
-			if (typeof this === 'undefined') { console.log(event); console.log(eventListener.listener.toString()); }
-			if (!eventListener.listener) { console.log(event); console.log(JSON.stringify(eventListener)); }
-			this.eventListener = { event, id: eventListener.id };
-			bReturn = eventListener.listener.apply(this, arguments);
-			this.eventListener = { event: null, id: null };
-		});
+		let bReturn;
+		const runEvent = (event) => {
+			let bReturn = event === 'on_mouse_rbtn_up' && callbacks[event].listeners.length; // To be used by on_mouse_rbtn_up to disable default menu
+			callbacks[event].listeners.forEach((eventListener) => {
+				if (typeof this === 'undefined') { console.log(event); console.log(eventListener.listener.toString()); }
+				if (!eventListener.listener) { console.log(event); console.log(JSON.stringify(eventListener)); }
+				this.eventListener = { event, id: eventListener.id };
+				bReturn = eventListener.listener.apply(this, arguments);
+				this.eventListener = { event: null, id: null };
+			});
+			return bReturn;
+		};
+		if (event === 'on_drag_drop' && window.InstanceType === 0 && fb.GetSelectionType() === 0) { // BUG: CUI Album List not setting a selection during drag n' drop
+			const action = arguments[0];
+			const idx = action.Playlist = plman.CreatePlaylist(plman.PlaylistCount,'.');
+			Promise.wait(20).then(() => { // Seems to be fast enough to not refresh the UI
+				const handleList = plman.GetPlaylistItems(idx);
+				plman.RemovePlaylist(idx);
+				const prevSel = fb.GetSelections(1);
+				const selectionHolder = fb.AcquireUiSelectionHolder();
+				selectionHolder.SetSelection(handleList, 6);
+				bReturn = runEvent(event);
+				selectionHolder.SetSelection(prevSel, 0); // Restore any previous selection
+			});
+		} else {
+			bReturn = runEvent(event);
+		}
 		return bReturn;
 	};
 };
