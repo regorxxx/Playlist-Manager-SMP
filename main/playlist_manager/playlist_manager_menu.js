@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/02/26
+//23/02/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -413,13 +413,15 @@ function createSelMenu(forcedIndex = -1) {
 					list.tags().forEach((tag, i) => menuTag(tag, i, menuName));
 					menu.newSeparator(menuName);
 					const subMenuName = menu.newMenu('AutoTags' + (list.bApplyAutoTags ? '' : ' [disabled]'), menuName);
-					menu.newEntry({	menuName: subMenuName, entryText: 'For automatic actions:', flags: MF_GRAYED });
+					menu.newEntry({ menuName: subMenuName, entryText: 'For automatic actions:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
 					[list.tags(0), ...autoTags].forEach((tag, i) => menuTag(tag, i, subMenuName, true));
 					menu.newSeparator(subMenuName);
-					menu.newEntry({	menuName: subMenuName, entryText: 'Open readme...', func: () => {
-						fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
-					}});
+					menu.newEntry({
+						menuName: subMenuName, entryText: 'Open readme...', func: () => {
+							fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
+						}
+					});
 
 				}
 				// Adds track tag(s)
@@ -1483,13 +1485,15 @@ function createMulSelMenu(forcedIndexes = []) {
 			list.tags().forEach((tag, i) => menuTag(tag, i, menuName));
 			menu.newSeparator(menuName);
 			const subMenuName = menu.newMenu('AutoTags' + (list.bApplyAutoTags ? '' : ' [disabled]'), menuName);
-			menu.newEntry({	menuName: subMenuName, entryText: 'For automatic actions:', flags: MF_GRAYED });
+			menu.newEntry({ menuName: subMenuName, entryText: 'For automatic actions:', flags: MF_GRAYED });
 			menu.newSeparator(subMenuName);
 			[list.tags(0), ...autoTags].forEach((tag, i) => menuTag(tag, i, subMenuName, true));
 			menu.newSeparator(subMenuName);
-			menu.newEntry({	menuName: subMenuName, entryText: 'Open readme...', func: () => {
-				fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
-			}});
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Open readme...', func: () => {
+					fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
+				}
+			});
 
 		}
 		if (showMenus['Tags']) {	// Adds track tag(s)
@@ -4013,7 +4017,7 @@ function createSettingsMenu(parent, parentBackground) {
 							overwriteProperties(panel.properties);
 							panel.fontChanged();
 							parent.repaint(true);
-							scrollBar.resize();
+							if (scrollBar) { scrollBar.resize(); }
 							parent.repaint(true);
 						}
 					});
@@ -4065,7 +4069,7 @@ function createSettingsMenu(parent, parentBackground) {
 								overwriteProperties(panel.properties);
 								panel.fontChanged();
 								parent.repaint(true);
-								scrollBar.resize();
+								if (scrollBar) { scrollBar.resize(); }
 								parent.repaint(true);
 							}
 						});

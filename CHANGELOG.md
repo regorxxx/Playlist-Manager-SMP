@@ -90,6 +90,7 @@
 - XSPF: fixed malformed .xspf playlists when adding tracks with special HTML chars using mouse actions. The standard saving was safe though.
 - XSPF: fixed multiple inconsistencies and minor bugs regarding [XSPF specs](https://xspf.org/spec) when tracks were added using mouse shortcuts vs standard saving. Data validation should now be much more robust, even if tags contain non-valid values on purpose.
 - UI: multiple fixes to color presets application and menu checks.
+- UI: fixed crash if scrollbar was disabled.
 
 ## [1.0.0-beta.8] - 2026-01-12
 ### Added

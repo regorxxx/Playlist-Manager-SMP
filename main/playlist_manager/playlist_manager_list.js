@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/02/26
+//23/02/26
 
 /* exported _list */
 
@@ -1602,7 +1602,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		overwriteProperties(panel.properties);
 		panel.fontChanged();
 		this.repaint(true);
-		scrollBar.resize();
+		if (this.uiElements['Scrollbar'].enabled && scrollBar) { scrollBar.resize(); }
 		this.repaint(true);
 		return key;
 	};
