@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/02/26
+//24/02/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -121,6 +121,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
 let properties = {
+	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0,1]] }],
 	playlistsPath: ['Tracked playlists folder', '.\\profile\\playlist_manager\\', { func: isString, portable: true }],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }], // Safety limit 0 or > 1000
 	fplRules: ['fpl playlists behavior', JSON.stringify({
@@ -394,6 +395,9 @@ Object.keys(properties).forEach(p => properties[p].push(properties[p][1]));
 setProperties(properties, '', 0);
 properties = getPropertiesPairs(properties, '', 0);
 checkJsonProperties(properties);
+
+// GDI/D2D draw mode
+window.DrawMode = properties.drawMode[1];
 
 {	// Check if is a setup or normal init
 	const infoPopups = JSON.parse(properties.infoPopups[1]);
