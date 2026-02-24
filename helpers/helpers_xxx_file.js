@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/02/26
+//24/02/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -651,8 +651,7 @@ function _saveSplitJson(file, value, replacer = void (0), space = void (0), spli
 
 function _jsonParse(value) {
 	try {
-		const data = JSON.parse(value);
-		return data;
+		return JSON.parse(value);
 	} catch (e) { // eslint-disable-line no-unused-vars
 		return null;
 	}

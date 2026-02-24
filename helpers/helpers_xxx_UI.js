@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/01/26
+//24/02/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha */
 
@@ -18,6 +18,7 @@ include('helpers_xxx_prototypes.js');
 
 // Callbacks
 addEventListener('on_script_unload', () => {
+	_bmp.ReleaseGraphics(_gr);
 	window.Tooltip.Deactivate();
 });
 
