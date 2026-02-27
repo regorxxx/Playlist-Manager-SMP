@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/02/26
+//27/02/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha */
 
@@ -444,16 +444,15 @@ function _textWidth(value, font) {
  * @function
  * @name applyAsMask
  * @param {GdiBitmap} img - Img to manipulate
- * @param {(img:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} applyCallback - Img manipulation logic. Width and height are from original img.
- * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img).
+ * @param {(img:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} applyCallback - Img manipulation logic. Width and height are from original img. To maintain D2D compatibility, don't use img rotation without releasing img gr first (when doing so, return true)
+ * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img). To maintain D2D compatibility, don't use mask rotation without releasing mask gr first (when doing so, return true)
  * @param {boolean} bInvertMask - If true, prefills mask with white.
  * @returns {GdiBitmap}
  */
 function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
 	const clone = img.Clone(0, 0, img.Width, img.Height);
 	const cloneGr = clone.GetGraphics();
-	applyCallback(clone, cloneGr, clone.Width, clone.Height);
-	clone.ReleaseGraphics(cloneGr);
+	if (!applyCallback(clone, cloneGr, clone.Width, clone.Height)) { clone.ReleaseGraphics(cloneGr); }
 	applyMask(clone, maskCallback, bInvertMask);
 	const imgGr = img.GetGraphics();
 	imgGr.DrawImage(clone, 0, 0, img.Width, img.Height, 0, 0, img.Width, img.Height);
@@ -467,7 +466,7 @@ function applyAsMask(img, applyCallback, maskCallback, bInvertMask) {
  * @function
  * @name applyMask
  * @param {GdiBitmap} img - Img to manipulate
- * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => void} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img).
+ * @param {(mask:GdiBitmap, gr:GdiGraphics, w:number, h:number) => boolean} maskCallback - Mask drawing. Width and height are from original img. The mask is prefilled with black by default (i.e. applies over all img). To maintain D2D compatibility, don't use mask rotation without releasing mask gr first (when doing so, return true)
  * @param {boolean} bInvertMask -  If true, prefills mask with white.
  * @returns {GdiBitmap}
  */
@@ -475,8 +474,7 @@ function applyMask(img, maskCallback, bInvertMask) {
 	const mask = gdi.CreateImage(img.Width, img.Height);
 	const maskGr = mask.GetGraphics();
 	maskGr.FillSolidRect(0, 0, img.Width, img.Height, bInvertMask ? 0xFFFFFFFF : 0xFF000000);
-	maskCallback(mask, maskGr, img.Width, img.Height);
-	mask.ReleaseGraphics(maskGr);
+	if (!maskCallback(mask, maskGr, img.Width, img.Height)) { mask.ReleaseGraphics(maskGr); }
 	img.ApplyMask(mask);
 	return img;
 };

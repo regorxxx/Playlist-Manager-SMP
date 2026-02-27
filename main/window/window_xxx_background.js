@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/26
+//27/02/26
 
 /* exported _background */
 
@@ -143,11 +143,15 @@ function _background({
 				intensity = Math.max(Math.min(this.coverModeOptions.mute / 100 * 255, 255), 0);
 				applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
 					gr.DrawImage(this.coverImg.art.image, 0, 0, w, h, 0, 0, w, h, 0, intensity / 2);
+					mask.ReleaseGraphics(gr);
 					mask.StackBlur(5);
+					return true;
 				});
 				applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
 					gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+					mask.ReleaseGraphics(gr);
 					mask.StackBlur(10);
+					return true;
 				});
 			}
 			if (this.coverModeOptions.edgeGlow !== 0 && Number.isInteger(this.coverModeOptions.edgeGlow)) {
@@ -159,7 +163,9 @@ function _background({
 					},
 					(mask, gr, w, h) => {
 						gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+						mask.ReleaseGraphics(gr);
 						mask.StackBlur(1);
+						return true;
 					}, true
 				);
 			}
@@ -172,12 +178,18 @@ function _background({
 					},
 					(mask, gr, w, h) => {
 						gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+						mask.ReleaseGraphics(gr);
 						mask.StackBlur(50);
+						return true;
 					}, true
 				);
 				applyAsMask(
 					this.coverImg.art.image,
-					(img) => img.StackBlur(10),
+					(img, gr) => {
+						img.ReleaseGraphics(gr);
+						img.StackBlur(10);
+						return true;
+					},
 					(mask, gr, w, h) => { gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h); },
 				);
 			}
@@ -187,7 +199,11 @@ function _background({
 					this.coverImg.art.image.StackBlur(Math.max(intensity / 5, 1));
 					applyAsMask(
 						this.coverImg.art.image,
-						(img) => img.StackBlur(intensity),
+						(img, gr) => {
+							img.ReleaseGraphics(gr);
+							img.StackBlur(intensity);
+							return true;
+						},
 						(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
 					);
 				} else {
@@ -207,7 +223,7 @@ function _background({
 	 * @param {GdiGraphics} o.gr - From on_paint
 	 * @param {{x?:number, y?:number, w?:number, h?:number, offsetH?:number}} o.limits - Drawing coordinates
 	 * @param {number} o.rotateFlip - Rotation/flip transformation
-	 * @param {(mask, gr, w, h) => void} o.fadeMask - Fading mask for reflections. Use something like (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w, h, 0, 0xFFFFFFFF, 0xFF000000)
+	 * @param {(mask, gr, w, h) => boolean} o.fadeMask - Fading mask for reflections. Use something like (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w, h, 0, 0xFFFFFFFF, 0xFF000000). To maintain D2D compatibility, don't use mask rotation without releasing mask gr first (when doing so, return true)
 	 * @param {{opacity:number}|null} o.fill - Used for panel filling instead of internal settings
 	 * @returns {void}
 	 */
@@ -435,7 +451,7 @@ function _background({
 		}
 		if (this.colorModeOptions.bDither && this.colorImg) {
 			if (bCreateImg) { this.dither(this.colorImg, grImg); }
-			this.colorImg.ReleaseGraphics(grImg);
+			else { this.colorImg.ReleaseGraphics(grImg); }
 			gr.DrawImage(this.colorImg, limits.x, limits.y, limits.w, limits.h, 0, 0, this.colorImg.Width, this.colorImg.Height);
 		}
 	};
@@ -528,6 +544,7 @@ function _background({
 				gr.DrawEllipse(j - rand, i - rand, 1, 1, scale, color2);
 			}
 		}
+		img.ReleaseGraphics(gr);
 		img.StackBlur(scale * 2);
 		return img;
 	};
