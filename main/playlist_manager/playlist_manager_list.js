@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/02/26
+//28/02/26
 
 /* exported _list */
 
@@ -1525,7 +1525,9 @@ function _list({ x, y, w, h, properties } = {}) {
 		return Object.values(this.headerButtons).some((button) => this.traceHeaderButton(x, y, button));
 	};
 
-	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || Math.ceil(Math.min(this.items, this.rows) / 10), bSmooth = true } = {}) => {
+	this.getAutoScrollDelta = () => Math.max(Math.ceil(Math.min(this.items, this.rows) / 10), 3);
+
+	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || this.getAutoScrollDelta(), bSmooth = true } = {}) => {
 		if (this.trace(this.mX, this.mY) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				if (!Number.isInteger(s)) { s = Math.round(s); }
@@ -2755,7 +2757,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		const getMask = (action) => {
 			if (action.mask === 'SG_CLICK') { return ''; }
-			else if (action.mask === 'DB_CLICK')  { return 'Double '; }
+			else if (action.mask === 'DB_CLICK') { return 'Double '; }
 			else { return action.maskName + ' + '; }
 		};
 		return 'Global shortcuts:' +

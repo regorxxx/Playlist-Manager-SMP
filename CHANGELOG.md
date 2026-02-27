@@ -76,6 +76,7 @@
 - Help: added multiple selection actions (if any) to list view shortcuts.
 ### Changed
 - UI: improved 'Set playlist tag(s)' submenu, separating common tags and AutoTags (related to special automatic actions). All AutoTags can now be deleted in a single click without affecting common ones. Additionally, the submenu has an entry to show a readme related to AutoTags usage and actions.
+- UI: default scrolling settings improvements.
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - Quick-search: Shift/Ctrl modifiers to perform lookup at any position instead of only the start of strings is now applied only once at first key pressed, so there is no need to keep pressing the modifier key while typing the other chars.
 - Quick-search: minor UI adjustments.

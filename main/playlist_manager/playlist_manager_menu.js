@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/02/26
+//28/02/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -4504,9 +4504,9 @@ function createSettingsMenu(parent, parentBackground) {
 			menu.newSeparator(subMenuName);
 			{
 				const subMenuNameTwo = menu.newMenu('Rows per step', subMenuName);
-				const options = [1, 2, 5, 10];
+				const options = [1, 2, 3, 5, 10];
 				const optionsLength = options.length;
-				const autoScroll = Math.ceil(Math.min(parent.items, parent.rows) / 10);
+				const autoScroll = parent.getAutoScrollDelta();
 				menu.newEntry({
 					menuName: subMenuNameTwo, entryText: 'Automatic\t' + _b(autoScroll), func: () => {
 						parent.scrollSettings.unit = null;
