@@ -1527,28 +1527,47 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.getAutoScrollDelta = () => Math.max(Math.ceil(Math.min(this.items, this.rows) / 10), 3);
 
+	const smoothScroll = {
+		steps: [],
+		timer: null,
+		stop: function() { this.steps.length = 0; this.timer = Date.now(); }
+	};
 	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || this.getAutoScrollDelta(), bSmooth = true } = {}) => {
 		if (this.trace(this.mX, this.mY) || !bPaint || bForce) {
 			if (this.items > this.rows) {
 				if (!Number.isInteger(s)) { s = Math.round(s); }
-				if (this.scrollSettings.bSmooth && bSmooth) {
+				if (this.scrollSettings.bSmooth && bSmooth && scrollBar && scrollBar.bDrag) { smoothScroll.stop(); }
+				if (this.scrollSettings.bSmooth && bSmooth && (!scrollBar || !scrollBar.bDrag)) {
+					const timer = smoothScroll.timer;
 					const delta = Math.min(Math.abs(s * scrollDelta), this.items);
 					if (delta > 1) {
 						const dir = Math.sign(s * scrollDelta);
 						if (this.offset - dir * delta > 0 && this.offset - dir * delta < this.items - this.rows) {
-							Promise.serial(
-								Array.from({ length: delta }, () => dir),
-								(s) => this.wheel({ s, bPaint, bForce, scrollDelta: 1 }),
-								30
-							);
+							Array.from({ length: delta }, () => dir).forEach((step) => smoothScroll.steps.push(step));
+							new Promise((resolve, reject) => {
+								smoothScroll.steps.reduce((prev) => {
+									return prev.then(() => {
+										if (smoothScroll.timer !== timer) { reject(); }
+										return Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: 1 })).then(() => Promise.wait(30));
+									});
+								}, Promise.resolve([])).then(() => resolve()).catch(() => void (0));
+							}).then(() => smoothScroll.stop()).catch(() => void (0));
 						} else {
-							Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: Math.ceil(delta / 5), bSmooth: false }))
-								.then(() => Promise.wait(30))
-								.then(() => this.wheel({ s: dir, bPaint, bForce, scrollDelta: Math.ceil(delta / 4), bSmooth: false }))
-								.then(() => Promise.wait(30))
-								.then(() => this.wheel({ s: dir, bPaint, bForce, scrollDelta: Math.ceil(delta / 3), bSmooth: false }))
-								.then(() => Promise.wait(30))
-								.then(() => this.wheel({ s: dir, bPaint, bForce, scrollDelta: delta - Math.ceil(delta / 3) - Math.ceil(delta / 4) + Math.ceil(delta / 5), bSmooth: false }));
+							[
+								Math.ceil(delta * 1 / 10),
+								Math.ceil(delta * 2 / 10),
+								Math.ceil(delta * 3 / 10),
+								Math.ceil(delta * 4 / 10),
+								delta - Math.ceil(delta * 1 / 10) - Math.ceil(delta * 2 / 10) - Math.ceil(delta * 3 / 10) - Math.ceil(delta * 4 / 10)
+							].filter(Boolean).forEach((step) => smoothScroll.steps.push(step));
+							new Promise((resolve, reject) => {
+								smoothScroll.steps.reduce((prev, curr) => {
+									return prev.then(() => {
+										if (smoothScroll.timer !== timer) { reject();}
+										return Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: curr, bSmooth: false })).then(() => Promise.wait(45));
+									});
+								}, Promise.resolve([])).then(() => resolve()).catch(() => void (0));
+							}).then(() => smoothScroll.stop()).catch(() => void (0));
 						}
 						return true;
 					}

@@ -93,6 +93,7 @@
 - XSPF: fixed multiple inconsistencies and minor bugs regarding [XSPF specs](https://xspf.org/spec) when tracks were added using mouse shortcuts vs standard saving. Data validation should now be much more robust, even if tags contain non-valid values on purpose.
 - UI: multiple fixes to color presets application and menu checks.
 - UI: fixed crash if scrollbar was disabled.
+- UI: smooth scrolling fixes.
 - Drag n' drop: workaround for CUI/SMP drag n' drop bug while dragging tracks directly from album list panel, without library view playlist usage. See [here](https://hydrogenaudio.org/index.php/topic,116669.msg1077838.html#msg1077838) and [CUI Issue 459](https://github.com/reupen/album_list_panel/issues/459).
 
 ## [1.0.0-beta.8] - 2026-01-12
