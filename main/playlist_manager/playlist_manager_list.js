@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/02/26
+//02/03/26
 
 /* exported _list */
 
@@ -2817,7 +2817,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			'\nTooltip:' +
 			'\n--------' +
 			'\n• Shift / Ctrl over buttons / playlists will show the associated action.' +
-			'\n• Font can be changed at \'[profile]\\js_data\\presets\\global\\globFonts.json\'.' +
+			'\n• Font set at \'[FB2K_PROFILE]\\js_data\\presets\\global\\globFonts.json\'.' +
 			'\n' +
 			(this.uiElements['Bottom toolbar'].enabled
 				? '\nFilter/sorting bottom toolbar:' +

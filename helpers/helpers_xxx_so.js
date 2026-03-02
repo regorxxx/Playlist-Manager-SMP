@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/10/25
+//02/03/26
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -94,7 +94,7 @@ function getSoFeatures() {
 
 function checkSoFeatures(soFeat, bPopup = true) {
 	let bPass = true;
-	const tip = '\n\nTip:\nIn case you don\'t plan to fix the error, it can be hidden by changing \'bPopupOnCheckSOFeatures\' setting found at \'[foobar profile]\\js_data\\presets\\global\\globSettings.json\'.';
+	const tip = '\n\nTip:\nIn case you don\'t plan to fix the error, it can be hidden by changing \'bPopupOnCheckSOFeatures\' setting found at \'[FB2K_PROFILE]\\js_data\\presets\\global\\globSettings.json\'.';
 	// Internals
 	if (!soFeat.gecko) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nActiveXObject_Constructor failed:\nFailed to create ActiveXObject object via CLSID: htmlfile.' + '\n\nFeatures affected:\nHTML file manipulation may not work (usually used for clipboard manipulation).' + tip + '\n\nFix: install \'Gecko\' package.\n' + 'https://wiki.winehq.org/Gecko', 'SO features');

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/12/25
+//02/03/26
 
 /**
  * Global folders setting
@@ -48,52 +48,52 @@ folders.dataName = 'js_data\\';
 folders.binariesName = 'binaries\\';
 /**
  * Absolute path to scripts installation root (adjusted for packages or script files)
- * @type {string} - Ex: [foobar profile]\\scripts\\SMP\\xxx-scripts\\ or [foobar profile]\\foo_spider_monkey_panel\\packages\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
+ * @type {string} - Ex: [FB2K_PROFILE]\\scripts\\SMP\\xxx-scripts\\ or [FB2K_PROFILE]\\foo_spider_monkey_panel\\packages\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
  */
 folders.xxx = fb.ProfilePath + folders.xxxName;
 /**
  * Path to global JS data folder
- * @type {string}- Ex: [foobar profile]\\js_data\\
+ * @type {string}- Ex: [FB2K_PROFILE]\\js_data\\
  */
 folders.data = fb.ProfilePath + folders.dataName;
 /**
  * Path to global binaries folder
- * @type {string}- Ex: [foobar profile]\\binaries\\
+ * @type {string}- Ex: [FB2K_PROFILE]\\binaries\\
  */
 folders.binaries = fb.ProfilePath + folders.binariesName;
 /**
  * Path to local JS data folder (adjusted for packages, fallbacks to global JS data folder otherwise)
- * @type {string}- Ex: [foobar profile]\\js_data\\ or [foobar profile]\\foo_spider_monkey_panel\\package_data\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
+ * @type {string}- Ex: [FB2K_PROFILE]\\js_data\\ or [FB2K_PROFILE]\\foo_spider_monkey_panel\\package_data\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
  */
 folders.dataPackage = folders.JsPackageDirs ? folders.JsPackageDirs.Storage : folders.data;
 /**
  * Path to global JS temp folder
- * @type {string} - Ex: [foobar profile]\\js_data\\temp\\
+ * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\temp\\
  */
 folders.temp = folders.data + 'temp\\';
 /**
  * Path to local JS temp folder (adjusted for packages, fallbacks to global JS data folder otherwise)
- * @type {string}- Ex: [foobar profile]\\js_data\\temp\\ or [foobar profile]\\foo_spider_monkey_panel\\temp\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
+ * @type {string}- Ex: [FB2K_PROFILE]\\js_data\\temp\\ or [FB2K_PROFILE]\\foo_spider_monkey_panel\\temp\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\
  */
 folders.tempPackage = folders.dataPackage + 'temp\\';
 /**
  * Path to global JS export folder
- * @type {string} - Ex: [foobar profile]\\js_data\\export\\
+ * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\export\\
  */
 folders.export = folders.data + 'export\\';
 /**
  * Path to global JS user helpers folder
- * @type {string} - Ex: [foobar profile]\\js_data\\helpers\\
+ * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\helpers\\
  */
 folders.userHelpers = folders.data + 'helpers\\';
 /**
  * Path to global JS user presets folder
- * @type {string} - Ex: [foobar profile]\\js_data\\presets\\
+ * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\presets\\
  */
 folders.userPresets = folders.data + 'presets\\';
 /**
  * Path to global JS user global presets folder
- * @type {string} - Ex: [foobar profile]\\js_data\\presets\\global\\
+ * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\presets\\global\\
  */
 folders.userPresetsGlobal = folders.userPresets + 'global\\';
 
