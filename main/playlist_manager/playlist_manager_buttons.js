@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/01/26
+//02/03/26
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -8,7 +8,7 @@
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isFunction:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
-/* global RGB:readable, _tt:readable, _scale:readable, _gdiFont:readable, _gr:readable, extendGR:readable, opaqueColor:readable, RGBA:readable */
+/* global RGB:readable, _tt:readable, _scale:readable, _gdiFont:readable, _textWidth:readable, _textLinesWrap:readable, extendGR:readable, opaqueColor:readable, RGBA:readable */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global buttonStates:readable */
 
@@ -74,12 +74,12 @@ function _listButtons(bSetup = false) {
 		this.description = description;
 		this.text = text;
 		this.textWidth = isFunction(this.text)
-			? () => _gr.CalcTextWidth(this.text(), gFont)
-			: _gr.CalcTextWidth(this.text, gFont);
+			? () => _textWidth(this.text(), gFont)
+			: _textWidth(this.text, gFont);
 		this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
 		this.iconWidth = isFunction(this.icon)
-			? () => _gr.CalcTextWidth(this.icon(), gFontIcon)
-			: _gr.CalcTextWidth(this.icon, gFontIcon);
+			? () => _textWidth(this.icon(), gFontIcon)
+			: _textWidth(this.icon, gFontIcon);
 		this.func = func;
 
 		this.containXY = function (x, y) {
@@ -520,7 +520,7 @@ function filterName() {
 				: !list.bInit || isArrayEqual(list.categoryState, states)
 					? options[0]
 					: 'Multiple...';
-			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
+			const lines = _textLinesWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...' : name;
 		}
 		case 'Extension': {
@@ -550,7 +550,7 @@ function filterName() {
 				: !list.bInit || isArrayEqual(list.tagState, states)
 					? options[0]
 					: 'Multiple...';
-			const lines = _gr.EstimateLineWrap(name, this.gFont, this.w() - 50);
+			const lines = _textLinesWrap(name, this.gFont, this.w() - 50);
 			return lines[0] !== name ? lines[0] + '...' : name;
 		}
 	}

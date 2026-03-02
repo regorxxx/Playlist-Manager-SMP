@@ -1052,12 +1052,12 @@ function _chart({
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
-							const _gr = img.GetGraphics();
-							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							img.ReleaseGraphics(_gr);
+							const imgGr = img.GetGraphics();
+							imgGr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+							imgGr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
+							imgGr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+							imgGr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
+							img.ReleaseGraphics(imgGr);
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, xTitle, yTitle, keyH, keyW, 0, 0, img.Width, img.Height);
@@ -1118,12 +1118,12 @@ function _chart({
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
-							const _gr = img.GetGraphics();
-							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							img.ReleaseGraphics(_gr);
+							const imgGr = img.GetGraphics();
+							imgGr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+							imgGr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
+							imgGr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+							imgGr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
+							img.ReleaseGraphics(imgGr);
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, x - xOffsetKey - maxTickW - _scale(5), this.y + (this.h - this.y) / 2 - keyW / 2, keyH, keyW, 0, 0, img.Width, img.Height);
@@ -1274,12 +1274,12 @@ function _chart({
 						} else {
 							const keyH = gr.CalcTextHeight(valueX, this.gFont);
 							const img = gdi.CreateImage(xTickW, keyH);
-							const _gr = img.GetGraphics();
-							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-							_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
-							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-							_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
-							img.ReleaseGraphics(_gr);
+							const imgGr = img.GetGraphics();
+							imgGr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+							imgGr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
+							imgGr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+							imgGr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
+							img.ReleaseGraphics(imgGr);
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, xLabel, yLabel - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
@@ -1302,7 +1302,7 @@ function _chart({
 									} else {
 										const keyH = gr.CalcTextHeight(valueZ, this.gFont);
 										const img = gdi.CreateImage(xTickW, keyH);
-										const _gr = img.GetGraphics();
+										const imgGr = img.GetGraphics();
 										let topMax = xTickW;
 										if (this.currPoint[0] !== i || this.currPoint[1] !== j) {
 											topMax = value.y / (maxY || 1) * (y - h);
@@ -1313,11 +1313,11 @@ function _chart({
 												}
 											} else if (valueZ.length > 3) { valueZ = valueZ.cut(1); }
 										} else if (this.hasToolbar && (zLabel + keyH) >= this.buttonsCoords.x()) { bHideToolbar = true; }
-										_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-										_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
-										_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-										_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
-										img.ReleaseGraphics(_gr);
+										imgGr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+										imgGr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
+										imgGr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+										imgGr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
+										img.ReleaseGraphics(imgGr);
 										img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 										gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 										if (graphType === 'timeline') {
@@ -1361,12 +1361,12 @@ function _chart({
 							gr.SetTextRenderingHint(TextRenderingHint.SystemDefault);
 						} else { // Draw vertical text in 2 passes, with different rendering hinting and alpha channel to enhance readability
 							const img = gdi.CreateImage(keyW, keyH);
-							const _gr = img.GetGraphics();
-							_gr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
-							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							img.ReleaseGraphics(_gr);
+							const imgGr = img.GetGraphics();
+							imgGr.SetTextRenderingHint(TextRenderingHint.SingleBitPerPixelGridFit);
+							imgGr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
+							imgGr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
+							imgGr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
+							img.ReleaseGraphics(imgGr);
 							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, x - xOffsetKey - maxTickW - _scale(5), this.y + (this.h - this.y) / 2 - keyW / 2, keyH, keyW, 0, 0, img.Width, img.Height);

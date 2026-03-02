@@ -1,7 +1,7 @@
 ﻿'use strict';
-//27/02/26
+//02/03/26
 
-/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha */
+/* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
@@ -431,7 +431,19 @@ function _gdiFont(name, size, style) {
 }
 
 function _textWidth(value, font) {
-	return _gr.CalcTextWidth(value, font);
+	return _gr ? _gr.CalcTextWidth(value, font) : 0;
+}
+
+function _textHeight(value, font) {
+	return _gr ? _gr.CalcTextHeight(value, font) : 0;
+}
+
+function _textLines(value, font, maxWidth) {
+	return _gr ? (_gr.EstimateLineWrap(value, font, maxWidth).length / 2 - 1) || 1 : 1;
+}
+
+function _textLinesWrap(value, font, maxWidth) {
+	return _gr ? _gr.EstimateLineWrap(value, font, maxWidth) : [];
 }
 
 /*

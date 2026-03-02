@@ -13,7 +13,7 @@ include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
-/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, _gdiFont:readable, RGB:readable, blendColors:readable, getBrightness:readable, toRGB:readable, _gr:readable, CENTRE:readable, _tt:readable, LEFT:readable, RIGHT:readable, RGBA:readable, scaleDPI:readable, lightenColor:readable, removeIdFromStr:readable, _sb:readable, isDark:readable */
+/* global _scale:readable, invert:readable, opaqueColor:readable, LM:readable, TM:readable, _gdiFont:readable, RGB:readable, blendColors:readable, getBrightness:readable, toRGB:readable, _textWidth:readable, CENTRE:readable, _tt:readable, LEFT:readable, RIGHT:readable, RGBA:readable, scaleDPI:readable, lightenColor:readable, removeIdFromStr:readable, _sb:readable, isDark:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_draw.js');
@@ -63,7 +63,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		_scale(Math.max(panel.fonts.size - (_scale(72) > 120 ? 10 : _scale(72) > 96 ? 8 : 6), 1)));
 	const iconCharHeader = chars.folderOpenBlack;
 	const iconCharPlaylistWidth = Object.fromEntries(
-		Object.entries(playlistDescriptors).map((pair) => [pair[0], _gr.CalcTextWidth(pair[1].icon, gfontIconChar())])
+		Object.entries(playlistDescriptors).map((pair) => [pair[0], _textWidth(pair[1].icon, gfontIconChar())])
 	);
 	let maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
 
@@ -157,7 +157,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					icon = this.playlistIcons[key].icon ? String.fromCharCode(parseInt(this.playlistIcons[key].icon, 16)) : null;
 				}
 			}
-			iconCharPlaylistWidth[key] = icon ? _gr.CalcTextWidth(icon, gfontIconChar()) : 0;
+			iconCharPlaylistWidth[key] = icon ? _textWidth(icon, gfontIconChar()) : 0;
 		}
 		maxIconWidth = Math.max(...Object.values(iconCharPlaylistWidth));
 	};
@@ -263,7 +263,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		return val;
 	};
 
-	this.calcColumnsWidth = (gr = _gr, toColumn = Infinity, current = -1) => {
+	this.calcColumnsWidth = (gr, toColumn = Infinity, current = -1) => {
 		let total = 0;
 		const perLabel = {};
 		if (toColumn) {
@@ -366,9 +366,9 @@ function _list({ x, y, w, h, properties } = {}) {
 		const bCategoryFilter = !isArrayEqual(this.categoryState, this.categories());
 		if (this.playlistsPath && this.itemsAll) {
 			const info = ' (' + this.itemsAll + ' pls.)' + (bCategoryFilter ? '[*]' : '');
-			const sizeInfo = _gr.CalcTextWidth(info, panel.fonts.title);
-			const sizeName = _gr.CalcTextWidth(this.playlistsPathDirName, panel.fonts.title);
-			const sizeEllipsis = _gr.CalcTextWidth('...', panel.fonts.title);
+			const sizeInfo = _textWidth(info, panel.fonts.title);
+			const sizeName = _textWidth(this.playlistsPathDirName, panel.fonts.title);
+			const sizeEllipsis = _textWidth('...', panel.fonts.title);
 			const left = this.w - 15 - sizeInfo - sizeEllipsis - 2;
 			const name = sizeName + sizeInfo + 15 > this.w
 				? this.playlistsPathDirName.slice(0, Math.floor(left * this.playlistsPathDirName.length / (sizeName - sizeInfo)) - Math.ceil(left * this.playlistsPathDirName.length / (sizeName - sizeEllipsis - 7))) + '...'
@@ -377,7 +377,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		} else {
 			this.headerText = 'Playlist Manager: empty folder';
 		}
-		if (this.w < _gr.CalcTextWidth(this.headerText, panel.fonts.title) + 15) {
+		if (this.w < _textWidth(this.headerText, panel.fonts.title) + 15) {
 			this.headerText = this.headerText.replace('Playlists: ', '').replace('Playlist Manager: ', '');
 		}
 	};

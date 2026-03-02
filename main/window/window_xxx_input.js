@@ -1,10 +1,10 @@
 ﻿'use strict';
-//01/10/25
+//02/03/26
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
 include('window_xxx_helpers.js');
-/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _gr:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable, FontStyle:readable */
+/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _textWidth:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable, FontStyle:readable */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, IDC_HAND:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_SINGLELINE:readable, DT_END_ELLIPSIS:readable, IDC_IBEAM:readable, IDC_ARROW:readable, DT_END_ELLIPSIS:readable, MF_STRING:readable, MF_GRAYED:readable, MF_DISABLED:readable, VK_DELETE:readable, VK_HOME:readable, VK_SHIFT:readable, VK_ESCAPE:readable, VK_BACK:readable, VK_RETURN:readable, VK_LEFT:readable, VK_END:readable , VK_RIGHT:readable */
 
@@ -268,9 +268,9 @@ function _dropdownList(
 	this.description = description;
 	this.tt = '';
 	this.text = text;
-	this.textWidth = isFunction(this.text) ? () => { return _gr.CalcTextWidth(this.text(), gFont); } : _gr.CalcTextWidth(this.text, gFont);
+	this.textWidth = isFunction(this.text) ? () => { return _textWidth(this.text(), gFont); } : _textWidth(this.text, gFont);
 	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
-	this.iconWidth = isFunction(this.icon) ? () => { return _gr.CalcTextWidth(this.icon(), gFontIcon); } : _gr.CalcTextWidth(this.icon, gFontIcon);
+	this.iconWidth = isFunction(this.icon) ? () => { return _textWidth(this.icon(), gFontIcon); } : _textWidth(this.icon, gFontIcon);
 	this.opened = false;
 	this.list = { values: [], current: null, hover: null, count: 0 };
 
@@ -461,24 +461,24 @@ function _buttonList(
 	this.description = description;
 	this.tt = '';
 	this.text = text;
-	this.textWidth = isFunction(this.text) ? () => { return _gr.CalcTextWidth(this.text(), gFont); } : _gr.CalcTextWidth(this.text, gFont);
+	this.textWidth = isFunction(this.text) ? () => { return _textWidth(this.text(), gFont); } : _textWidth(this.text, gFont);
 	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
-	this.iconWidth = isFunction(this.icon) ? () => { return _gr.CalcTextWidth(this.icon(), gFontIcon); } : _gr.CalcTextWidth(this.icon, gFontIcon);
+	this.iconWidth = isFunction(this.icon) ? () => { return _textWidth(this.icon(), gFontIcon); } : _textWidth(this.icon, gFontIcon);
 	this.opened = false;
 	this.menuFunc = (values, current) => {
 		this.opened = true;
 		const menu = new _menu({ onBtnUp: () => { this.opened = false; } });
 		values.forEach((item) => {
-			const padWidth = _gr.CalcTextWidth(' ', _gdiFont('Arial', _scale(11)));
+			const padWidth = _textWidth(' ', _gdiFont('Arial', _scale(11)));
 			const count = this.w / padWidth;
 			let padText = ' '.repeat(count / 2);
 			let entryText = padText + item + padText;
-			let diff = _gr.CalcTextWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
+			let diff = _textWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
 			while (Math.abs(diff) > padWidth) {
 				if (diff > 0) { padText = padText.substring(1); }
 				else { padText += ' '; }
 				entryText = padText + item + padText;
-				diff = _gr.CalcTextWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
+				diff = _textWidth(entryText, _gdiFont('Arial', _scale(11))) - this.w;
 			}
 			menu.newEntry({ entryText, func: () => { this.text = item; } });
 		});
@@ -583,9 +583,9 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 	this.description = description;
 	this.tt = '';
 	this.text = text;
-	this.textWidth = isFunction(this.text) ? () => { return _gr.CalcTextWidth(this.text(), gFont); } : _gr.CalcTextWidth(this.text, gFont);
+	this.textWidth = isFunction(this.text) ? () => { return _textWidth(this.text(), gFont); } : _textWidth(this.text, gFont);
 	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
-	this.iconWidth = isFunction(this.icon) ? () => { return _gr.CalcTextWidth(this.icon(), gFontIcon); } : _gr.CalcTextWidth(this.icon, gFontIcon);
+	this.iconWidth = isFunction(this.icon) ? () => { return _textWidth(this.icon(), gFontIcon); } : _textWidth(this.icon, gFontIcon);
 	this.func = func;
 
 	this.containXY = function (x, y) {
@@ -724,11 +724,11 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 
 		// adjust offset to always see the cursor
 		if (!this.drag && !this.select) {
-			this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset, this.Cpos), this.font);
+			this.Cx = _textWidth(this.text.substring(this.offset, this.Cpos), this.font);
 			if (this.Cx) {
 				while (this.Cx >= this.w - this.rightMargin) {
 					this.offset++;
-					this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset, this.Cpos), this.font);
+					this.Cx = _textWidth(this.text.substring(this.offset, this.Cpos), this.font);
 				}
 			}
 		}
@@ -808,11 +808,11 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	};
 
 	this.calcText = function () {
-		this.TWidth = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
+		this.TWidth = _textWidth(this.text.substring(this.offset), this.font);
 	};
 
 	this.getCx = function (pos) {
-		return (pos >= this.offset ? _gr.CalcTextWidth(this.text.substring(this.offset, pos), this.font) : 0);
+		return (pos >= this.offset ? _textWidth(this.text.substring(this.offset, pos), this.font) : 0);
 	};
 
 	this.getCPos = function (x) {
@@ -820,7 +820,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		let pos = 0;
 		let i;
 		for (i = this.offset; i < this.text.length; i++) {
-			pos += _gr.CalcTextWidth(this.text.substring(i, i + 1), this.font);
+			pos += _textWidth(this.text.substring(i, i + 1), this.font);
 			if (pos >= tx + 3) {
 				break;
 			}
@@ -1277,10 +1277,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 								}
 								this.Cpos = this.text.length;
 							}
-							this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
+							this.Cx = _textWidth(this.text.substring(this.offset), this.font);
 							while (this.Cx >= this.w - this.rightMargin) {
 								this.offset++;
-								this.Cx = _gr.CalcTextWidth(this.text.substring(this.offset), this.font);
+								this.Cx = _textWidth(this.text.substring(this.offset), this.font);
 							}
 							this.repaint();
 						}
