@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/02/26
+//02/03/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -5951,14 +5951,20 @@ function createFilterSortMenu() {
 	menu.newSeparator();
 	{
 		const subMenuName = menu.newMenu('Other sorting tools');
+		menu.newEntry({ menuName: subMenuName, entryText: 'Press Shift to invert order:', flags: MF_GRAYED });
+		menu.newSeparator(subMenuName);
 		menu.newEntry({
 			menuName: subMenuName,
-			entryText: 'Apply current sorting to playlist tabs', func: () => {
-				const plsNames = range(0, plman.PlaylistCount - 1).map((i) => plman.GetPlaylistName(i));
+			entryText: 'Apply panel sorting to UI playlists', func: () => {
+				const bShift = utils.IsKeyPressed(VK_SHIFT);
+				let plsNames = [];
 				const bHasFolders = list.itemsFolder !== 0 && showMenus['Folders'];
 				if (list.getMethodState() === 'By name' && !bHasFolders) {
-					plman.SortPlaylistsByName(list.getSortState() === 'Az' ? 1 : -1);
+					plman.SortPlaylistsByName((list.getSortState() === 'Az' ? 1 : -1) * (bShift ? -1 : 1));
+					plsNames = range(0, plman.PlaylistCount - 1).map((i) => plman.GetPlaylistName(i));
 				} else {
+					plsNames = range(0, plman.PlaylistCount - 1).map((i) => plman.GetPlaylistName(i));
+					if (bShift) { plsNames.reverse(); }
 					let data = clone(list.dataAll).map((item) => {
 						if (item.isFolder) { item.isOpen = true; }
 						return item;
@@ -5978,6 +5984,7 @@ function createFilterSortMenu() {
 							}
 						}
 					}
+					if (bShift) { plsNames.reverse(); }
 				}
 				console.log(
 					'Playlist Manager: sorted playlist tabs in U. ' + list.getMethodState() + ' ' + _p(list.getSortState()) +
@@ -5988,7 +5995,7 @@ function createFilterSortMenu() {
 		});
 		menu.newEntry({
 			menuName: subMenuName,
-			entryText: 'Alphabetically sort playlist tabs', func: () => {
+			entryText: 'Alphabetically sort UI playlists', func: () => {
 				const bShift = utils.IsKeyPressed(VK_SHIFT);
 				plman.SortPlaylistsByName(bShift ? -1 : 1);
 				console.log(
