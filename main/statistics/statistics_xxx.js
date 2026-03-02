@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/01/26
+//27/02/26
 
 /* exported _chart */
 
@@ -1057,8 +1057,8 @@ function _chart({
 							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
 							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
 							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
+							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, xTitle, yTitle, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
@@ -1123,8 +1123,8 @@ function _chart({
 							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
 							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
 							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
+							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, x - xOffsetKey - maxTickW - _scale(5), this.y + (this.h - this.y) / 2 - keyW / 2, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
@@ -1279,8 +1279,8 @@ function _chart({
 							_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
 							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
 							_gr.DrawString(valueX, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, xTickW, keyH, StringFormatFlags.NoWrap);
-							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
+							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, xLabel, yLabel - xTickW - this.axis.x.width, keyH, xTickW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
@@ -1317,8 +1317,8 @@ function _chart({
 										_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 255), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
 										_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
 										_gr.DrawString(valueZ, this.gFont, RGBA(...toRGB(xAxisColor), 123), 0, 0, topMax, keyH, StringFormatFlags.NoWrap);
-										img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 										img.ReleaseGraphics(_gr);
+										img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 										gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 										if (graphType === 'timeline') {
 											const point = this.dataCoords[i][j];
@@ -1366,8 +1366,8 @@ function _chart({
 							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 200), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
 							_gr.SetTextRenderingHint(TextRenderingHint.AntiAliasGridFit);
 							_gr.DrawString(key, this.gFont, RGBA(...toRGB(yAxisColor), 123), 0, 0, keyW, keyH, StringFormatFlags.NoWrap);
-							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							img.ReleaseGraphics(_gr);
+							img.RotateFlip(RotateFlipType.Rotate90FlipXY);
 							gr.SetInterpolationMode(InterpolationMode.NearestNeighbor);
 							gr.DrawImage(img, x - xOffsetKey - maxTickW - _scale(5), this.y + (this.h - this.y) / 2 - keyW / 2, keyH, keyW, 0, 0, img.Width, img.Height);
 							gr.SetInterpolationMode(InterpolationMode.Default);
