@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/02/26
+//02/03/26
 
 /* exported _background */
 
@@ -45,6 +45,7 @@ function _background({
 	 * @type {(bForce:boolean, onDone:function) => void}
 	 * @param {Boolean} bForce - [=false]
 	 * @param {Function?} onDone - [=null]
+	 * @param {Boolean} bRepaint - [=true]
 	 * @returns {void}
 	 */
 	this.updateImageBg = debounce((bForce = false, onDone = null, bRepaint = true) => {
@@ -60,6 +61,8 @@ function _background({
 		const bPath = ['path', 'folder'].includes(this.coverMode);
 		const path = bPath ? this.getArtPath(void (0), handle) : '';
 		const bFoundPath = bPath && path.length;
+		if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
+		if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
 		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return; }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
@@ -72,7 +75,7 @@ function _background({
 		}
 		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
 		let profiler;
-		if (this.logging.bProfile) { profiler = new FbProfiler('loadImg'); }
+		if (this.logging.bProfile) { profiler = new FbProfiler('Background - loadImg'); }
 		const promise = bFoundPath
 			? gdi.LoadImageAsyncV2('', path)
 			: handle
@@ -89,13 +92,16 @@ function _background({
 				this.coverImg.art.path = result.path;
 				this.coverImg.handle = handle.RawPath;
 				this.coverImg.id = id;
+				if (this.logging.bDebug) { console.log('Background - updateImageBg - art handle: ' + result.path + ' (handle)'); }
 			}
 			this.processArtColors();
 			this.processArtEffects();
 		}).catch(() => {
+			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error'); }
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}).finally(() => {
+			if (this.logging.bDebug) { console.log('Background - updateImageBg - art colors: ' + this.getArtColors()); }
 			this.applyArtColors(bRepaint);
 			this.notifyArtColors();
 			if (bRepaint) { this.repaint(); }
@@ -112,7 +118,7 @@ function _background({
 	 */
 	this.processArtColors = () => {
 		let profiler;
-		if (this.logging.bProfile) { profiler = new FbProfiler('processArtColors'); }
+		if (this.logging.bProfile) { profiler = new FbProfiler('Background - processArtColors'); }
 		if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
 			this.coverImg.art.colors = JSON.parse(this.coverImg.art.image.GetColourSchemeJSON(6));
 		}
@@ -129,7 +135,7 @@ function _background({
 	 */
 	this.processArtEffects = () => {
 		let profiler;
-		if (this.logging.bProfile) { profiler = new FbProfiler('processArtEffects'); }
+		if (this.logging.bProfile) { profiler = new FbProfiler('Background - processArtEffects'); }
 		if ((this.showCover || this.useColorsBlend) && !!this.coverImg.art.image) {
 			let intensity;
 			if (this.coverModeOptions.bFlipX && this.coverModeOptions.bFlipY) {
@@ -1274,6 +1280,7 @@ function _background({
 	/**
 	 * @typedef {object} Logging - Panel logging related settings.
 	 * @property {boolean} [bProfile] - Profiling logging flag.
+	 * @property {boolean} [bDebug] - Debug logging flag.
 	 */
 	/** @type {Logging} - Panel logging related settings */
 	this.logging = {};
@@ -1300,6 +1307,6 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 			}
 			: {}
 		),
-		logging: { bProfile: false }
+		logging: { bProfile: false, bDebug: false }
 	};
 };
