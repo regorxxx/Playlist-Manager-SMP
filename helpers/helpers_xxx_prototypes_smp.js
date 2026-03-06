@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/26
+//05/03/26
 
 /* exported extendGR, checkCompatible */
 
@@ -93,7 +93,7 @@ Object.defineProperty(fb, 'tfCache', {
 
 // Augment FbTitleFormat() constructor with 'Expression' property and add caching
 {
-	const oldProto = FbProfiler.prototype;
+	const oldProto = FbTitleFormat.prototype;
 	const old = FbTitleFormat;
 	FbTitleFormat = function FbTitleFormat() { // NOSONAR
 		const bCache = Object.hasOwn(fb.tfCache, arguments[0]);
@@ -422,9 +422,9 @@ if (FbProfiler) {
 		that.CheckPoint = (function CheckPoint(name) {
 			let point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			if (point) {
-				point.time = this.Time;
+				point.last = this.Time;
 			} else {
-				point = { name, time: this.Time, acc: 0 };
+				point = { name, last: this.Time, times: [], time: 0, timeAcc: 0, calls: 0, callsAcc: 0, report: { interval: 0, id: null } };
 				this.CheckPoints.push(point);
 			}
 			return point;
@@ -433,18 +433,84 @@ if (FbProfiler) {
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			if (point) {
 				const now = this.Time;
-				point.acc += now - point.time;
-				point.time = now;
+				const time = now - point.last;
+				point.times.push(time);
+				point.timeAcc += time;
+				point.time += time;
+				point.last = now;
+				point.calls += 1;
+				point.callsAcc += 1;
 			}
-			return point ? point.acc : null;
+			return point ? point.timeAcc : null;
 		}).bind(that);
 		that.ElapsedTimeSince = (function ElapsedTimeSince(name) {
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
-			return (point ? this.Time - point.time : null);
+			return (point ? this.Time - point.last : null);
 		}).bind(that);
-		that.CheckPointPrint = (function CheckPointStep(name, message) {
+		that.CheckPointPrint = (function CheckPointStep(name, message, options = { bAverage: false, bPerInterval: false, bOnVisible: false }) {
+			if (options.bOnVisible && !window.IsVisible) { return null; }
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
-			if (point) { console.log('profiler (' + this.Name + '): ' + name + ' ' + point.acc + ' ms' + (message || '')); return true; }
+			if (point) {
+				const msTotal = options.bAverage
+					? (point.timeAcc / point.callsAcc).toFixed(1) + ' ms/call'
+					: point.timeAcc.toFixed(1) + ' ms';
+				if (options.bPerInterval) {
+					if (options.bAverage) {
+						const avg = (point.time / point.calls).toFixed(1);
+						const total = point.time.toFixed(1);
+						const max = Math.max.apply(Math, point.times).toFixed(1);
+						const fps = (1000 / avg).toFixed(1);
+						console.log(
+							'--------------------------------------------------------------\n' +
+							'profiler (' + this.Name + '): ' + name + message + ' - ' + (point.report.interval / 1000).toFixed(1) + ' s interval\n' +
+							'--------------------------------------------------------------\n' +
+							'Average:\t\t' + avg + ' ms/call\n' +
+							'FPS:\t\t' + fps + ' fps\n' +
+							'Slowest:\t\t' + max + ' ms\n' +
+							'Total calls:\t' + point.calls + ' calls\n' +
+							'Total time:\t' + total + ' ms\n'
+						);
+					} else {
+						const ms = point.time.toFixed(1) + ' ms';
+						console.log('profiler (' + this.Name + '): ' + name + ' - ' + ms + ' on ' + point.calls + ' steps | ' + msTotal + ' on ' + point.callsAcc + ' total' + (message || ''));
+					}
+				} else {
+					console.log('profiler (' + this.Name + '): ' + name + ' - ' + msTotal + ' on ' + point.callsAcc + ' steps ' + (message || ''));
+				}
+				point.calls = 0;
+				point.time = 0;
+				return true;
+			}
+			return null;
+		}).bind(that);
+		that.CheckPointPrintInterval = (function CheckPointPrintInterval(interval, name, message, options) {
+			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			if (point) {
+				if (point.report.id !== null) { clearInterval(point.report.id); point.report.id = null; }
+				point.report.interval = interval || 0;
+				if (point.report.interval) {
+					point.report.id = setInterval(() => this.CheckPointPrint(name, message, options), interval);
+				}
+				return true;
+			}
+			return null;
+		}).bind(that);
+		that.HasCheckPointPrintInterval = (function HasCheckPointPrintInterval(name) {
+			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			return point && point.report.id !== null;
+		}).bind(that);
+		that.HasCheckPoint = (function HasCheckPoint(name) {
+			return !!this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+		}).bind(that);
+		that.CheckPointReset = (function CheckPointReset(name) {
+			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			if (point) {
+				point.last = this.Time;
+				point.time.length = 0;
+				point.timeAcc = 0;
+				point.calls = 0;
+				point.callsAcc = 0;
+			}
 			return null;
 		}).bind(that);
 		return that;
