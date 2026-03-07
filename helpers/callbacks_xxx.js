@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/02/26
+//06/03/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
 
@@ -226,6 +226,7 @@ const fireEvents = function (event) {
 		};
 		if (event === 'on_drag_drop' && window.InstanceType === 0 && fb.GetSelectionType() === 0) { // BUG: CUI Album List not setting a selection during drag n' drop
 			const action = arguments[0];
+			if (action.IsInternal) { bReturn = runEvent(event); }
 			const idx = action.Playlist = plman.CreatePlaylist(plman.PlaylistCount,'.');
 			Promise.wait(20).then(() => { // Seems to be fast enough to not refresh the UI
 				const handleList = plman.GetPlaylistItems(idx);

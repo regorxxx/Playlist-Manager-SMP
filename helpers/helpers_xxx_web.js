@@ -1,7 +1,7 @@
 ﻿'use strict';
-//05/06/25
+//06/03/26
 
-/* exported downloadText, paginatedFetch, abortWebRequests */
+/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2 */
 
 function downloadText(URL) {
 	return URL.includes('http://') || URL.includes('https://')
@@ -30,7 +30,6 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 				window.IsUnload
 					? reject({ status: 408, responseText: 'Forced shutdown' })
 					: reject({ status: this.status, responseText: this.responseText });
-
 			}
 		}
 	} else if (!func && this !== null) {
@@ -39,6 +38,35 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 			? reject({ status: 408, responseText: 'Forced shutdown' })
 			: reject({ status: this.status, responseText: this.responseText });
 	} // 408 Request Timeout
+	return null;
+}
+
+function onStateChangeV2(resolve, reject, func = null, type = null) {
+	if (this !== null) { // this is winHttp bound
+		if (this.Status === 200) {
+			if (window.WebRequests) { window.WebRequests.delete(this); }
+			if (func) { return func(this.ResponseText, this.ResponseBody); }
+			else {
+				if (type !== null) {
+					const contentType = this.GetResponseHeader('Content-Type');
+					if (!contentType.includes(type)) {
+						reject({ status: this.Status, responseText: 'Type mismatch: ' + contentType + ' is not ' + type });
+					}
+					resolve(contentType.includes('text') ? this.ResponseText : this.ResponseBody);
+				}
+				resolve(this.ResponseText);
+			}
+		} else if (!func) {
+			window.IsUnload
+				? reject({ status: 408, responseText: 'Forced shutdown' })
+				: reject({ status: this.Status, responseText: this.ResponseText });
+		}
+	} else if (!func) {
+		if (window.WebRequests) { window.WebRequests.delete(this); }
+		window.IsUnload
+			? reject({ status: 408, responseText: 'Forced shutdown' })
+			: reject({ status: this.Status, responseText: this.ResponseText });
+	}
 	return null;
 }
 
@@ -81,6 +109,63 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 	return p;
 }
 
+function sendV2({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
+	const p = new Promise((resolve, reject) => {
+		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; }
+		const winHttp = new ActiveXObject('WinHttp.WinHttpRequest.5.1');
+		if (window.WebRequests) { window.WebRequests.add(winHttp); }
+		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
+		// Add ('&' + new Date().getTime()) to URLS to avoid caching
+		winHttp.Open(
+			method,
+			URL + (bypassCache
+				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime()
+				: ''),
+			true
+		);
+		requestHeader.forEach((pair) => {
+			if (!pair[0] || !pair[1]) { console.log('HTTP Headers missing: ' + pair); return; }
+			winHttp.SetRequestHeader(...pair);
+		});
+		if (bypassCache) {
+			winHttp.SetRequestHeader('Cache-Control', 'private');
+			winHttp.SetRequestHeader('Pragma', 'no-cache');
+			winHttp.SetRequestHeader('Cache', 'no-store');
+			winHttp.SetRequestHeader('If-Modified-Since', 'Sat, 1 Jan 2000 00:00:00 GMT');
+		}
+		winHttp.SetTimeouts(timeOut, timeOut, timeOut, timeOut);
+		winHttp.Send(method === 'POST' ? body : void (0));
+		const timer = setTimeout(() => {
+			clearInterval(checkResponse);
+			if (!window.WebRequests || !window.WebRequests.has(winHttp)) { return; }
+			else { window.WebRequests.delete(winHttp); }
+			try {
+				winHttp.WaitForResponse(-1);
+				onStateChangeV2.call(winHttp, resolve, reject, func, type);
+			} catch (e) {
+				let status = 400;
+				if (e.message.indexOf('0x80072ee7') !== -1) { status = 400; }
+				else if (e.message.indexOf('0x80072ee2') !== -1) { status = 408; }
+				else if (e.message.indexOf('0x8000000a') !== -1) { status = 408; }
+				winHttp.Abort();
+				if (!func) { reject({ status, responseText: e.message }); }
+			}
+		}, timeOut);
+		const checkResponse = setInterval(() => {
+			if (!window.WebRequests || !window.WebRequests.has(winHttp)) {
+				clearInterval(checkResponse);
+				clearTimeout(timer);
+				return;
+			}
+			let response;
+			try { response = winHttp.Status && winHttp.ResponseText; } catch (e) { } // eslint-disable-line no-unused-vars, no-empty
+			if (!response) { return; }
+			onStateChangeV2.call(winHttp, resolve, reject, func, type);
+		}, 30);
+	});
+	return p;
+}
+
 // Send consecutive GET request, incrementing queryParams.offset or queryParams.page
 // Keys are the response object path, which point to an array, to concatenate for the final response
 function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], increment = 1, previousResponse = [] }) {
@@ -93,7 +178,7 @@ function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], incre
 		paramsArr = paramsArr.filter((pair) => pair[0] !== 'min_ts');
 	}
 	const urlParams = paramsArr.length
-		? '?' +	 paramsArr.map((pair) => pair[0] + '=' + pair[1]).join('&')
+		? '?' + paramsArr.map((pair) => pair[0] + '=' + pair[1]).join('&')
 		: '';
 	return send({ method: 'GET', URL: URL + urlParams, requestHeader, bypassCache: true })
 		.then(
@@ -141,6 +226,21 @@ function abortWebRequests(bClear = true) {
 		if (bClear) { window.WebRequests.clear(); }
 	}
 }
+
+function addUrlParams(params) {
+	return Object.keys(params).length
+		? '?' + encodeUrlParams(params)
+		: '';
+}
+
+function encodeUrlParams(params) {
+	return Object.entries(params).map((pair) => {
+		return Array.isArray(pair[1])
+			? pair[1].map((val) => [pair[0], val].map(encodeURIComponent).join('=')).join('&')
+			: pair.map(encodeURIComponent).join('=');
+	}).join('&');
+}
+
 
 // Add handling to terminate activeX objects on foobar shutdown to avoid crashes
 // If a panel error is thrown while a web request is active, the entire foobar2000
