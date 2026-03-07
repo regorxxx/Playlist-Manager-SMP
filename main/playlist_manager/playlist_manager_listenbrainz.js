@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/26
+//06/03/26
 
 /* exported ListenBrainz */
 
@@ -18,7 +18,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTags:readable, getHandleListTagsV2:readable, sanitizeTagIds:readable, sanitizeQueryVal:readable, checkQuery:readable, sanitizeQueryVal:readable, sanitizeTagValIds:readable */
 include('..\\..\\helpers\\helpers_xxx_web.js');
-/* global send:readable, paginatedFetch:readable */
+/* global send:readable, paginatedFetch:readable, addUrlParams:readable */
 include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
 /* global similarity:readable */
 const SimpleCrypto = require('..\\helpers-external\\SimpleCrypto-js\\SimpleCrypto.min');
@@ -115,10 +115,9 @@ ListenBrainz.listensCache = {
 			user = this.sanitizeUser(user);
 			if (data) {
 				if (data[user].maxRetrievalDate < maxDate) {
-					const queryParams = '?max_ts=' + maxDate + '&count=1';
 					const listen = await send({
 						method: 'GET',
-						URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + queryParams,
+						URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + addUrlParams({ max_ts: maxDate, count: 1 }),
 						requestHeader: [['Authorization', 'Token ' + token]],
 						bypassCache: true
 					}).then(
@@ -131,10 +130,9 @@ ListenBrainz.listensCache = {
 					if (listen && listen.listened_at > maxDate) { bPass = false; }
 				}
 				if (data[user].minRetrievalDate > minDate) {
-					const queryParams = '?max_ts=' + data[user].minRetrievalDate + '&count=1';
 					const listen = await send({
 						method: 'GET',
-						URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + queryParams,
+						URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + addUrlParams({ max_ts: data[user].minRetrievalDate, count: 1 }),
 						requestHeader: [['Authorization', 'Token ' + token]],
 						bypassCache: true
 					}).then(
@@ -929,10 +927,9 @@ ListenBrainz.getUserFeedback = function getUserFeedback(user, params = {/*score,
 			}
 		);
 	} else {
-		const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&') : '';
 		return send({
 			method: 'GET',
-			URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback' + queryParams,
+			URL: 'https://api.listenbrainz.org/1/feedback/user/' + user + '/get-feedback' + addUrlParams(params),
 			requestHeader: [['Authorization', 'Token ' + token]],
 			bypassCache: true
 		}).then(
@@ -1271,11 +1268,9 @@ ListenBrainz.lookupRecordingInfoByMBIDs = function lookupRecordingInfoByMBIDs(MB
  * @returns {Promise.<{recording_mbid:string}[]>}
  */
 ListenBrainz.getEntitiesByTag = function getEntitiesByTag(tagsArr, token, type = 'artist', count = 50, operator = 'or', popularity = [0, 75]) {
-	const queryParams = tagsArr.map((tag) => 'tag=' + encodeURIComponent(tag.toLowerCase())).join('&')
-		+ '&operator=' + (operator || 'or').toLowerCase();
 	return send({
 		method: 'GET',
-		URL: 'https://api.listenbrainz.org/1/lb-radio/tags?' + queryParams + '&pop_begin=' + popularity[0] + '&pop_end=' + popularity[1] + '&count=' + count,
+		URL: 'https://api.listenbrainz.org/1/lb-radio/tags' + addUrlParams({ tag: tagsArr.map((t) => t.toLowerCase()), operator: (operator || 'or').toLowerCase(), pop_begin: popularity[0], pop_end: popularity[1], count }),
 		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
 	}).then(
 		(resolve) => {
@@ -1334,12 +1329,9 @@ ListenBrainz.getRecordingsByTag = function getRecordingsByTag(tagsArr, token, co
  */
 ListenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', params = {/*count, offset, range*/ }, token = '') {
 	if (!user) { console.log('getTopRecordings: no user provided'); return Promise.resolve([]); }
-	const queryParams = Object.keys(params).length
-		? '?' + Object.entries(params).map((pair) => pair[0] + '=' + pair[1]).join('&')
-		: '';
 	return send({
 		method: 'GET',
-		URL: 'https://api.listenbrainz.org/1/stats/' + (user.toLowerCase() === 'sitewide' ? 'sitewide' : 'user/' + user) + '/recordings' + queryParams,
+		URL: 'https://api.listenbrainz.org/1/stats/' + (user.toLowerCase() === 'sitewide' ? 'sitewide' : 'user/' + user) + '/recordings' + addUrlParams(params),
 		requestHeader: [['Authorization', 'Token ' + token]],
 		bypassCache: true
 	}).then(
@@ -1372,12 +1364,9 @@ ListenBrainz.getTopRecordings = function getTopRecordings(user = 'sitewide', par
  */
 ListenBrainz.getRecommendedRecordings = function getRecommendedRecordings(user, params = { artist_type: 'top' /*count, offset*/ }, token = '') {
 	if (!user) { console.log('getRecommendedRecordings: no user provided'); return Promise.resolve([]); }
-	const queryParams = Object.keys(params).length
-		? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&')
-		: '';
 	return send({
 		method: 'GET',
-		URL: 'https://api.listenbrainz.org/1/cf/recommendation/user/' + user + '/recording' + queryParams,
+		URL: 'https://api.listenbrainz.org/1/cf/recommendation/user/' + user + '/recording' + addUrlParams(params),
 		requestHeader: [['Authorization', 'Token ' + token]],
 		bypassCache: true
 	}).then(
@@ -1426,12 +1415,9 @@ ListenBrainz.retrieveUserRecommendedPlaylistsNames = function retrieveUserRecomm
 			}
 		);
 	} else {
-		const queryParams = Object.keys(params).length
-			? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&')
-			: '';
 		return send({
 			method: 'GET',
-			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists/createdfor' + queryParams,
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists/createdfor' + addUrlParams(params),
 			requestHeader: [['Authorization', 'Token ' + token]],
 			bypassCache: true
 		}).then(
@@ -1745,10 +1731,9 @@ ListenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 			}
 		);
 	} else {
-		const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&') : '';
 		return send({
 			method: 'GET',
-			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists' + queryParams,
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/playlists' + addUrlParams(params),
 			requestHeader: [['Authorization', 'Token ' + token]],
 			bypassCache: true
 		}).then(
@@ -2006,10 +1991,9 @@ ListenBrainz.retrieveListens = async function retrieveListens(user, params = { m
 			}
 		);
 	} else {
-		const queryParams = Object.keys(params).length ? '?' + Object.entries(params).map((pair) => { return pair[0] + '=' + pair[1]; }).join('&') : '';
 		return send({
 			method: 'GET',
-			URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + queryParams,
+			URL: 'https://api.listenbrainz.org/1/user/' + user + '/listens' + addUrlParams(params),
 			requestHeader: [['Authorization', 'Token ' + token]],
 			bypassCache: true
 		}).then(
@@ -2120,10 +2104,9 @@ ListenBrainz.exportPlaylistToService = function exportPlaylistToService(pls, ser
 			(s) => ListenBrainz.exportPlaylistToService(pls, s, token)
 			, 50); // [{status, value}, ...]
 	}
-	const queryParams = bPublic ? '?bPublic=true' : '';
 	return send({
 		method: 'POST',
-		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/export/' + service + queryParams,
+		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/export/' + service + addUrlParams({ is_public: bPublic }),
 		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]]
 	}).then(
 		(resolve) => {
