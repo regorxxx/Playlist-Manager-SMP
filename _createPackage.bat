@@ -1,6 +1,6 @@
-﻿@ECHO off
+@ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.11/02/2026
+REM Create packages (zip file) from js files v.02/03/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -27,6 +27,14 @@ SET foobarPath=%2
 IF [%foobarPath%]==[.] (
 	SET foobarPath="..\..\..\..\foobar2000.exe"
 )
+CALL :input %1
+GOTO:EOF
+
+REM ------------------------------
+REM Init
+REM ------------------------------
+
+:input
 ECHO ---------------------------------
 ECHO ^|	Package creator:	^|
 ECHO ---------------------------------
@@ -37,14 +45,17 @@ ECHO (4) Timeline-SMP
 ECHO (5) Volume-Seekbar-SMP
 ECHO (6) Infinity-Tools-SMP
 ECHO (7) Library-Tree-SMP
+ECHO (8) Art-Display-SMP
+ECHO (M) See more...
+ECHO (E) Exit...
 ECHO.
 IF [%~1]==[] (
-	CHOICE /C 1234567 /N /M "CHOOSE PACKAGE TO BUILD (1-7): "
+	CHOICE /C 12345678me /N /M "CHOOSE PACKAGE TO BUILD (1-9): "
 ) ELSE (
 	IF [%1] EQU [0] (
-		ECHO 9| CHOICE /C 123456789 /N >NUL
+		ECHO 11| CHOICE /C 12345678me /N >NUL
 	) ELSE (
-		ECHO %1| CHOICE /C 123456789 /N /M "CHOOSE PACKAGE TO BUILD (1-7): "
+		ECHO %1| CHOICE /C 12345678me /N /M "CHOOSE PACKAGE TO BUILD (1-9): "
 	)
 )
 IF %ERRORLEVEL% EQU 1 GOTO world_map
@@ -54,10 +65,39 @@ IF %ERRORLEVEL% EQU 4 GOTO timeline
 IF %ERRORLEVEL% EQU 5 GOTO volume_seekbar
 IF %ERRORLEVEL% EQU 6 GOTO infinity_tools
 IF %ERRORLEVEL% EQU 7 GOTO library_tree
-IF ERRORLEVEL 7 (
+IF %ERRORLEVEL% EQU 8 GOTO art_display
+IF %ERRORLEVEL% EQU 9 call :more
+IF %ERRORLEVEL% EQU 10 GOTO:EOF
+IF ERRORLEVEL 11 (
 	ECHO Package ^(%1^) not recognized.
 	GOTO:EOF
 )
+GOTO:EOF
+
+:more
+ECHO ---------------------------------
+ECHO ^|	Package creator:	^|
+ECHO ---------------------------------
+ECHO (1) Profiler-SMP
+ECHO (m) See more...
+ECHO.
+IF [%~1]==[] (
+	CHOICE /C 1m /N /M "CHOOSE PACKAGE TO BUILD (1-9): "
+) ELSE (
+	IF [%1] EQU [0] (
+		ECHO 4| CHOICE /C 1m /N >NUL
+	) ELSE (
+		ECHO %1| CHOICE /C 1m /N /M "CHOOSE PACKAGE TO BUILD (1-8): "
+	)
+)
+IF %ERRORLEVEL% EQU 1 GOTO profiler
+IF %ERRORLEVEL% EQU 2 call :input
+IF %ERRORLEVEL% EQU 3 GOTO:EOF
+IF ERRORLEVEL 4 (
+	ECHO Package ^(%1^) not recognized.
+	GOTO:EOF
+)
+GOTO:EOF
 
 REM ------------------------------
 REM Packages
@@ -873,6 +913,120 @@ CALL :copy_folder assets\library_tree\images\noCover\small
 CALL :copy_folder assets\library_tree\images\root
 CALL :copy_folder assets\library_tree\images\root\small
 CALL :copy_folder assets\library_tree\licences
+REM package info, zip and report
+CALL :finish
+GOTO:EOF
+
+:art_display
+REM package variables
+REM version is automatically retrieved from main js file
+REM any text must be JSON encoded
+SET name=Art-Display-SMP
+SET id=9DFE7B71-FA68-4E78-9004-16E3FEF6DA17
+SET description=https://github.com/regorxxx/Art-Display-SMP\r\n\r\nA display panel for foobar2000, using Spider Monkey Panel.\r\n\r\n• Supports any art type from tracks (playing and selection).\r\n• Load images from any path or folder.\r\n• Multiple image effects.\r\n• Configurable display text by TF.\r\n• Media playback notifications using foo_flowin.
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" art_display.js`) DO (SET version=%%F)
+IF "%version%"=="" (
+	ECHO Main file not found or wrong version string
+	PAUSE>NUL
+	EXIT /B 1
+)
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Art-Display-SMP', { author: 'regorxxx', version: '=%
+SET version=%version:', features: { drag_n_drop: false } }); }=%
+REM features
+SET enableDragDrop=false
+SET shouldGrabFocus=false
+REM global variable
+SET root=%packagesFolder%\%name: =-%
+REM package folder and file
+CALL :check_root
+CALL :copy_main art_display.js
+REM docs
+CALL :copy_file _INSTALLATION.txt
+CALL :copy_file _TIPS.txt
+REM main
+CALL :copy_folder main\art_display
+CALL :check_folder main\window
+CALL :copy_file main\window\window_xxx_background.js
+CALL :copy_file main\window\window_xxx_background_menu.js
+CALL :copy_file main\window\window_xxx_dynamic_colors.js
+CALL :copy_file main\window\window_xxx_helpers.js
+CALL :copy_file main\window\window_xxx_display.js
+REM helpers
+CALL :check_folder helpers
+CALL :copy_file helpers\callbacks_xxx.js
+CALL :copy_file helpers\helpers_xxx.js
+CALL :copy_file helpers\helpers_xxx_basic_js.js
+CALL :copy_file helpers\helpers_xxx_console.js
+CALL :copy_file helpers\helpers_xxx_dummy.js
+CALL :copy_file helpers\helpers_xxx_export.js
+CALL :copy_file helpers\helpers_xxx_file.js
+CALL :copy_file helpers\helpers_xxx_file_zip.js
+CALL :copy_file helpers\helpers_xxx_flags.js
+CALL :copy_file helpers\helpers_xxx_foobar.js
+CALL :copy_file helpers\helpers_xxx_global.js
+CALL :copy_file helpers\helpers_xxx_global_post.js
+CALL :copy_file helpers\helpers_xxx_input.js
+CALL :copy_file helpers\helpers_xxx_properties.js
+CALL :copy_file helpers\helpers_xxx_prototypes.js
+CALL :copy_file helpers\helpers_xxx_prototypes_smp.js
+CALL :copy_file helpers\helpers_xxx_so.js
+CALL :copy_file helpers\helpers_xxx_UI.js
+CALL :copy_file helpers\helpers_xxx_UI_chars.js
+CALL :copy_file helpers\helpers_xxx_web.js
+CALL :copy_file helpers\helpers_xxx_web_update.js
+CALL :copy_file helpers\menu_xxx.js
+CALL :check_folder helpers\readme
+CALL :copy_file helpers\readme\art_display.txt
+REM helpers external
+CALL :copy_folder helpers-external\7z
+CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\checkso
+CALL :copy_folder helpers-external\chroma.js
+CALL :copy_folder helpers-external\cmdutils
+CALL :copy_folder helpers-external\curl
+CALL :copy_folder helpers-external\namethatcolor
+CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM package info, zip and report
+CALL :finish
+GOTO:EOF
+
+:profiler
+REM package variables
+REM version is automatically retrieved from main js file
+REM any text must be JSON encoded
+SET name=Profiler-SMP
+SET id=5EE8144D-2778-4AD7-B90C-3B44FFC6F00A
+SET description=https://github.com/regorxxx/Profiler-SMP\r\n\r\nTest and profiling tool for foobar2000 JS-host testing and benchmarking (e.g. SMP and JSplitter).\r\n\r\n• Unit tests to automatize JS-host checking.\r\n• Compare functions regarding execution speed and memory consumption.\r\n• Reports in txt tables or JSON format.\r\n• Configurable tests.
+REM version
+FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" smp_profiler.js`) DO (SET version=%%F)
+IF "%version%"=="" (
+	ECHO Main file not found or wrong version string
+	PAUSE>NUL
+	EXIT /B 1
+)
+SET version=%version:if (!window.ScriptInfo.PackageId) { window.DefineScript('Profiler-SMP', { author: 'regorxxx', version: '=%
+SET version=%version:' }); }=%
+REM features
+SET enableDragDrop=false
+SET shouldGrabFocus=false
+REM global variable
+SET root=%packagesFolder%\%name: =-%
+REM package folder and file
+CALL :check_root
+CALL :copy_main smp_profiler.js
+REM docs
+CALL :copy_file _INSTALLATION.txt
+CALL :copy_file _TIPS.txt
+REM main
+CALL :copy_folder main\profiler
+REM helpers
+CALL :check_folder helpers
+CALL :copy_file helpers\callbacks_xxx.js
+CALL :copy_folder helpers\profiler
+REM helpers external
+CALL :copy_folder helpers-external\bitmasksorterjs
+CALL :copy_folder helpers-external\easy-table-1.2.0
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
