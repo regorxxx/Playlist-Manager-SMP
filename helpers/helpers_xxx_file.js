@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/02/26
+//09/03/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -723,12 +723,15 @@ function _explorer(fileOrFolder) {
 }
 
 // Workaround for bug on win 7 on utils.Glob(), matching extensions with same chars: utils.Glob(*.m3u) returns *.m3u8 files too
-function getFiles(folderPath, extensionSet) {
+function getFiles(folderPath, extensionSet, mask) {
 	folderPath = _resolvePath(folderPath);
 	const bLongPath = folderPath.length > 260;
-	return utils.Glob((bLongPath ? _longPath(folderPath) : folderPath) + '*.*').filter((item) => {
+	const files = utils.Glob((bLongPath ? _longPath(folderPath) : folderPath) + '*.*').filter((item) => {
 		return extensionSet.has('.' + item.split('.').pop().toLowerCase());
 	}).map((path) => path.replace(/^\\\\\?\\/, ''));
+	return mask
+		? files.map((file) => utils.PathWildcardMatch(mask, file) ? file : null).filter(Boolean)
+		: files;
 }
 
 function _run() {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/25
+//09/03/26
 
 /* exported _menu */
 
@@ -7,7 +7,7 @@
 	Contextual Menu helper v2.6.0
  */
 
-include(fb.ComponentPath + 'docs\\Flags.js');
+include(fb.ComponentPath + 'docs\\Flags.js'); // Can also be replaced with fb.ComponentPath + 'samples\\complete\\js\\helpers.js';
 /* global MF_STRING:readable, MF_GRAYED:readable, abortWebRequests:readable */
 
 /**
@@ -105,7 +105,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	/** @type {number} - Internal menu idx count */
 	let idx = 0;
 	/** @type {_menu.Separator} - Separator string identifier to be used by externally */
-	this.separator = void(0);
+	this.separator = void (0);
 	Object.defineProperty(this, 'separator', { get() { return _menu.separator; } });
 	/** @type {RegExp} - Expression to check for separator entries */
 	const separator = /(?:^|\\)(?:sep|separator)$/i;
@@ -1300,7 +1300,7 @@ _menu.isFunction = function isFunction(obj) {
  * @name separator
  * @type {_menu.Separator}
 */
-_menu.separator = void(0);
+_menu.separator = void (0);
 Object.defineProperty(_menu, 'separator', { get() { return this.separators[0]; } });
 /**
  * Separators identifier
@@ -1311,7 +1311,7 @@ Object.defineProperty(_menu, 'separator', { get() { return this.separators[0]; }
  * @name separator
  * @type {string[]}
 */
-_menu.separators = void(0);
+_menu.separators = void (0);
 Object.defineProperty(_menu, 'separators', {
 	configurable: false,
 	writable: false,

@@ -1,7 +1,7 @@
 ﻿'use strict';
-//22/01/26
+//08/03/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -550,6 +550,40 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 		}
 	}
 	return query;
+}
+
+/**
+ * It iterates over a TF expression or an Array of TF expressions and creates a query for all those combinations (expanded in 1D or 2D arrays).
+ * For every TF expression, '$counter' is replaced with the step number (counting from zero).
+ * For 1D, every subset uses 'subTagsArrayLogic' between the tags. And then 'tagsArrayLogic' between subsets. QueryKey is the tag name.
+ * For a single string, only 'tagsArrayLogic' is used.
+ * When using an array as 'tagsArrayLogic', the output is also an array, meant to be used with {@link queryJoin}
+ *
+ * @function
+ * @name queryCombinationsExpand
+ * @kind function
+ * @param {string|string[]} tagsExpression - The tag TF expression in a single string or 1D array.
+ * @param {string|string[]} queryKey - May be a single or array of TitleFormat strings
+ * @param {number} steps - Number of steps for iteration, counting from 0 to steps (not included), to replace '$counter'
+ * @param {string} tagsArrayLogic - May be: AND|OR|AND NOT|OR NOT
+ * @param {?string} subTagsArrayLogic - May be: AND|OR|AND NOT|OR NOT
+ * @param {?string} [match='IS'] - [=IS] May be: IS|HAS|EQUAL
+ * @returns {string|string[]|undefined}
+ * @example
+ * // Returns 'ARTIST IS "$meta(A,0)#" OR ARTIST IS "#$meta(A,1)#'
+ * queryCombinationsExpand('#$meta(A,$counter)#', 'ARTIST', 2, 'OR', void(0), 'IS')
+ * @example
+ * // Returns ["ARTIST IS "#$meta(A,0)#" OR ARTIST IS "#$meta(A,1)#",COMPOSER IS "#$meta(A,0)#" OR COMPOSER IS "#$meta(A,1)#"]
+ * queryCombinationsExpand('#$meta(A,$counter)#', ['ARTIST', 'COMPOSER'], 2, 'OR', void(0), 'IS')
+ * @example
+ * // Returns '(ARTIST IS "#$meta(A,0)#" AND ARTIST IS "#$meta(A,1)#") OR (ARTIST IS "#$meta(B,0)#" AND ARTIST IS "#$meta(B,1)#")'
+ * queryCombinationsExpand(['#$meta(A,$counter)#','#$meta(B,$counter)#'], 'ARTIST', 2, 'OR', void(0), 'IS')
+ */
+function queryCombinationsExpand(tagsExpression, queryKey, steps, tagsArrayLogic /*AND, OR [NOT]*/, subTagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
+	const tagsArray = Array.isArray(tagsExpression)
+		? tagsExpression.map((tf) => Array.from({length: steps}, (v, j) => tf.replace(/\$counter/g, j)))
+		: Array.from({length: steps}, (v, j) => tagsExpression.replace(/\$counter/g, j));
+	return queryCombinations(tagsArray, queryKey,  tagsArrayLogic, subTagsArrayLogic, match);
 }
 
 /**
