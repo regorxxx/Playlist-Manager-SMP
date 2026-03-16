@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/03/26
+//12/03/26
 
 /* exported extendGR, checkCompatible */
 
@@ -502,6 +502,9 @@ if (FbProfiler) {
 		that.HasCheckPoint = (function HasCheckPoint(name) {
 			return !!this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 		}).bind(that);
+		that.GetCheckPoint = (function GetCheckPoint(name) {
+			return this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+		}).bind(that);
 		that.CheckPointReset = (function CheckPointReset(name) {
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			if (point) {
@@ -583,6 +586,11 @@ if (!window.Bugs) { window.Bugs = {}; }
 window.Bugs.SetPlaylistLockedActions = ![
 	{ version: '1.6.2.25.10.29', target: 'smp' },
 	{ version: '3.6.1.2', target: 'jsplitter' }
+].some((host) => isCompatible(host.version, host.target));
+
+window.Bugs.GetPlaybackQueueContents = ![
+	{ version: '1.7.26.1.11', target: 'smp' },
+	{ version: '3.7.6', target: 'jsplitter' }
 ].some((host) => isCompatible(host.version, host.target));
 
 /* Helpers */

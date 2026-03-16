@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/03/26
+//13/03/26
 
 /* exported _background */
 
@@ -241,7 +241,11 @@ function _background({
 		fill = null, alpha = this.coverModeOptions.alpha
 	} = {}) => {
 		if (this.coverImg.art.image && alpha > 0) {
-			gr.SetInterpolationMode(InterpolationMode.InterpolationModeBilinear);
+			// No need for fancy interpolation if image will be already blurred in some way
+			const interpolation = this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur) || this.coverModeOptions.bloom !== 0 && Number.isInteger(this.coverModeOptions.bloom)
+				? InterpolationMode.LowQuality
+				: InterpolationMode.HighQualityBicubic;
+			gr.SetInterpolationMode(interpolation);
 			const img = fadeMask
 				? this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
 				: this.coverImg.art.image;
