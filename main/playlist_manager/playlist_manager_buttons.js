@@ -1,10 +1,10 @@
 ﻿'use strict';
-//02/03/26
+//16/03/26
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
 
-/* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable, panel:readable, WshShell:readable, popup:readable, overwriteProperties:readable, FontStyle:readable */
+/* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable, panel:readable, WshShell:readable, popup:readable, overwriteProperties:readable, FontStyle:readable, SmoothingMode:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isFunction:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -145,7 +145,7 @@ function _listButtons(bSetup = false) {
 			else {
 				const x = xCalc + 1; const y = yCalc; const w = Math.max(wCalc - 4, 0); const h = Math.max(hCalc - 2, 0); const arc = Math.min(w, h, _scale(5)) / 2;
 				if (w > 0 && h > 0 && arc > 0) {
-					gr.SetSmoothingMode(2); // Antialias for lines
+					gr.SetSmoothingMode(SmoothingMode.HighQuality);
 					const toolbarAlpha = Math.min(parent.config.toolbarOpacity * 10, 100);
 					switch (this.state) {
 						case buttonStates.normal:
@@ -231,7 +231,7 @@ function _listButtons(bSetup = false) {
 						case buttonStates.hide:
 							return;
 					}
-					gr.SetSmoothingMode(0);
+					gr.SetSmoothingMode();
 				}
 			}
 			const offset = 10;

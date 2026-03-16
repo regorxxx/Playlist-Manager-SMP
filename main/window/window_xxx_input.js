@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/03/26
+//16/03/26
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -52,7 +52,7 @@ function _check({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4
 				const hoverCol = this.value ? 0x20ffffff & this.fillColor : RGBA(0, 0, 0, 15);
 				gr.FillEllipse(this.x - this.hoveredExtPad, this.y - this.hoveredExtPad, this.size + this.hoveredExtPad * 2, this.size + this.hoveredExtPad * 2, hoverCol);
 			}
-			gr.SetSmoothingMode(SmoothingMode.Default);
+			gr.SetSmoothingMode();
 		}
 	};
 
@@ -136,7 +136,7 @@ function _toggleControl({ x, y, size = _scale(10) * 1.5, value = false, color = 
 			gr.FillEllipse(knobX - this.hoveredExtPad, this.y - this.hoveredExtPad, this.h + this.hoveredExtPad * 2, this.h + this.hoveredExtPad * 2, hoverCol);
 		}
 		gr.FillEllipse(knobX, this.y, this.h, this.h, knobCol);
-		gr.SetSmoothingMode(SmoothingMode.Default);
+		gr.SetSmoothingMode();
 	};
 
 	this.repaint = () => {
@@ -716,7 +716,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 			? DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT
 			: DT_LEFT | DT_VCENTER | DT_SINGLELINE | DT_NOPREFIX | DT_CALCRECT | DT_END_ELLIPSIS;
 		// draw bg
-		gr.SetSmoothingMode(0);
+		gr.SetSmoothingMode();
 		if (this.borderColor) {
 			gr.FillSolidRect(x - 2, y + 0, (this.w + 4), this.h - 0, this.borderColor);
 		}

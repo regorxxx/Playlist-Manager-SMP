@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/01/26
+//16/03/26
 
 /* exported _scrollBar */
 
@@ -90,7 +90,7 @@ function _scrollBar({
 				const currX = this.x + this.w * 2 / 3 - this.wHidden;
 				try { gr.FillRoundRect(currX, currY, this.wHidden, this.size, this.wHidden / 2, this.wHidden / 2, this.color); }
 				catch (e) { gr.FillSolidRect(currX, currY, this.wHidden, this.size, this.color); } // eslint-disable-line no-unused-vars
-				gr.SetSmoothingMode(SmoothingMode.Default);
+				gr.SetSmoothingMode();
 				return;
 			}
 		}
@@ -151,7 +151,7 @@ function _scrollBar({
 				? tintColor(color, 10)
 				: color;
 		gr.FillSolidRect(this.x, currY, this.w, this.size, currColor);
-		gr.SetSmoothingMode(SmoothingMode.Default);
+		gr.SetSmoothingMode();
 		if (this.visibleFunc) { this.repaint(this.timer); } // Smooth visibility switch
 	};
 

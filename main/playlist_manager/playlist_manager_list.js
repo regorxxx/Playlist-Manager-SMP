@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/03/26
+//16/03/26
 
 /* exported _list */
 
@@ -904,7 +904,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				// Lines
 				lineColor = blendColors(panel.colors.highlight, panelBgColor, 0.7);
 				if (buttons.length) { gr.DrawLine(this.x + this.w - iconOffsetRight, 1, this.x + this.w - iconOffsetRight, lineY - 2, 1, lineColor); }
-				gr.SetSmoothingMode(SmoothingMode.Default);
+				gr.SetSmoothingMode();
 				headerW = LM + iconOffsetLeft + 5;
 				headerH = lineY;
 				break;

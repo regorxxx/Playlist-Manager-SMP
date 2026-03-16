@@ -1,10 +1,10 @@
 ﻿'use strict';
-//27/02/26
+//16/03/26
 
 /* exported _chart */
 
 include('statistics_xxx_helper.js');
-/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable, blendColors:readable, applyAsMask:readable */
+/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable, blendColors:readable, applyAsMask:readable, SmoothingMode:readable */
 
 /**
  * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'lines-hq'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
@@ -236,7 +236,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintScatter = (gr, series, i, x, y, w, h, maxY, tickW, xAxisValues) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
@@ -293,7 +292,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws lines chart
+	 * Draws lines chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintLines
 	 * @kind method
@@ -311,7 +310,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintLines = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
 		let valH;
@@ -339,7 +337,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws lines chart. Same than paintLines but splits thick lines into multiple pieces to avoid drawing glitches
+	 * Draws lines chart. Same than paintLines but splits thick lines into multiple pieces to avoid drawing glitches. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintLines
 	 * @kind method
@@ -357,7 +355,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintLinesHighQ = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
 		let valH;
@@ -401,7 +398,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws fill chart
+	 * Draws fill chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintLines
 	 * @kind method
@@ -419,13 +416,13 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintFill = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		const selBar = tickW;
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const minColor = this.configuration.bGradientPoints ? invert(color, false, true) : color;
+		const smoothMode = SmoothingMode.AntiAlias;
 		series.forEach((value, j) => {
 			const scale = value.y / (maxY || 1);
 			valH = scale * (y - h);
@@ -448,12 +445,12 @@ function _chart({
 					const img = applyAsMask(
 						gdi.CreateImage(tickW, y - h),
 						(img, gr, w, h) => {
-							gr.SetSmoothingMode(4);
+							gr.SetSmoothingMode(smoothMode);
 							gr.FillGradRect(0, 0, w, h, 90.1, color, minColor);
 						},
 						(mask, gr, w, h) => {
 							const lineArr = [0, h - series[j - 1].y / (maxY || 1) * h, 0, h, w, h, w, h - scale * h ];
-							gr.SetSmoothingMode(4);
+							gr.SetSmoothingMode(smoothMode);
 							gr.FillPolygon(RGB(0, 0, 0), 0, lineArr);
 						},
 						true
@@ -473,7 +470,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws bars chart
+	 * Draws bars chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintLines
 	 * @kind method
@@ -491,7 +488,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintBars = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const xValues = x + i * barW;
 		let valH;
@@ -519,7 +515,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws horizontal bars chart. X-Y axis are inverted
+	 * Draws horizontal bars chart. X-Y axis are inverted. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintHorizontalBars
 	 * @kind method
@@ -538,7 +534,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintHorizontalBars = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues, xAxisValuesLen) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const yValues = y - barW - i * barW;
 		let valW;
@@ -567,7 +562,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws timeline chart
+	 * Draws timeline chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintTimeline
 	 * @kind method
@@ -585,7 +580,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintTimeline = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		const xValues = x + i * barW;
 		let valH;
@@ -615,7 +609,7 @@ function _chart({
 		});
 	};
 	/**
-	 * Draws pie chart
+	 * Draws pie chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintPie
 	 * @kind method
@@ -632,7 +626,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintPie = (gr, series, i, x, y, w, h, maxY, r) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		let circleArr = [];
 		const labelCoord = [];
@@ -686,7 +679,7 @@ function _chart({
 		return labelCoord;
 	};
 	/**
-	 * Draws doughnut chart
+	 * Draws doughnut chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
 	 * @property
 	 * @name paintDoughnut
 	 * @kind method
@@ -704,7 +697,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintDoughnut = (gr, series, i, x, y, w, h, maxY, r, rInner) => { // NOSONAR
-		// Antialias for lines use gr.SetSmoothingMode(4) before calling
 		// Values
 		let circleArr = [];
 		const labelCoord = [];
@@ -862,7 +854,7 @@ function _chart({
 				offsetTickText = - tickW / 2;
 				// Values
 				const last = xAxisValuesLen - 1;
-				gr.SetSmoothingMode(4); // Antialias for lines
+				gr.SetSmoothingMode(SmoothingMode.AntiAlias);
 				this.dataDraw.forEach((series, i) => {
 					if (graphType === 'scatter' || (series.length === 1)) {
 						this.paintScatter(gr, series, i, x, y, w, h, maxY, tickW, xAxisValues);
@@ -874,7 +866,7 @@ function _chart({
 						this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					}
 				});
-				gr.SetSmoothingMode(0);
+				gr.SetSmoothingMode();
 				break;
 			}
 			case 'q-q plot':
@@ -885,7 +877,7 @@ function _chart({
 				offsetTickText = - tickW / 2;
 				// Values
 				const last = xAxisValuesLen - 1;
-				gr.SetSmoothingMode(4); // Antialias for lines
+				gr.SetSmoothingMode(SmoothingMode.AntiAlias);
 				const len = this.dataDraw.length - 1;
 				if (len > 0) { // Paint first the line, then the points
 					this.paintLines(gr, this.dataDraw[len], len, x, y, w, h, maxY, tickW, last, xAxisValues);
@@ -894,7 +886,7 @@ function _chart({
 						this.paintScatter(gr, series, i, x, y, w, h, maxY, tickW, xAxisValues);
 					}
 				}
-				gr.SetSmoothingMode(0);
+				gr.SetSmoothingMode();
 				break;
 			}
 			case 'pie': {
@@ -903,7 +895,7 @@ function _chart({
 				barW = 0;
 				offsetTickText = - tickW / 2;
 				// Values
-				gr.SetSmoothingMode(4); // Antialias for lines
+				gr.SetSmoothingMode(SmoothingMode.AntiAlias);
 				const seriesLen = this.dataDraw.length;
 				this.dataDraw.forEach((series, i) => {
 					const r = tickW * (seriesLen - i) / seriesLen;
@@ -912,7 +904,7 @@ function _chart({
 					this.dataCoords[i].forEach((point) => { point.r1 = (seriesLen - i - 1) / seriesLen * r; });
 				});
 				labelOver.r = tickW;
-				gr.SetSmoothingMode(0);
+				gr.SetSmoothingMode();
 				break;
 			}
 			case 'doughnut': {
@@ -921,7 +913,7 @@ function _chart({
 				barW = 0;
 				offsetTickText = - tickW / 2;
 				// Values
-				gr.SetSmoothingMode(4); // Antialias for lines
+				gr.SetSmoothingMode(SmoothingMode.AntiAlias);
 				const seriesLen = this.dataDraw.length + 1;
 				this.dataDraw.forEach((series, i) => {
 					const r1 = tickW * (seriesLen - i) / seriesLen;
@@ -931,7 +923,7 @@ function _chart({
 					this.dataCoords[i].forEach((point) => { point.r1 = (seriesLen - i - 1) / seriesLen * r1; });
 				});
 				labelOver.r = tickW;
-				gr.SetSmoothingMode(0);
+				gr.SetSmoothingMode();
 				break;
 			}
 			case 'timeline': {
