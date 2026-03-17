@@ -1,10 +1,10 @@
 ﻿'use strict';
-//13/03/26
+//17/03/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable */
 
 /**
  * Background for panel with different cover options
@@ -96,8 +96,8 @@ function _background({
 			}
 			this.processArtColors();
 			this.processArtEffects();
-		}).catch(() => {
-			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error'); }
+		}).catch((error) => {
+			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}).finally(() => {
@@ -145,75 +145,163 @@ function _background({
 			} else if (this.coverModeOptions.bFlipY) {
 				this.coverImg.art.image.RotateFlip(RotateFlipType.RotateNoneFlipY);
 			}
-			if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
-				intensity = Math.max(Math.min(this.coverModeOptions.mute / 100 * 255, 255), 0);
-				applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
-					gr.DrawImage(this.coverImg.art.image, 0, 0, w, h, 0, 0, w, h, 0, intensity / 2);
-					mask.ReleaseGraphics(gr);
-					mask.StackBlur(5);
-					return true;
+			if (window.DrawMode === 1 && !this.coverModeOptions.bGdiEffects) {
+				applyEffect(this.coverImg.art.image, (img) => {
+					let prevEffect, effect;
+					if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
+						intensity = Math.max(Math.min(this.coverModeOptions.mute / 100, 1), 0);
+						const brightness = d2d.Effect(Effects.Brightness.ID);
+						brightness.SetInput(0, img);
+						brightness.SetValue(Effects.Brightness.BlackPoint, new Float32Array([0, 1 - intensity]));
+						const blur = d2d.Effect(Effects.GaussianBlur.ID);
+						blur.SetInputEffect(0, brightness);
+						blur.SetValue(Effects.GaussianBlur.StandardDeviation, 1);
+						blur.SetValue(Effects.GaussianBlur.BorderMode, BorderMode.Hard);
+						effect = d2d.Effect(Effects.Blend.ID);
+						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
+						else { effect.SetInput(0, img); }
+						effect.SetInputEffect(1, blur);
+						effect.SetValue(Effects.Blend.Mode, BlendMode.Luminosity);
+						prevEffect = effect;
+						const tint = d2d.Effect(Effects.TemperatureTint.ID);
+						tint.SetInput(0, img);
+						tint.SetValue(Effects.TemperatureTint.Temperature, -0.25);
+						effect = d2d.Effect(Effects.Blend.ID);
+						effect.SetInputEffect(0, prevEffect);
+						effect.SetInputEffect(1, tint);
+						effect.SetValue(Effects.Blend.Mode, BlendMode.Darken);
+						prevEffect = effect;
+						effect = d2d.Effect(Effects.HighlightsShadows.ID);
+						effect.SetInputEffect(0, prevEffect);
+						effect.SetValue(Effects.HighlightsShadows.Shadows, 0.75);
+						effect.SetValue(Effects.HighlightsShadows.Highlights, -0.25);
+						effect.SetValue(Effects.HighlightsShadows.Clarity, -1);
+						effect.SetValue(Effects.HighlightsShadows.MaskBlurRadius, 5);
+						prevEffect = effect;
+					}
+					if (this.coverModeOptions.edgeGlow !== 0 && Number.isInteger(this.coverModeOptions.edgeGlow)) {
+						intensity = Math.max(Math.min(this.coverModeOptions.edgeGlow / 100, 1), 0);
+						effect = d2d.Effect(Effects.EdgeDetection.ID);
+						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
+						else { effect.SetInput(0, img); }
+						effect.SetValue(Effects.EdgeDetection.Strength, intensity);
+						prevEffect = effect;
+					}
+					if (this.coverModeOptions.bloom !== 0 && Number.isInteger(this.coverModeOptions.bloom)) {
+						intensity = Math.max(Math.min(this.coverModeOptions.bloom / 100, 1), 0);
+						const brightness = d2d.Effect(Effects.Brightness.ID);
+						brightness.SetInput(0, img);
+						brightness.SetValue(Effects.Brightness.WhitePoint, new Float32Array([0.5, intensity]));
+						intensity = Math.max(img.Width, img.Height) / 100;
+						const blur = d2d.Effect(Effects.GaussianBlur.ID);
+						blur.SetInputEffect(0, brightness);
+						blur.SetValue(Effects.GaussianBlur.StandardDeviation, intensity);
+						blur.SetValue(Effects.GaussianBlur.BorderMode, BorderMode.Hard);
+						effect = d2d.Effect(Effects.Blend.ID);
+						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
+						else { effect.SetInput(0, img); }
+						effect.SetInputEffect(1, blur);
+						effect.SetValue(Effects.Blend.Mode, prevEffect ? BlendMode.SoftLight : BlendMode.Screen);
+						prevEffect = effect;
+					}
+					if (this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
+						intensity = this.coverModeOptions.bCircularBlur
+							? Math.min(Math.max(this.coverModeOptions.blur, 0) / 5 / 2, 1)
+							: Math.max(this.coverModeOptions.blur, 0);
+						effect = d2d.Effect(Effects.GaussianBlur.ID);
+						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
+						else { effect.SetInput(0, img); }
+						effect.SetValue(Effects.GaussianBlur.StandardDeviation, intensity);
+						effect.SetValue(Effects.GaussianBlur.BorderMode, BorderMode.Hard);
+						prevEffect = effect;
+						if (this.coverModeOptions.bCircularBlur) {
+							intensity = Math.max(this.coverModeOptions.blur, 0) / 2;
+							prevEffect = effect = applyEffectAsMaskEffect(this.coverImg.art.image, effect, (img, effect) => {
+								const innerBlur = d2d.Effect(Effects.GaussianBlur.ID);
+								innerBlur.SetInputEffect(0, effect);
+								innerBlur.SetValue(Effects.GaussianBlur.StandardDeviation, intensity);
+								return innerBlur;
+							}, (mask, gr) => {
+								gr.FillEllipse(mask.Width / 4, mask.Height / 4, mask.Width / 2, mask.Height / 2, 0xFF000000);
+								mask.ReleaseGraphics(gr);
+								mask.StackBlur(mask.Width / 10);
+								return true;
+							}, true);
+						}
+					}
+					return effect;
 				});
-				applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
-					gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
-					mask.ReleaseGraphics(gr);
-					mask.StackBlur(10);
-					return true;
-				});
-			}
-			if (this.coverModeOptions.edgeGlow !== 0 && Number.isInteger(this.coverModeOptions.edgeGlow)) {
-				intensity = Math.max(Math.min(this.coverModeOptions.edgeGlow / 100 * 255, 255), 0);
-				applyAsMask(
-					this.coverImg.art.image,
-					(img, gr, w, h) => {
-						gr.FillSolidRect(0, 0, w, h, RGBA(0, 0, 0));
-					},
-					(mask, gr, w, h) => {
+			} else {
+				if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
+					intensity = Math.max(Math.min(this.coverModeOptions.mute / 100 * 255, 255), 0);
+					applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
+						gr.DrawImage(this.coverImg.art.image, 0, 0, w, h, 0, 0, w, h, 0, intensity / 2);
+						mask.ReleaseGraphics(gr);
+						mask.StackBlur(5);
+						return true;
+					});
+					applyMask(this.coverImg.art.image, (mask, gr, w, h) => {
 						gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
 						mask.ReleaseGraphics(gr);
-						mask.StackBlur(1);
+						mask.StackBlur(10);
 						return true;
-					}, true
-				);
-			}
-			if (this.coverModeOptions.bloom !== 0 && Number.isInteger(this.coverModeOptions.bloom)) {
-				intensity = Math.max(Math.min(this.coverModeOptions.bloom / 100 * 255, 255), 0);
-				applyAsMask(
-					this.coverImg.art.image,
-					(img, gr, w, h) => {
-						gr.FillSolidRect(0, 0, w, h, RGBA(255, 255, 255));
-					},
-					(mask, gr, w, h) => {
-						gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
-						mask.ReleaseGraphics(gr);
-						mask.StackBlur(50);
-						return true;
-					}, true
-				);
-				applyAsMask(
-					this.coverImg.art.image,
-					(img, gr) => {
-						img.ReleaseGraphics(gr);
-						img.StackBlur(10);
-						return true;
-					},
-					(mask, gr, w, h) => { gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h); },
-				);
-			}
-			if (this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
-				intensity = Math.max(this.coverModeOptions.blur, 0);
-				if (this.coverModeOptions.bCircularBlur) {
-					this.coverImg.art.image.StackBlur(Math.max(intensity / 5, 1));
+					});
+				}
+				if (this.coverModeOptions.edgeGlow !== 0 && Number.isInteger(this.coverModeOptions.edgeGlow)) {
+					intensity = Math.max(Math.min(this.coverModeOptions.edgeGlow / 100 * 255, 255), 0);
+					applyAsMask(
+						this.coverImg.art.image,
+						(img, gr, w, h) => {
+							gr.FillSolidRect(0, 0, w, h, RGBA(0, 0, 0));
+						},
+						(mask, gr, w, h) => {
+							gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+							mask.ReleaseGraphics(gr);
+							mask.StackBlur(1);
+							return true;
+						}, true
+					);
+				}
+				if (this.coverModeOptions.bloom !== 0 && Number.isInteger(this.coverModeOptions.bloom)) {
+					intensity = Math.max(Math.min(this.coverModeOptions.bloom / 100 * 255, 255), 0);
+					applyAsMask(
+						this.coverImg.art.image,
+						(img, gr, w, h) => {
+							gr.FillSolidRect(0, 0, w, h, RGBA(255, 255, 255));
+						},
+						(mask, gr, w, h) => {
+							gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h, 0, intensity);
+							mask.ReleaseGraphics(gr);
+							mask.StackBlur(50);
+							return true;
+						}, true
+					);
 					applyAsMask(
 						this.coverImg.art.image,
 						(img, gr) => {
 							img.ReleaseGraphics(gr);
-							img.StackBlur(intensity);
+							img.StackBlur(10);
 							return true;
 						},
-						(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
+						(mask, gr, w, h) => { gr.DrawImage(this.coverImg.art.image.InvertColours(), 0, 0, w, h, 0, 0, w, h); },
 					);
-				} else {
-					this.coverImg.art.image.StackBlur(intensity);
+				}
+				if (this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur)) {
+					intensity = Math.max(this.coverModeOptions.blur, 0);
+					if (this.coverModeOptions.bCircularBlur) {
+						this.coverImg.art.image.StackBlur(Math.min(intensity / 5, 1));
+						applyAsMask(
+							this.coverImg.art.image,
+							(img, gr) => {
+								img.ReleaseGraphics(gr);
+								img.StackBlur(intensity);
+								return true;
+							},
+							(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
+						);
+					} else {
+						this.coverImg.art.image.StackBlur(intensity);
+					}
 				}
 			}
 		}
@@ -333,7 +421,7 @@ function _background({
 					);
 				}
 			}
-			gr.SetInterpolationMode(InterpolationMode.Default);
+			gr.SetInterpolationMode();
 		}
 	};
 	/**
@@ -460,9 +548,11 @@ function _background({
 				break;
 		}
 		if (this.colorModeOptions.bDither && this.colorImg) {
+			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			if (bCreateImg) { this.dither(this.colorImg, grImg); }
 			else { this.colorImg.ReleaseGraphics(grImg); }
 			gr.DrawImage(this.colorImg, limits.x, limits.y, limits.w, limits.h, 0, 0, this.colorImg.Width, this.colorImg.Height);
+			gr.SetInterpolationMode();
 		}
 	};
 	/**
@@ -484,11 +574,13 @@ function _background({
 		if (this.useColorsBlend && !!this.coverImg.art.image && limits.h > 1 && limits.w > 1) {
 			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 			const img = this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
-				.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), 2)
-				.Resize(limits.w, limits.h, 2);
+				.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.LowQuality)
+				.Resize(limits.w, limits.h, InterpolationMode.LowQuality);
 			const offset = 90 - intensity;
 			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
+			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, offset / 2, offset / 2, img.Width - offset, img.Height - offset, this.coverModeOptions.angle, alpha);
+			gr.SetInterpolationMode();
 			return true;
 		}
 		return false;
@@ -689,7 +781,8 @@ function _background({
 			colorMode: this.colorMode,
 			colorModeOptions: { ...this.colorModeOptions },
 			...(bPosition ? { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } : {}),
-			timer: this.timer
+			timer: this.timer,
+			logging: this.logging
 		};
 	};
 	/**
@@ -1236,6 +1329,7 @@ function _background({
 	 * @property {number} angle - Image angle drawing (0-360)
 	 * @property {number} alpha - Image opacity (0-255)
 	 * @property {number} mute - Image mute effect (0-100)
+	 * @property {boolean} bGdiEffects - Force GDI effects while using D2D rendering
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
 	 * @property {'name'|'date'} pathCycleSort - Art sorting when using 'folder' coverMode
@@ -1298,7 +1392,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks

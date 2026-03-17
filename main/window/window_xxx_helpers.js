@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/03/25
+//16/03/25
 
 // Dummy file to load existing helpers or independent file
 {
@@ -15,5 +15,6 @@
 		include('window_xxx_helpers_fallback.js');
 		include('menu_xxx.js');
 		include(fb.ComponentPath + 'docs\\Flags.js');
+		if (fb.ComponentPath.includes('foo_uie_jsplitter')) { include(fb.ComponentPath + '\\docs\\Effects.js'); }
 	}
 }
