@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/26
+//18/03/26
 
 /* exported createBackgroundMenu */
 
@@ -186,6 +186,12 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.bCircularBlur, value: null, newValue: !this.coverModeOptions.bCircularBlur, entryText: 'Circular blur' }
 		].forEach(createMenuOption('coverModeOptions', 'bCircularBlur', subMenu, true));
 		menu.getLastEntry().flags = this.coverModeOptions.blur === 0 || !this.showCover ? MF_GRAYED : MF_STRING;
+		if (this.useD2D) {
+			[
+				{ isEq: null, key: this.coverModeOptions.bDirectionalBlur, value: null, newValue: !this.coverModeOptions.bDirectionalBlur, entryText: 'Directional blur' }
+			].forEach(createMenuOption('coverModeOptions', 'bDirectionalBlur', subMenu, true));
+			menu.getLastEntry().flags = this.coverModeOptions.blur === 0 || !this.showCover ? MF_GRAYED : MF_STRING;
+		}
 		[
 			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
 			{ entryText: menu.separator },
@@ -195,9 +201,12 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ key: 'mute', entryText: 'Mute...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
 			{ key: 'bloom', entryText: 'Bloom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
 			{ key: 'edgeGlow', entryText: 'Edge...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
+			{ key: 'vignette', entryText: 'Vignette...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
 			{ entryText: menu.separator },
 			{ key: 'alpha', entryText: 'Opacity...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
+			{ key: 'histogram', entryText: 'Histogram...', checks: [(num) => num >= 0 && num <= 1024], inputHint: '\n0 is disabled, otherwise sets the number of bins.\n(0 to 1024)', bD2D: true },
 		].forEach((option) => {
+			if (option.bD2D && !this.useD2D) { return; }
 			if (menu.isSeparator(option)) { menu.newSeparator(subMenu); return; }
 			const prevVal = option.key === 'alpha' ? Math.round(this.coverModeOptions[option.key] * 100 / 255) : this.coverModeOptions[option.key];
 			menu.newEntry({
@@ -209,6 +218,12 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				}, flags: this.useCover && (option.key === 'alpha' || this.showCover || this.colorMode === 'blend') ? MF_STRING : MF_GRAYED
 			});
 		});
+		if (this.useD2D) {
+			menu.newSeparator(subMenu);
+			[
+				{ isEq: null, key: this.coverModeOptions.bGrayScale, value: null, newValue: !this.coverModeOptions.bGrayScale, entryText: 'Grayscale' }
+			].forEach(createMenuOption('coverModeOptions', 'bGrayScale', subMenu, true));
+		}
 		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.coverModeOptions.bFlipX, value: null, newValue: !this.coverModeOptions.bFlipX, entryText: 'Flip on X-axis' }

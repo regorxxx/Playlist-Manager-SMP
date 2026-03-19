@@ -1,10 +1,10 @@
 ﻿'use strict';
-//17/03/26
+//18/03/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable, invert:readable, SmoothingMode:readable, blendColors:readable */
 
 /**
  * Background for panel with different cover options
@@ -50,7 +50,7 @@ function _background({
 	 */
 	this.updateImageBg = debounce((bForce = false, onDone = null, bRepaint = true) => {
 		if (!this.useCover) {
-			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
+			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null; this.coverImg.art.histogram = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
@@ -98,7 +98,7 @@ function _background({
 			this.processArtEffects();
 		}).catch((error) => {
 			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
-			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null;
+			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null; this.coverImg.art.histogram = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
 		}).finally(() => {
 			if (this.logging.bDebug) { console.log('Background - updateImageBg - art colors: ' + this.getArtColors()); }
@@ -145,7 +145,7 @@ function _background({
 			} else if (this.coverModeOptions.bFlipY) {
 				this.coverImg.art.image.RotateFlip(RotateFlipType.RotateNoneFlipY);
 			}
-			if (window.DrawMode === 1 && !this.coverModeOptions.bGdiEffects) {
+			if (this.useD2D) {
 				applyEffect(this.coverImg.art.image, (img) => {
 					let prevEffect, effect;
 					if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
@@ -208,7 +208,10 @@ function _background({
 						intensity = this.coverModeOptions.bCircularBlur
 							? Math.min(Math.max(this.coverModeOptions.blur, 0) / 5 / 2, 1)
 							: Math.max(this.coverModeOptions.blur, 0);
-						effect = d2d.Effect(Effects.GaussianBlur.ID);
+						const id = this.coverModeOptions.bDirectionalBlur
+							? Effects.DirectionalBlur.ID
+							: Effects.GaussianBlur.ID;
+						effect = d2d.Effect(id);
 						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
 						else { effect.SetInput(0, img); }
 						effect.SetValue(Effects.GaussianBlur.StandardDeviation, intensity);
@@ -216,8 +219,8 @@ function _background({
 						prevEffect = effect;
 						if (this.coverModeOptions.bCircularBlur) {
 							intensity = Math.max(this.coverModeOptions.blur, 0) / 2;
-							prevEffect = effect = applyEffectAsMaskEffect(this.coverImg.art.image, effect, (img, effect) => {
-								const innerBlur = d2d.Effect(Effects.GaussianBlur.ID);
+							prevEffect = effect = applyEffectAsMaskEffect(img, effect, (img, effect) => {
+								const innerBlur = d2d.Effect(id);
 								innerBlur.SetInputEffect(0, effect);
 								innerBlur.SetValue(Effects.GaussianBlur.StandardDeviation, intensity);
 								return innerBlur;
@@ -228,6 +231,33 @@ function _background({
 								return true;
 							}, true);
 						}
+					}
+					if (this.coverModeOptions.bGrayScale) {
+						effect = d2d.Effect(Effects.Grayscale.ID);
+						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
+						else { effect.SetInput(0, img); }
+						prevEffect = effect;
+					}
+					if (this.coverModeOptions.vignette !== 0 && Number.isInteger(this.coverModeOptions.vignette)) {
+						intensity = Math.max(Math.min(this.coverModeOptions.vignette / 100, 1), 0);
+						effect = d2d.Effect(Effects.Vignette.ID);
+						if (prevEffect) { effect.SetInputEffect(0, prevEffect); }
+						else { effect.SetInput(0, img); }
+						const color = [...toRGB(this.coverModeOptions.vignetteColor || this.getAvgUiColor()).map((v) => v / 255), 1];
+						effect.SetValue(Effects.Vignette.Color, new Float32Array(color));
+						effect.SetValue(Effects.Vignette.TransitionSize, intensity);
+						effect.SetValue(Effects.Vignette.Strength, 0.8);
+						prevEffect = effect;
+					}
+					if (this.coverModeOptions.histogram !== 0 && Number.isInteger(this.coverModeOptions.histogram)) {
+						intensity = Math.round(Math.max(Math.min(this.coverModeOptions.histogram, 1024), 0));
+						const hist = d2d.Effect(Effects.Histogram.ID);
+						hist.SetInput(0, img);
+						hist.SetValue(Effects.Histogram.NumBins, intensity);
+						const imgGr = img.GetGraphics();
+						imgGr.DrawEffect(hist, 0, 0, 0, 0, img.Width, img.Height);
+						img.ReleaseGraphics(imgGr);
+						this.coverImg.art.histogram = hist.GetValue(Effects.Histogram.HistogramOutput);
 					}
 					return effect;
 				});
@@ -297,11 +327,32 @@ function _background({
 								img.StackBlur(intensity);
 								return true;
 							},
-							(mask, gr, w, h) => { gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF); mask.StackBlur(w / 10); },
+							(mask, gr, w, h) => {
+								gr.FillEllipse(w / 4, h / 4, w / 2, h / 2, 0xFFFFFFFF);
+								mask.ReleaseGraphics(gr);
+								mask.StackBlur(w / 10);
+								return true;
+							},
 						);
 					} else {
 						this.coverImg.art.image.StackBlur(intensity);
 					}
+				}
+				if (this.coverModeOptions.vignette !== 0 && Number.isInteger(this.coverModeOptions.vignette)) {
+					intensity = Math.max(Math.min(this.coverModeOptions.vignette / 100, 1), 0);
+					applyAsMask(
+						this.coverImg.art.image,
+						(img, gr, w, h) => gr.FillSolidRect(0, 0, w, h, 0xFF000000),
+						(mask, gr, w, h) => {
+							const x = intensity * w / 7;
+							const y = intensity * h / 7;
+							const ww = w - 2 * x;
+							const hh = h - 2 * y;
+							gr.FillEllipse(x, y, ww, hh, 0xFFFFFFFF);
+							mask.ReleaseGraphics(gr);
+							mask.StackBlur(w / 3.5);
+						},
+					);
 				}
 			}
 		}
@@ -423,6 +474,46 @@ function _background({
 			}
 			gr.SetInterpolationMode();
 		}
+	};
+	this.paintHistogram = ({
+		gr,
+		limits = { x, y, w, h, offsetH },
+		points = this.coverImg.art.histogram,
+		bGradient = false,
+		alpha = 200
+	} = {}) => {
+		if (!points) { return false; }
+		const maxY = Math.max(...points);
+		const w = limits.w;
+		const h = limits.h;
+		const y = Math.min(w / 8, h / 10);
+		const x = Math.min(w / 8, h / 10);
+		const barW = (w - x * 2) / (points.length || 1);
+		const barH = (h - y * 2);
+		let valH;
+		const color = RGBA(...toRGB(this.getAvgArtColor()), alpha);
+		const borderColor = RGBA(
+			...toRGB(invert(color, true)),
+			getBrightness(...toRGB(color)) < 50 ? 50 : 25
+		);
+		gr.SetSmoothingMode(SmoothingMode.AntiAlias);
+		points.forEach((value, i) => {
+			const scale = value / (maxY || 1);
+			valH = scale * barH;
+			const xPoint = x + i * barW;
+			const yPoint = y - valH + barH;
+			const topColor = bGradient
+				? blendColors(color, invert(color, false, false), scale, false)
+				: color;
+			if (color !== topColor) {
+				gr.FillGradRect(xPoint, yPoint, barW, valH, 90.1, topColor, color);
+			} else {
+				gr.FillSolidRect(xPoint, yPoint, barW, valH, color);
+			}
+			gr.DrawRect(xPoint, yPoint, barW, valH, Math.max(barW / 10, 1), borderColor);
+		});
+		gr.SetSmoothingMode();
+		return true;
 	};
 	/**
 	 * Paints reflected art
@@ -622,6 +713,8 @@ function _background({
 				break;
 		}
 		if (this.logging.bProfile) { profiler.Print('image'); }
+		this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+		if (this.logging.bProfile) { profiler.Print('histogram'); }
 	};
 	/**
 	 * Color image dithering
@@ -1203,6 +1296,13 @@ function _background({
 		configurable: false,
 		get: () => this.useCover && this.coverModeOptions.bProcessColors
 	});
+	/** @type {boolean} - Flag which indicates if panel uses D2D rendering */
+	this.useD2D;
+	Object.defineProperty(this, 'useD2D', {
+		enumerable: true,
+		configurable: false,
+		get: () => window.DrawMode === 1 && !this.coverModeOptions.bGdiEffects
+	});
 	/**
 	 * Called on on_mouse_move.
 	 *
@@ -1308,8 +1408,8 @@ function _background({
 	};
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
-	this.coverImg = { art: { path: '', image: null, colors: null }, handle: null, id: null };
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
+	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null }, handle: null, id: null };
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} - Height margin for image drawing */
@@ -1329,6 +1429,10 @@ function _background({
 	 * @property {number} angle - Image angle drawing (0-360)
 	 * @property {number} alpha - Image opacity (0-255)
 	 * @property {number} mute - Image mute effect (0-100)
+	 * @property {number} vignette - Image vignette effect (0-100)
+	 * @property {number} vignetteColor - Image vignette color
+	 * @property {number} histogram - Image histogram display (0-1024)
+	 * @property {boolean} bGrayScale - GrayScale effect
 	 * @property {boolean} bGdiEffects - Force GDI effects while using D2D rendering
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
@@ -1392,7 +1496,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 90, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
