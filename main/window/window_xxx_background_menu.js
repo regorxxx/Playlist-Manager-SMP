@@ -1,11 +1,11 @@
 ﻿'use strict';
-//18/03/26
+//19/03/26
 
 /* exported createBackgroundMenu */
 
 /* global Chroma:readable, folders:readable */
 include('window_xxx_helpers.js');
-/* global MF_GRAYED:readable, MF_STRING:readable,  */
+/* global MF_GRAYED:readable, MF_STRING:readable, MF_CHECKED:readable  */
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
@@ -112,6 +112,30 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}
 		}));
+		menu.newSeparator(subMenu);
+		{
+			const subMenuSecond = menu.newMenu('By priority', subMenu, this.coverModePriority.length ? MF_CHECKED : MF_STRING);
+			const modes = ['front', 'back', 'disc', 'icon', 'artist']
+				.map((mode) => [mode, mode + '_embedded', mode + '_stub'])
+				.flat(Infinity);
+			let bDone, i = 1;
+			modes.forEach((mode) => {
+				if (this.coverModePriority.includes(mode)) {
+					menu.newEntry({ menuName: subMenuSecond, entryText: '(' + i + ') ' + mode, flags: MF_GRAYED });
+					bDone = true;
+					i++;
+				}
+			});
+			if (!bDone) { menu.newEntry({ menuName: subMenuSecond, entryText: ' - none - ', flags: MF_GRAYED }); }
+			menu.newSeparator(subMenuSecond);
+			menu.newEntry({
+				menuName: subMenuSecond, entryText: 'Edit art types...', func: () => {
+					const input = Input.json('array strings', this.coverModePriority, 'Enter art types:\n(array of strings)\n\nAllowed: ' + this.getCoverModes(false).join(', ') + '\nSuffix \'_stub\' or \'_embedded\' can also be added.\n\ne.g. ["front", "back_stub", "artist"]' , window.Name + ' (' + window.ScriptInfo.Name + '): Y-axis margin', 2);
+					if (input === null) { return; }
+					this.changeConfig({ config: { coverModePriority: [...new Set(input)] }, callbackArgs: { bSaveProperties: true } });
+				},
+			});
+		}
 		if (['path', 'folder'].includes(this.coverMode.toLowerCase())) {
 			menu.newSeparator(subMenu);
 			menu.newEntry({

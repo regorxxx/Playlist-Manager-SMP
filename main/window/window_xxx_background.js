@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/03/26
+//19/03/26
 
 /* exported _background */
 
@@ -46,9 +46,19 @@ function _background({
 	 * @param {Boolean} bForce - [=false]
 	 * @param {Function?} onDone - [=null]
 	 * @param {Boolean} bRepaint - [=true]
-	 * @returns {void}
+	 * @returns {Promise.<boolean>}
 	 */
-	this.updateImageBg = debounce((bForce = false, onDone = null, bRepaint = true) => {
+	this.updateImageBg = debounce(async (bForce = false, onDone = null, bRepaint = true) => {
+		if (this.coverModePriority.length) {
+			const handle = this.getHandle();
+			for (let mode of this.coverModePriority) {
+				const artPromise = await this.getHandleArt(handle, mode, true);
+				if (artPromise.path.length) {
+					this.coverMode = mode;
+					break;
+				}
+			}
+		}
 		if (!this.useCover) {
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null; this.coverImg.art.histogram = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
@@ -56,30 +66,29 @@ function _background({
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
 		if (!this.useColors || this.useColorsBlend) { this.colorImg = null; }
 		else if (!this.useCover) { this.colorsChanged(bRepaint, true, false); }
-		if (!this.useCover) { return; }
+		if (!this.useCover) { return Promise.resolve(false); }
 		const handle = this.getHandle();
 		const bPath = ['path', 'folder'].includes(this.coverMode);
 		const path = bPath ? this.getArtPath(void (0), handle) : '';
 		const bFoundPath = bPath && path.length;
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
-		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return; }
+		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return Promise.resolve(false); }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
 			id = tf.EvalWithMetadb(handle);
 			if (!bForce && id === this.coverImg.id) {
 				if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
-				return;
+				return Promise.resolve(false);
 			}
 		}
-		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
 		let profiler;
 		if (this.logging.bProfile) { profiler = new FbProfiler('Background - loadImg'); }
 		const promise = bFoundPath
 			? gdi.LoadImageAsyncV2('', path)
 			: handle
-				? utils.GetAlbumArtAsyncV2(void (0), handle, AlbumArtId[this.coverMode] || 0, true, false, false)
+				? this.getHandleArt(handle, this.coverMode)
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
 			if (this.logging.bProfile) { profiler.Print(); }
@@ -96,10 +105,12 @@ function _background({
 			}
 			this.processArtColors();
 			this.processArtEffects();
+			return true;
 		}).catch((error) => {
 			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
 			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null; this.coverImg.art.histogram = null;
 			this.coverImg.handle = null; this.coverImg.id = null;
+			return false;
 		}).finally(() => {
 			if (this.logging.bDebug) { console.log('Background - updateImageBg - art colors: ' + this.getArtColors()); }
 			this.applyArtColors(bRepaint);
@@ -695,10 +706,20 @@ function _background({
 		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
 		switch (this.coverMode) {
 			case 'front':
+			case 'front_stub':
+			case 'front_embedded':
 			case 'back':
+			case 'back_stub':
+			case 'back_embedded':
 			case 'disc':
+			case 'disc_stub':
+			case 'disc_embedded':
 			case 'icon':
+			case 'icon_stub':
+			case 'icon_embedded':
 			case 'artist':
+			case 'artist_stub':
+			case 'artist_embedded':
 			case 'path':
 			case 'folder': {
 				if (this.coverModeOptions.reflection !== 'none' && !this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
@@ -822,7 +843,7 @@ function _background({
 			const value = pair[1];
 			if (typeof value !== 'undefined') {
 				if (value && Array.isArray(value)) {
-					this[key] = [...this[key], ...value];
+					this[key] = [...value];
 				} else if (value && typeof value === 'object') {
 					this[key] = { ...this[key], ...value };
 				} else {
@@ -831,7 +852,7 @@ function _background({
 			}
 		});
 		this.checkConfig();
-		if (config.coverMode || config.coverModeOptions) { this.updateImageBg(true); }
+		if (config.coverMode || config.coverModeOptions || config.coverModePriority) { this.updateImageBg(true); }
 		if (config.colorMode || config.colorModeOptions) {
 			this.colorImg = null;
 			if (this.colorModeOptions.bUiColors) { this.colorsChanged(false, false, false); }
@@ -870,6 +891,7 @@ function _background({
 	this.exportConfig = (bPosition = false) => {
 		return {
 			coverMode: this.coverMode,
+			coverModePriority: [...this.coverModePriority],
 			coverModeOptions: { ...this.coverModeOptions },
 			colorMode: this.colorMode,
 			colorModeOptions: { ...this.colorModeOptions },
@@ -877,6 +899,26 @@ function _background({
 			timer: this.timer,
 			logging: this.logging
 		};
+	};
+	/**
+	 * Gets art from handle
+	 * @property
+	 * @name getHandleArt
+	 * @kind method
+	 * @memberof _background
+	 * @param {FbMetadbHandle} handle
+	 * @param {CoverMode} mode - Art type
+	 * @param {Boolean} bNoLoadImg - If true, then no art loading will be performed and only path to art will be returned in
+	 * @returns {Promise.<ArtPromiseResult>}
+	 */
+	this.getHandleArt = (handle, mode, bNoLoadImg = false) => {
+		const AlbumArtId = {
+			front: 0, back: 1, disc: 2, icon: 3, artist: 4,
+			front_stub: 5, back_stub: 6, disc_stub: 7, icon_stub: 8, artist_stub: 9,
+			front_embedded: 10, back_embedded: 11, disc_embedded: 12, icon_embedded: 13, artist_embedded: 14
+		};
+		const id = AlbumArtId[mode] || 0;
+		return utils.GetAlbumArtAsyncV2(void (0), handle, id % 5, id < 10, id >= 10, bNoLoadImg);
 	};
 	/**
 	 * Gets current art path which may link to a static file or file within folder set
@@ -977,10 +1019,10 @@ function _background({
 	 */
 	this.cycleArtModeAsync = async (next = 1, callbackArgs) => {
 		const modes = [...trackCoverModes].rotate(trackCoverModes.indexOf(this.coverMode) + Math.sign(next));
-		const AlbumArtId = { front: 0, back: 1, disc: 2, icon: 3, artist: 4 };
 		let bDone;
+		const handle = this.getHandle();
 		for (let i = 0; i < modes.length; i++) {
-			bDone = await utils.GetAlbumArtAsyncV2(void (0), this.getHandle(), AlbumArtId[modes[0]] || 0, true, false, true)
+			bDone = await this.getHandleArt(handle, modes[0], true)
 				.then((artPromise) => {
 					if (artPromise.path.length) {
 						this.changeConfig({ config: { coverMode: modes[0] }, callbackArgs });
@@ -1057,10 +1099,13 @@ function _background({
 	 * @name getCoverModes
 	 * @kind method
 	 * @memberof _background
+	 * @param {boolean} bNone - If true, includes none
 	 * @returns {CoverMode[]}
 	 */
-	this.getCoverModes = () => {
-		return ['none', ...trackCoverModes];
+	this.getCoverModes = (bNone = true) => {
+		return bNone
+			? ['none', ...trackCoverModes]
+			: [...trackCoverModes];
 	};
 	/**
 	 * Returns first available cover mode
@@ -1419,6 +1464,8 @@ function _background({
 	 */
 	/** @type {CoverMode} - Art type used by panel */
 	this.coverMode = '';
+	/** @type {CoverMode[]} - Art types used by priority */
+	this.coverModePriority = [];
 	/** @type {CoverMode[]} - Art types used by panel */
 	const trackCoverModes = ['front', 'back', 'disc', 'icon', 'artist'];
 	/** @typedef {'symmetric'|'asymmetric'|'none'} ReflectionMode - Available reflection modes */
