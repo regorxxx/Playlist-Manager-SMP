@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/26
+//19/03/26
 
 /* exported _menu */
 
@@ -120,7 +120,10 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @property  {(number) => number} btn_up
 	 * @property  {(number) => void} btn_up_done
 	 */
-
+	/** @type {number} - Last btn_up() x coord */
+	this.mx = -1;
+	/** @type {string} - Last btn_up() y coord */
+	this.my = -1;
 	/* Methods (public) */
 	/**
 	 * Get total number of menu entries (parents and entries)
@@ -968,6 +971,8 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @returns {boolean} Flag to suppress default panel menu
 	 */
 	this.btn_up = (x, y, object, forcedEntry = '', bExecute = true, replaceFunc = null, flag = 0, bindArgs = null) => {
+		this.mx = x;
+		this.my = y;
 		// Recreate menu(s)
 		const manualMenuArr = this.initMenu(object);
 		// Find currently selected item
@@ -1070,6 +1075,16 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	};
 
 	/* Helpers (public) */
+	/**
+	 * Returns coordinates from last .btn_up() call
+	 *
+	 * @kind getter
+	 * @memberof _menu
+	 * @name lastCoords
+	 * @type {[number, number]}
+	 */
+	this.lastCoords = void(0);
+	Object.defineProperty(this, 'lastCoords', { get() { return [this.mx, this.my]; } });
 	/**
 	 * Checks if a menu entry (object) is a separator.
 	 *
