@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/03/26
+//20/03/26
 
 /* exported _background */
 
@@ -157,7 +157,7 @@ function _background({
 				this.coverImg.art.image.RotateFlip(RotateFlipType.RotateNoneFlipY);
 			}
 			if (this.useD2D) {
-				applyEffect(this.coverImg.art.image, (img) => {
+				this.coverImg.art.image = applyEffect(this.coverImg.art.image, (img) => {
 					let prevEffect, effect;
 					if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
 						intensity = Math.max(Math.min(this.coverModeOptions.mute / 100, 1), 0);
@@ -271,7 +271,7 @@ function _background({
 						this.coverImg.art.histogram = hist.GetValue(Effects.Histogram.HistogramOutput);
 					}
 					return effect;
-				});
+				}, d2d.CreateImage(this.coverImg.art.image.Width, this.coverImg.art.image.Height));
 			} else {
 				if (this.coverModeOptions.mute !== 0 && Number.isInteger(this.coverModeOptions.mute)) {
 					intensity = Math.max(Math.min(this.coverModeOptions.mute / 100 * 255, 255), 0);
@@ -396,7 +396,7 @@ function _background({
 				? InterpolationMode.LowQuality
 				: InterpolationMode.HighQualityBicubic;
 			gr.SetInterpolationMode(interpolation);
-			const img = fadeMask
+			const img = fadeMask || rotateFlip !== RotateFlipType.RotateNoneFlipNone
 				? this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
 				: this.coverImg.art.image;
 			if (rotateFlip !== RotateFlipType.RotateNoneFlipNone) { img.RotateFlip(rotateFlip); }
