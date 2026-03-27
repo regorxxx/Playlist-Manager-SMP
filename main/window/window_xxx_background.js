@@ -1,5 +1,5 @@
 ﻿'use strict';
-//20/03/26
+//21/03/26
 
 /* exported _background */
 
@@ -49,25 +49,25 @@ function _background({
 	 * @returns {Promise.<boolean>}
 	 */
 	this.updateImageBg = debounce(async (bForce = false, onDone = null, bRepaint = true) => {
+		let handle;
 		if (this.coverModePriority.length) {
-			const handle = this.getHandle();
-			for (let mode of this.coverModePriority) {
-				const artPromise = await this.getHandleArt(handle, mode, true);
-				if (artPromise.path.length) {
-					this.coverMode = mode;
-					break;
+			handle = this.getHandle();
+			if (handle) {
+				for (let mode of this.coverModePriority) {
+					const artPromise = await this.getHandleArt(handle, mode, true);
+					if (artPromise.path.length) {
+						this.coverMode = mode;
+						break;
+					}
 				}
 			}
 		}
-		if (!this.useCover) {
-			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null; this.coverImg.art.histogram = null;
-			this.coverImg.handle = null; this.coverImg.id = null;
-		}
+		if (!this.useCover) { this.resetArt(); }
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
 		if (!this.useColors || this.useColorsBlend) { this.colorImg = null; }
 		else if (!this.useCover) { this.colorsChanged(bRepaint, true, false); }
 		if (!this.useCover) { return Promise.resolve(false); }
-		const handle = this.getHandle();
+		if (!handle) { handle = this.getHandle(); }
 		const bPath = ['path', 'folder'].includes(this.coverMode);
 		const path = bPath ? this.getArtPath(void (0), handle) : '';
 		const bFoundPath = bPath && path.length;
@@ -108,8 +108,7 @@ function _background({
 			return true;
 		}).catch((error) => {
 			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
-			this.coverImg.art.path = null; this.coverImg.art.image = null; this.coverImg.art.colors = null; this.coverImg.art.histogram = null;
-			this.coverImg.handle = null; this.coverImg.id = null;
+			this.resetArt();
 			return false;
 		}).finally(() => {
 			if (this.logging.bDebug) { console.log('Background - updateImageBg - art colors: ' + this.getArtColors()); }
@@ -1092,6 +1091,22 @@ function _background({
 		num: 0,
 		shown: new Set(),
 		timer: null
+	};
+	/**
+	 * Reset art img
+	 * @property
+	 * @name resetArt
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
+	this.resetArt = () => {
+		this.coverImg.art.path = null;
+		this.coverImg.art.image = null;
+		this.coverImg.art.colors = null;
+		this.coverImg.art.histogram = null;
+		this.coverImg.handle = null;
+		this.coverImg.id = null;
 	};
 	/**
 	 * Returns available cover modes plus 'none' as first value
