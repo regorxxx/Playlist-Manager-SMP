@@ -896,6 +896,7 @@ CALL :copy_file helpers\helpers_xxx_tags_cache.js
 CALL :copy_file helpers\helpers_xxx_so.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\library_tree_callbacks.txt
+CALL :copy_file helpers\readme\library_tree_presets.txt
 REM helpers external
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
