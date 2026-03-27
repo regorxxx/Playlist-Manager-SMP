@@ -1,7 +1,7 @@
 ﻿'use strict';
-//08/03/26
+//27/03/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3 */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable */
@@ -581,9 +581,9 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
  */
 function queryCombinationsExpand(tagsExpression, queryKey, steps, tagsArrayLogic /*AND, OR [NOT]*/, subTagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
 	const tagsArray = Array.isArray(tagsExpression)
-		? tagsExpression.map((tf) => Array.from({length: steps}, (v, j) => tf.replace(/\$counter/g, j)))
-		: Array.from({length: steps}, (v, j) => tagsExpression.replace(/\$counter/g, j));
-	return queryCombinations(tagsArray, queryKey,  tagsArrayLogic, subTagsArrayLogic, match);
+		? tagsExpression.map((tf) => Array.from({ length: steps }, (v, j) => tf.replace(/\$counter/g, j)))
+		: Array.from({ length: steps }, (v, j) => tagsExpression.replace(/\$counter/g, j));
+	return queryCombinations(tagsArray, queryKey, tagsArrayLogic, subTagsArrayLogic, match);
 }
 
 /**
@@ -875,6 +875,62 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 		i++;
 	}
 	if (options.bMerged) { outputArray = outputArray.flat(); }
+	return outputArray;
+}
+
+/**
+ * Retrieve tags from a handle list using .EvalWithMetadbs(). Tags are split based on $meta_sep()
+ * Returns an array of arrays with length equal to the number of handles. [handle count x [n Tags]]
+ *
+ * @function
+ * @name getHandleListTagsV3
+ * @kind function
+ * @param {FbMetadbHandleList} handleList
+ * @param {string[]} tagsArray
+ * @param {{ bMerged: boolean }} options
+ * @returns {string[][]|string[]}
+ */
+function getHandleListTagsV3(handleList, tagsArray, options = { bMerged: false }) {
+	if (!isArrayStrings(tagsArray)) { return null; }
+	if (!handleList) { return null; }
+	options = { bMerged: false, ...(options || {}) };
+	const tagArray_length = tagsArray.length;
+	/** @type {any[]|any[][]} */
+	let outputArray = [];
+	let i = 0;
+	let tagString = '';
+	const outputArray_length = handleList.Count;
+	const nullVal = '|​|'; // Contains U+200B invisible char
+	const sepVal = '|‎|'; // Contains U+200E invisible char
+	const sepTag = '|‏|'; // Contains U+200F invisible char
+	while (i < tagArray_length) {
+		const tagStr = !tagsArray[i].includes('$')
+			? !tagsArray[i].includes('%')
+				? '$if2($meta_sep(' + tagsArray[i] + ',\'' + sepVal + '\'),\'' + nullVal + '\')'
+				: tagsArray[i].toUpperCase() === '%ALBUM ARTIST%'
+					? '$if3($meta_sep(ALBUM ARTIST,\'' + sepVal + '\'),$meta_sep(ARTIST,\'' + sepVal + '\'),\'' + nullVal + '\')'
+					: tagsArray[i].toUpperCase() === '%ARTIST%'
+						? '$if3($meta_sep(ARTIST,\'' + sepVal + '\'),$meta_sep(ALBUM ARTIST,\'' + sepVal + '\'),\'' + nullVal + '\')'
+						: '$if3($meta_sep(' + tagsArray[i].replaceAll('%', '') + ',\'' + sepVal + '\'),\'' + nullVal + '\')'
+			: '$if2(' + tagsArray[i] + ',\'' + nullVal + '\')';
+		if (options.bMerged) { tagString += (i === 0 ? '' : sepVal) + tagStr; } // We have all values separated sepVal
+		else { tagString += (i === 0 ? '' : sepTag) + tagStr; } // We have tag values separated by sepVal and different tags by sepTag
+		i++;
+	}
+	let tfo = fb.TitleFormat(tagString);
+	outputArray = tfo.EvalWithMetadbs(handleList);
+	if (options.bMerged) { // Just an array of values per track: n x 1
+		for (let i = 0; i < outputArray_length; i++) {
+			outputArray[i] = outputArray[i].split(sepVal).filter((v) => v !== nullVal);
+		}
+	} else { // Array of values tag and per track; n x tagNumber
+		for (let i = 0; i < outputArray_length; i++) {
+			outputArray[i] = outputArray[i].split(sepTag);
+			for (let j = 0; j < tagArray_length; j++) {
+				outputArray[i][j] = outputArray[i][j].split(sepVal).filter((v) => v !== nullVal);
+			}
+		}
+	}
 	return outputArray;
 }
 
