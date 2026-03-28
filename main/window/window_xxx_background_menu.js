@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/03/26
+//28/03/26
 
 /* exported createBackgroundMenu */
 
@@ -345,7 +345,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		menu.getLastEntry().flags = ['bigradient'].includes(this.colorMode) ? MF_STRING : MF_GRAYED;
 		menu.newSeparator(subMenu);
 		[
-			{ key: 'blendIntensity', entryText: 'Blend blur intensity...', type: 'int positive', checks: [(num) => num >= 0 && num < 90], inputHint: '\nBlur intensity.\n(0 to 90)' },
+			{ key: 'blendIntensity', entryText: 'Blend blur intensity...', type: 'int positive', checks: [(num) => num >= 0 && num <= 90], inputHint: '\nBlur intensity.\n(0 to 90)' },
 			{ key: 'blendAlpha', entryText: 'Blend opacity...', type: 'int positive', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
 		].forEach((option) => {
 			const prevVal = option.key === 'blendAlpha' ? Math.round(this.colorModeOptions[option.key] * 100 / 255) : this.colorModeOptions[option.key];

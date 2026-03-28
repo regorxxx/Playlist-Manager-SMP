@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/03/26
+//28/03/26
 
 /* exported _background */
 
@@ -674,13 +674,16 @@ function _background({
 	} = {}) => {
 		if (this.useColorsBlend && !!this.coverImg.art.image && limits.h > 1 && limits.w > 1) {
 			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
-			const img = this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
-				.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.LowQuality)
-				.Resize(limits.w, limits.h, InterpolationMode.LowQuality);
-			const offset = 90 - intensity;
+			const img = this.coverImg.art.image
+				.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
+				.Resize(limits.w, limits.h, InterpolationMode.HighQuality);
 			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
 			gr.SetInterpolationMode(InterpolationMode.LowQuality);
-			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, offset / 2, offset / 2, img.Width - offset, img.Height - offset, this.coverModeOptions.angle, alpha);
+			const offset = 90 - intensity;
+			// To mimic Biography blend, coords must be translated to img source before interpolation
+			const destOffsetW = offset  / ((limits.w - limits.x + offset * 2) / img.Width);
+			const destOffsetH = offset / ((limits.h - limits.y + offset * 2) / img.Height);
+			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, destOffsetW, destOffsetH, img.Width - 2 * destOffsetW, img.Height - 2 * destOffsetH, this.coverModeOptions.angle, alpha);
 			gr.SetInterpolationMode();
 			return true;
 		}
