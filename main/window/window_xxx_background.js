@@ -674,14 +674,17 @@ function _background({
 	} = {}) => {
 		if (this.useColorsBlend && !!this.coverImg.art.image && limits.h > 1 && limits.w > 1) {
 			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
-			const img = this.coverImg.art.image
-				.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
-				.Resize(limits.w, limits.h, InterpolationMode.HighQuality);
+			// To mimic Biography blend, HighQuality interpolation must be used. Cache img for given size
+			const img = this.coverImg.art.blendImage && this.coverImg.art.blendImage.Width === limits.w && this.coverImg.art.blendImage.Height === limits.h
+				? this.coverImg.art.blendImage
+				: this.coverImg.art.blendImage = this.coverImg.art.image
+					.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
+					.Resize(limits.w, limits.h, InterpolationMode.HighQuality);
 			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
 			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			const offset = 90 - intensity;
 			// To mimic Biography blend, coords must be translated to img source before interpolation
-			const destOffsetW = offset  / ((limits.w - limits.x + offset * 2) / img.Width);
+			const destOffsetW = offset / ((limits.w - limits.x + offset * 2) / img.Width);
 			const destOffsetH = offset / ((limits.h - limits.y + offset * 2) / img.Height);
 			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, destOffsetW, destOffsetH, img.Width - 2 * destOffsetW, img.Height - 2 * destOffsetH, this.coverModeOptions.angle, alpha);
 			gr.SetInterpolationMode();
@@ -1108,6 +1111,7 @@ function _background({
 		this.coverImg.art.image = null;
 		this.coverImg.art.colors = null;
 		this.coverImg.art.histogram = null;
+		this.coverImg.art.blendImage = null;
 		this.coverImg.handle = null;
 		this.coverImg.id = null;
 	};
@@ -1471,8 +1475,8 @@ function _background({
 	};
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
-	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null }, handle: null, id: null };
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap:null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
+	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null, blendImage: null }, handle: null, id: null };
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} - Height margin for image drawing */
