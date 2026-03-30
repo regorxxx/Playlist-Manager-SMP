@@ -92,6 +92,7 @@ function _background({
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
 			if (this.logging.bProfile) { profiler.Print(); }
+			this.resetArt();
 			if (bFoundPath) {
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = path;
