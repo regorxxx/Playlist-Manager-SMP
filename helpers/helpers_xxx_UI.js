@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/03/26
+//30/03/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -565,16 +565,17 @@ function applyEffectAsMaskEffect(img, source, effectCallback, maskCallback, bInv
  * @name applyEffect
  * @param {D2DBitmap} img - Img source to apply effects
  * @param {(img:D2DBitmap, gr:D2DGraphics, w:number, h:number) => void} effectCallback - Img manipulation logic. Width and height are from original img. To maintain D2D compatibility, don't use img rotation without releasing img gr first (when doing so, return true)
- * @param {D2DBitmap} img - Img destination to draw over. If not specified, source img is used
- * @param {number} composite - Composition mode flags for {@link D2DGraphics#DrawEffect DrawEffect}
+ * @param {D2DBitmap?} imgDest - Img destination to draw over. If not specified, an empty image based on input size is used. Set to null to draw over input.
+ * @param {number?} composite - [=0] Composition mode flags for {@link D2DGraphics#DrawEffect DrawEffect}
  * @returns {D2DBitmap}
  */
-function applyEffect(img, effectCallback, imgDest, composite = 0) {
+function applyEffect(img, effectCallback, imgDest = d2d.CreateImage(img.Width, img.Height), composite = 0) {
 	const effect = effectCallback(img, img.Width, img.Height);
 	if (effect) {
 		const imgGr = (imgDest || img).GetGraphics();
 		imgGr.DrawEffect(effect, 0, 0, 0, 0, img.Width, img.Height, composite);
 		(imgDest || img).ReleaseGraphics(imgGr);
+		return (imgDest || img);
 	}
-	return (imgDest || img);
+	return img;
 };
