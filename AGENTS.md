@@ -1,5 +1,5 @@
 ## Overview
-This program is a foobar2000 tool which limits AI usage, according to its [license](../main/LICENSE).
+This program limits AI usage, according to its [license](../main/LICENSE).
 
 ## Allowed usage
 Related to AI agents, according to its [license](../main/LICENSE), in particular in Section 19:
