@@ -1,11 +1,16 @@
-                    GNU AFFERO GENERAL PUBLIC LICENSE
-                       Version 3, 19 November 2007
+                    NON-AI GNU AFFERO GENERAL PUBLIC LICENSE
+                       Version 1, 31 March 2026
 
- Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+ Copyright (C) 2026 Regorxxx. <https://github.com/regorxxx>
  Everyone is permitted to copy and distribute verbatim copies
  of this license document, but changing it is not allowed.
 
                             Preamble
+
+  The Non-AI GNU Affero General Public Licens is a license based on the 
+GNU Affero General Public License version 3, with the addition of two
+sections; section 18 that adds a stronger copyleft clause and section
+19 that limits usage for AI usage purposes.
 
   The GNU Affero General Public License is a free, copyleft license for
 software and other kinds of works, specifically designed to ensure
@@ -615,6 +620,36 @@ reviewing courts shall apply local law that most closely approximates
 an absolute waiver of all civil liability in connection with the
 Program, unless a warranty or assumption of liability accompanies a
 copy of the Program in return for a fee.
+
+  18. Product and Service Improvement.
+
+  If the Program or any portion of it are used to improve, develop, or 
+enhance any product or service, the resulting product or service must 
+be released under this License.
+
+  19. AI usage limitations.
+
+  The Program or any portion of it shall not be used, directly or 
+indirectly, for any purpose related to artificial intelligence training,
+machine learning, or the creation of datasets intended for use in 
+artificial intelligence or machine learning applications, including but
+not limited to code generation, text generation, tokenization, natural 
+language processing, data mining and predictive analytics.
+
+  20. Interpretation of Section 19.
+
+  The AI usage limitations above does not limit AI usage as a tool
+complying with the four essential freedoms by Free Software Foundation
+<https://www.gnu.org/philosophy/free-sw.en.html#four-freedoms>, since
+it does not "limit the freedom to study how the program works", as long
+as the user their-self is the one exercising their rights. This excludes
+datasets and training usage, since machine learning applications is by
+definition done by non-user elements. It allows other use cases like 
+creating a summary of the Program or explaining any portion of it, which 
+don't require previous machine learning training on it, and which can 
+also be done with non-AI software. AI tools may also be used to modify 
+the Program or any portion of it as long as it's done outside the 
+limitations covered on Section 19.
 
                      END OF TERMS AND CONDITIONS
 
