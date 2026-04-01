@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/12/25
+//01/04/26
 
 /* exported dynamicColors */
 
@@ -27,42 +27,88 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 		.sort((a, b) => Chroma.contrast(b, note) - Chroma.contrast(a, note))[0];
 	if (typeof sec === 'undefined') { sec = blendColors(tint, note, 0.5); }
 	if (bAdvanced) {
-		let cMain = Chroma(main);
-		let cSec = Chroma(sec);
-		if (cMain.hsv()[1] - cSec.hsv()[1] > 0.2) {
-			[cMain, cSec] = [cSec, cMain];
-			if (cMain.luminance() - cSec.luminance() > 0.4) {
+		const chromaColors = colorScheme.map((c) => Chroma(c));
+		if (chromaColors.every((c) => c.get('hsl.s') < 0.1)) { // It's mostly a B&W scheme
+			let cMain = Chroma(main);
+			let cSec = Chroma(sec);
+			if (cMain.hsv()[1] - cSec.hsv()[1] > 0.2) {
 				[cMain, cSec] = [cSec, cMain];
-			} else if (cMain.luminance() - cSec.luminance() > 0.2 || cSec.luminance() < 0.3) {
-				cSec = cSec.luminance(cSec.luminance() + 0.2).saturate(10);
+				if (cMain.luminance() - cSec.luminance() > 0.4) {
+					[cMain, cSec] = [cSec, cMain];
+				} else if (cMain.luminance() - cSec.luminance() > 0.2 || cSec.luminance() < 0.3) {
+					cSec = cSec.luminance(cSec.luminance() + 0.2);
+				}
+			} else {
+				if (cMain.luminance() - cSec.luminance() > 0.2) {
+					[cMain, cSec] = [cSec, cMain];
+				}
+				if (cMain.luminance() - cSec.luminance() > 0.2 || cMain.luminance() > 0.5) {
+					cMain = cMain.luminance(cMain.luminance() - 0.1);
+				}
+				if (cSec.luminance() < 0.5) {
+					if (cSec.hsv()[1] < 0.1 && cMain.luminance() > 0.2) {
+						cSec = cSec.luminance(cSec.luminance() - 0.1);
+					} else {
+						cSec = cSec.luminance(cSec.luminance() + 0.1);
+					}
+					if (Math.abs(cMain.luminance() - cSec.luminance()) < 0.3) {
+						cMain = cMain.luminance(cMain.luminance() + (cMain.luminance() > 0.3 ? 0.1 : - 0.1));
+						cSec = cSec.luminance(cSec.luminance() + (cSec.luminance() > 0.3 ? 0.1 : -0.1));
+					}
+				}
+				if (Chroma.deltaE(cMain, cSec) < 15) {
+					const lum = cMain.luminance();
+					cMain = lum > 0.01
+						? cMain.luminance(Math.min(lum * 1 / 2, lum - 0.10))
+						: cMain.luminance(Math.max(lum * 3 / 2, lum + 0.10));
+					if (cMain.get('hsl.s') > 0.3) { cMain = cMain.desaturate(2); }
+				}
 			}
+			main = cMain.android();
+			if (main === -1) { main = 4294967295; }
+			sec = cSec.android();
+			if (sec === -1) { sec = 4294967295; }
 		} else {
-			if (cMain.luminance() - cSec.luminance() > 0.2) {
+			let cMain = Chroma(main);
+			let cSec = Chroma(sec);
+			if (cMain.hsv()[1] - cSec.hsv()[1] > 0.2) {
 				[cMain, cSec] = [cSec, cMain];
-			}
-			if (cMain.luminance() - cSec.luminance() > 0.2 || cMain.luminance() > 0.5) {
-				cMain = cMain.luminance(cMain.luminance() - 0.1);
-			}
-			if (cSec.luminance() < 0.5) {
-				if (cSec.hsv()[1] < 0.1 && cMain.luminance() > 0.2) {
-					cSec = cSec.luminance(cSec.luminance() - 0.1);
-				} else {
-					cSec = cSec.luminance(cSec.luminance() + 0.1).saturate(20);
+				if (cMain.luminance() - cSec.luminance() > 0.4) {
+					[cMain, cSec] = [cSec, cMain];
+				} else if (cMain.luminance() - cSec.luminance() > 0.2 || cSec.luminance() < 0.3) {
+					cSec = cSec.luminance(cSec.luminance() + 0.2).saturate(10);
 				}
-				if (Math.abs(cMain.luminance() - cSec.luminance()) < 0.3) {
-					cMain = cMain.luminance(cMain.luminance() + (cMain.luminance() > 0.3 ? 0.1 : - 0.1));
-					cSec = cSec.luminance(cSec.luminance() + (cSec.luminance() > 0.3 ? 0.1 : -0.1));
+			} else {
+				if (cMain.luminance() - cSec.luminance() > 0.2) {
+					[cMain, cSec] = [cSec, cMain];
+				}
+				if (cMain.luminance() - cSec.luminance() > 0.2 || cMain.luminance() > 0.5) {
+					cMain = cMain.luminance(cMain.luminance() - 0.1);
+				}
+				if (cSec.luminance() < 0.5) {
+					if (cSec.hsv()[1] < 0.1 && cMain.luminance() > 0.2) {
+						cSec = cSec.luminance(cSec.luminance() - 0.1);
+					} else {
+						cSec = cSec.luminance(cSec.luminance() + 0.1).saturate(20);
+					}
+					if (Math.abs(cMain.luminance() - cSec.luminance()) < 0.3) {
+						cMain = cMain.luminance(cMain.luminance() + (cMain.luminance() > 0.3 ? 0.1 : - 0.1));
+						cSec = cSec.luminance(cSec.luminance() + (cSec.luminance() > 0.3 ? 0.1 : -0.1));
+					}
+				}
+				if (Chroma.deltaE(cMain, cSec) < 15) {
+					const lum = cMain.luminance();
+					cMain = lum > 0.01
+						? cMain.luminance(Math.min(lum * 1 / 2, lum - 0.10))
+						: cMain.luminance(Math.max(lum * 3 / 2, lum + 0.10));
+					if (cMain.get('hsl.s') > 0.3) { cMain = cMain.desaturate(2); }
 				}
 			}
-			if (Chroma.deltaE(cMain, cSec) < 15) {
-				cMain = cMain.luminance(cMain.luminance() - 0.15);
-				if (cMain.get('hsl.s') > 0.3) { cMain = cMain.desaturate(2); }
-			}
+			main = cMain.android();
+			if (main === -1) { main = 4294967295; }
+			sec = cSec.android();
+			if (sec === -1) { sec = 4294967295; }
 		}
-		main = cMain.android();
-		if (main === -1) { main = 4294967295; }
-		sec = cSec.android();
-		if (sec === -1) { sec = 4294967295; }
 	}
 	return {
 		main,

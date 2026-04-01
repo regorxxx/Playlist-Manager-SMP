@@ -80,6 +80,8 @@
 ### Changed
 - UI: improved 'Set playlist tag(s)' submenu, separating common tags and AutoTags (related to special automatic actions). All AutoTags can now be deleted in a single click without affecting common ones. Additionally, the submenu has an entry to show a readme related to AutoTags usage and actions.
 - UI: default scrolling settings improvements.
+- UI: improvements on dynamic colors handling for almost B&W art or with a lightly tinted by a single color.
+- UI: improvements on dynamic colors handling related to K-means++ with OKLAB color space when using JSplitter v3.7.10+ or v4.1.0+ as JS host. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1078415.html#msg1078415).
 - Sorting: pressing Shift while applying any of the 'Other sorting tools' submenu (from 'Filter and sorting' button) will invert the order for all cases, not just to alphabetically sorting.
 - Installation: panel menu, accessed through 'Ctrl + Win + R. Click' (which works globally on any script and panel, at any position), now also includes the script version number and a submenu to check and set auto-updates.
 - Quick-search: Shift/Ctrl modifiers to perform lookup at any position instead of only the start of strings is now applied only once at first key pressed, so there is no need to keep pressing the modifier key while typing the other chars.

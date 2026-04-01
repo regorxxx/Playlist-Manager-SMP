@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/03/26
+//01/04/26
 
 /* exported _background */
 
@@ -131,7 +131,9 @@ function _background({
 		let profiler;
 		if (this.logging.bProfile) { profiler = new FbProfiler('Background - processArtColors'); }
 		if (this.coverImg.art.image && this.coverModeOptions.bProcessColors) {
-			this.coverImg.art.colors = JSON.parse(this.coverImg.art.image.GetColourSchemeJSON(6));
+			this.coverImg.art.colors = this.coverImg.art.image.GetColourSchemeJSONV2
+				? JSON.parse(this.coverImg.art.image.GetColourSchemeJSONV2(6))
+				: JSON.parse(this.coverImg.art.image.GetColourSchemeJSON(6));
 		}
 		if (this.logging.bProfile) { profiler.Print(); }
 		return this.coverImg.art.colors;
