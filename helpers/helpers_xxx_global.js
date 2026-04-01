@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/03/26
+//01/04/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -229,6 +229,9 @@ const globTags = {
 	md5Decoded: 'MD5',
 	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)',
 	skipCount: '$max(%SKIP_COUNT%,%SKIP_TRACK_SKIP_COUNT%,0)',
+	added: '$if3(%ADDED_ENHANCED%,%2003_ADDED%,%ADDED%)',
+	firstPlayed: '$if3(%FIRST_PLAYED_ENHANCED%,%2003_FIRST_PLAYED%,%FIRST_PLAYED%)',
+	lastPlayed: '$if3(%LAST_PLAYED_ENHANCED%,%2003_LAST_PLAYED%,%LAST_PLAYED%)',
 	folksonomy: 'FOLKSONOMY',
 	feedback: 'FEEDBACK',
 	lra: 'REPLAYGAIN_TRACK_RANGE',
