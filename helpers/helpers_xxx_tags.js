@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/03/26
+//04/04/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3 */
 
@@ -69,7 +69,7 @@ const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
  * @returns {string}
  */
 function sanitizeTagTfo(tag) {
-	return tag.replace(/'/g, '\'\'').replace(/%/g, '\'%\'').replace(/\$/g, '\'$$\'').replace(/\[/g, '\'[\'').replace(/\]/g, '\']\'').replace(/\(/g, '\'(\'').replace(/\)/g, '\')\'').replace(/,/g, '\',\'');
+	return tag.replace(/'/g, '\'\'').replace(/%/g, '\'%\'').replace(/\$/g, '\'$$\'').replace(/\[/g, '\'[\'').replace(/\]/g, '\']\'').replace(/\(/g, '\'(\'').replace(/\)/g, '\')\'').replace(/,/g, '\',\'').replace(/\|/g, '\'|\'');;
 }
 
 /**
