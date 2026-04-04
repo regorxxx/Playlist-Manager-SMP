@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/26
+//04/04/26
 
 /* exported _list */
 
@@ -1538,6 +1538,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				if (!Number.isInteger(s)) { s = Math.round(s); }
 				if (this.scrollSettings.bSmooth && bSmooth && scrollBar && scrollBar.bDrag) { smoothScroll.stop(); }
 				if (this.scrollSettings.bSmooth && bSmooth && (!scrollBar || !scrollBar.bDrag)) {
+					smoothScroll.stop();
 					const timer = smoothScroll.timer;
 					const delta = Math.min(Math.abs(s * scrollDelta), this.items);
 					if (delta > 1) {
@@ -1558,7 +1559,7 @@ function _list({ x, y, w, h, properties } = {}) {
 								Math.ceil(delta * 2 / 10),
 								Math.ceil(delta * 3 / 10),
 								Math.ceil(delta * 4 / 10),
-								delta - Math.ceil(delta * 1 / 10) - Math.ceil(delta * 2 / 10) - Math.ceil(delta * 3 / 10) - Math.ceil(delta * 4 / 10)
+								Math.max(delta - Math.ceil(delta * 1 / 10) - Math.ceil(delta * 2 / 10) - Math.ceil(delta * 3 / 10) - Math.ceil(delta * 4 / 10), 0)
 							].filter(Boolean).forEach((step) => smoothScroll.steps.push(step));
 							new Promise((resolve, reject) => {
 								smoothScroll.steps.reduce((prev, curr) => {
