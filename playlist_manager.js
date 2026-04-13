@@ -1,5 +1,5 @@
 ﻿'use strict';
-//26/02/26
+//13/04/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -115,8 +115,8 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 			}
 		});
 	} else {
-		if (!pop.isEnabled()) { pop.enable(true, message, tt, 'cacheLib waiting'); } // Disabled on notify
-		else { pop.setReason('cacheLib waiting'); }
+		if (pop.isEnabled()) { pop.setReason('cacheLib waiting'); } // Disabled on notify
+		else { pop.enable(true, message, tt, 'cacheLib waiting'); }
 		window.NotifyOthers('xxx-scripts: precacheLibraryPaths ask', null);
 	}
 	return null;
@@ -124,7 +124,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
 let properties = {
-	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0,1]] }],
+	drawMode: ['Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0, 1]] }],
 	playlistsPath: ['Tracked playlists folder', '.\\profile\\playlist_manager\\', { func: isString, portable: true }],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }], // Safety limit 0 or > 1000
 	fplRules: ['fpl playlists behavior', JSON.stringify({
@@ -211,7 +211,7 @@ let properties = {
 	bCheckDuplWarnings: ['Warnings when loading duplicated playlists', true, { func: isBoolean }],
 	bSavingXsp: ['Auto-save .xsp playlists', false, { func: isBoolean }],
 	bAllPls: ['Track UI-only playlists', false, { func: isBoolean }],
-	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !isNaN, range: [[0, 0], [1000, Infinity]] }], // Infinity calls it on unload and playlist changes only
+	autoBack: ['Auto-backup interval for playlists (in ms). Forced > 1000. 0 disables it.', Infinity, { func: !Number.isNaN, range: [[0, 0], [1000, Infinity]] }], // Infinity calls it on unload and playlist changes only
 	autoBackN: ['Auto-backup files allowed.', 50, { func: isInt }],
 	filterMethod: ['Current filter buttons', 'Playlist type,Lock state', { func: isString }],
 	bSavingDefExtension: ['Try to save playlists always as default format', true, { func: isBoolean }],
@@ -221,8 +221,8 @@ let properties = {
 	playlistIcons: ['Playlist icons codes (Font Awesome)', JSON.stringify(
 		Object.fromEntries(Object.entries(playlistDescriptors).map((plsPair) => {
 			const key = plsPair[0];
-			const icon = plsPair[1].icon ? plsPair[1].icon.charCodeAt(0).toString(16) : null;
-			const iconBg = plsPair[1].iconBg ? plsPair[1].iconBg.charCodeAt(0).toString(16) : null;
+			const icon = plsPair[1].icon ? plsPair[1].icon.codePointAt(0).toString(16) : null;
+			const iconBg = plsPair[1].iconBg ? plsPair[1].iconBg.codePointAt(0).toString(16) : null;
 			return [key, { icon, iconBg }];
 		}))), { func: isJSON }],
 	iDynamicMenus: ['Show dynamic menus', 1, { func: isInt, range: [[0, 2]] }],
@@ -363,9 +363,9 @@ let properties = {
 		playlistCache: 6000,
 	}), { func: isJSON, forceDefaults: true }],
 	statusIcons: ['Playlist status icons', JSON.stringify({
-		active: { enabled: true, string: String.fromCharCode(8226) /* • */, offset: true },
-		playing: { enabled: true, string: String.fromCharCode(9654) /* ▶ */, offset: false },
-		loaded: { enabled: true, string: String.fromCharCode(187) /* » */, offset: true }
+		active: { enabled: true, string: String.fromCodePoint(8226) /* • */, offset: true },
+		playing: { enabled: true, string: String.fromCodePoint(9654) /* ▶ */, offset: false },
+		loaded: { enabled: true, string: String.fromCodePoint(187) /* » */, offset: true }
 	}), { func: isJSON, forceDefaults: true }],
 	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }],
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone]), { func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }],
@@ -465,7 +465,7 @@ const background = new _background({
 			if (!bForced && !list.properties.bDynamicColors[1]) { return; }
 			else if (colArray) {
 				const bChangeBg = list.properties.bDynamicColorsBg[1] && background.useColors && !background.useColorsBlend;
-				const { main, sec, note, mainAlt, secAlt } = dynamicColors( // eslint-disable-line no-unused-vars
+				const { sec, note, mainAlt } = dynamicColors( // eslint-disable-line no-unused-vars
 					colArray,
 					bChangeBg ? RGB(122, 122, 122) : background.getAvgPanelColor(),
 					true
@@ -715,7 +715,51 @@ const autoBackTimer = Number(list.properties.autoBack[1]);
 	});
 }
 
-if (!list.properties.bSetup[1]) {
+if (list.properties.bSetup[1]) {
+	const button = bottomToolbar.buttons.setup;
+	addEventListener('on_mouse_lbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
+		bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
+	});
+	addEventListener('on_mouse_lbtn_down', (x, y, mask) => { // eslint-disable-line no-unused-vars
+		bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
+	});
+	addEventListener('on_mouse_rbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
+		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
+			return onRbtnUpImportSettings.call(list).btn_up(x, y);
+		}
+		return true; // left shift + left windows key will bypass this callback and will open default context menu.
+	});
+	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => { // eslint-disable-line no-unused-vars
+		background.move(x, y, mask);
+		bottomToolbar.on_mouse_move_buttn(x, y, mask);
+		if (bottomToolbar.curBtn === null) {
+			pop.move(x, y, mask);
+			window.SetCursor(IDC_ARROW);
+		} else {
+			list.up_btn.hover = false;
+			list.down_btn.hover = false;
+			window.SetCursor(IDC_HAND);
+		}
+	});
+	addEventListener('on_mouse_leave', () => {
+		background.leave();
+		bottomToolbar.on_mouse_leave_buttn();
+	});
+	addEventListener('on_paint', (gr) => {
+		if (!window.ID) { return; }
+		if (!window.Width || !window.Height) { return; }
+		background.paint(gr);
+		bottomToolbar.on_paint_buttn(gr);
+	});
+	addEventListener('on_size', (width, height) => {
+		background.resize({ w: width, h: height, bPaint: false });
+		pop.resize();
+		button.w = width / 2;
+		button.h = height / 3;
+		button.x = width / 2 - button.w / 2;
+		button.y = height / 2 - button.h / 2;
+	});
+} else {
 	// Auto-update if there are a different number of items on folder or the total file sizes change
 	// Note tracking it's not perfect... yes, you could change characters on a file without modifying size
 	// but that use-case makes no sense for playlists. These are not files with 'tags', no need to save timestamps or hashes.
@@ -1015,9 +1059,7 @@ if (!list.properties.bSetup[1]) {
 			}
 			case 'xxx-scripts: precacheLibraryPaths': {
 				if (list.bLiteMode) { return; }
-				if (!info) {
-					cacheLib(void (0), void (0), void (0), true);
-				} else {
+				if (info) {
 					const now = Date.now();
 					if (now - plmInit.lastUpdate > 1000) { plmInit.lastUpdate = now; } else { plmInit.lastUpdate = now; return; } // Update once per time needed...
 					libItemsAbsPaths = [...info];
@@ -1036,6 +1078,8 @@ if (!list.properties.bSetup[1]) {
 					list.plsCache.clear();
 					fb.queryCache.clear();
 					pop.disable(true);
+				} else {
+					cacheLib(void (0), void (0), void (0), true);
 				}
 				break;
 			}
@@ -1223,7 +1267,7 @@ if (!list.properties.bSetup[1]) {
 	// Autosave
 	// Halt execution if trigger rate is greater than autosave (ms), so it fires only once after successive changes made.
 	// if Autosave === 0, then it does nothing...
-	debouncedUpdate = (autoSaveTimer !== 0) ? debounce(list.updatePlaylist, autoSaveTimer) : null;
+	debouncedUpdate = (autoSaveTimer === 0) ? null : debounce(list.updatePlaylist, autoSaveTimer);
 	addEventListener('on_playlist_items_reordered', (/** @type {number} */ playlistIndex, oldName = null) => {
 		if (!list.bInit) { return; }
 		const name = plman.GetPlaylistName(playlistIndex);
@@ -1359,8 +1403,8 @@ if (!list.properties.bSetup[1]) {
 		let bToFolder = false;
 		if ((mask & 32) === 32) {
 			if (list.index !== -1) {
-				if (!list.data[list.index].isFolder) { list.index = -1; }
-				else { bToFolder = true; }
+				if (list.data[list.index].isFolder) { bToFolder = true; }
+				else { list.index = -1; }
 				if (window.IsVisible) { list.repaint(false, 'list'); }
 			}
 		}
@@ -1497,50 +1541,6 @@ if (!list.properties.bSetup[1]) {
 	}
 
 	stats.attachCallbacks();
-} else {
-	const button = bottomToolbar.buttons.setup;
-	addEventListener('on_mouse_lbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
-		bottomToolbar.on_mouse_lbtn_up_buttn(x, y);
-	});
-	addEventListener('on_mouse_lbtn_down', (x, y, mask) => { // eslint-disable-line no-unused-vars
-		bottomToolbar.on_mouse_lbtn_down_buttn(x, y);
-	});
-	addEventListener('on_mouse_rbtn_up', (x, y, mask) => { // eslint-disable-line no-unused-vars
-		if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_LWIN)) {
-			return onRbtnUpImportSettings.call(list).btn_up(x, y);
-		}
-		return true; // left shift + left windows key will bypass this callback and will open default context menu.
-	});
-	addEventListener('on_mouse_move', (x, y, mask, bDragDrop = false) => { // eslint-disable-line no-unused-vars
-		background.move(x, y, mask);
-		bottomToolbar.on_mouse_move_buttn(x, y, mask);
-		if (bottomToolbar.curBtn === null) {
-			pop.move(x, y, mask);
-			window.SetCursor(IDC_ARROW);
-		} else {
-			list.up_btn.hover = false;
-			list.down_btn.hover = false;
-			window.SetCursor(IDC_HAND);
-		}
-	});
-	addEventListener('on_mouse_leave', () => {
-		background.leave();
-		bottomToolbar.on_mouse_leave_buttn();
-	});
-	addEventListener('on_paint', (gr) => {
-		if (!window.ID) { return; }
-		if (!window.Width || !window.Height) { return; }
-		background.paint(gr);
-		bottomToolbar.on_paint_buttn(gr);
-	});
-	addEventListener('on_size', (width, height) => {
-		background.resize({ w: width, h: height, bPaint: false });
-		pop.resize();
-		button.w = width / 2;
-		button.h = height / 3;
-		button.x = width / 2 - button.w / 2;
-		button.y = height / 2 - button.h / 2;
-	});
 }
 globProfiler.Print('callbacks');
 

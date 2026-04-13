@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/26
+//13/04/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
 
@@ -105,7 +105,7 @@ const callbacks = {
 	on_volume_change: { listeners: [], bRegistered: false },
 };
 
-const parentWindow = this; // This is Window in this context without SMP wrapping
+const parentWindow = this; // NOSONAR This is Window in this context without SMP wrapping
 parentWindow.eventListener = { event: null, id: null };
 
 /**
@@ -115,13 +115,82 @@ parentWindow.eventListener = { event: null, id: null };
 /**
  * Adds a listener to any SMP callback
  *
+ * @final
  * @function
  * @name addEventListener
  * @kind function
- * @param {smpEvents} event - Event type
- * @param {Function} listener - Callback function
+ * @template {smpEvents} smpEvent
+ * @param {smpEvent} event - Event type
+ * @param {smpEvent extends ('on_always_on_top_changed'|'on_playback_follow_cursor_changed'|'on_cursor_follow_playback_changed'|'on_playback_pause'|'on_playlist_stop_after_current_changed')
+ * 		? (state: boolean) => void
+ * 		: smpEvent extends ('on_char')
+ * 			? (code: number) => void
+ * 			: smpEvent extends ('on_drag_drop'|'on_drag_enter'|'on_drag_over')
+ * 				? (action:DropTargetAction, x: number, y: number, mask: number) => void
+ * 				: smpEvent extends ('on_focus')
+ * 					? (isFocused: boolean) => void
+ * 					: smpEvent extends ('on_get_album_art_done')
+ * 						? (handle: FbMetadbHandle, artId: number, img: GdiBitmap|D2DBitmap|null, imgPath: string) => void
+ * 						: smpEvent extends ('on_item_focus_change')
+ * 							? (playlistIndex: number, from: number, to: number) => void
+ * 							: smpEvent extends ('on_item_played'|'on_playback_edited'|'on_playback_new_track')
+ * 								? (handle: FbMetadbHandle) => void
+ * 								: smpEvent extends ('on_key_down'|'on_key_up')
+ * 									? (vKey: number) => void
+ * 									: smpEvent extends ('on_library_items_added'|'on_library_items_changed'|'on_library_items_removed')
+ * 										? (handleList: FbMetadbHandleList) => void
+ * 										: smpEvent extends ('on_load_image_done')
+ * 											? (cookie: number, img: GdiBitmap|D2DBitmap|null, imgPath: string) => void
+ * 											: smpEvent extends ('on_main_menu'|'on_main_menu_dynamic')
+ * 												? (index: number) => void
+ * 												: smpEvent extends ('on_metadb_changed')
+ * 													? (handleList: FbMetadbHandleList, fromHook: boolean) => void
+ * 													: smpEvent extends ('on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up')
+ * 														? (x: number, y: number, mask: number) => void
+ * 														: smpEvent extends ('on_mouse_wheel'|'on_mouse_wheel_h')
+ * 															? (step: number) => void
+ * 															: smpEvent extends ('on_notify_data')
+ * 																? (name: string, info: any) => void
+ * 																: smpEvent extends ('on_paint')
+ * 																	? (gr: GdiGraphics|D2DGraphics ) => void
+ * 																	: smpEvent extends ('on_playback_order_changed')
+ * 																		? (newOrder: (0|1|2|3|4|5|6)) => void
+ * 																		: smpEvent extends ('on_playback_queue_changed')
+ * 																			? (origin: (0|1|2)) => void
+ * 																			: smpEvent extends ('on_playback_seek'|'on_playback_time')
+ * 																				? (time: number) => void
+ * 																				: smpEvent extends ('on_playback_starting')
+ * 																					? (cmd: (0|1|2|3|4|5|6), isPaused: boolean) => void
+ * 																					: smpEvent extends ('on_playback_stop')
+ * 																						? (reason: (0|1|2|3)) => void
+ * 																						: smpEvent extends ('on_playlist_item_ensure_visible')
+ * 																							? (playlistIndex: number, playlistItemIndex: number) => void
+ * 																							: smpEvent extends ('on_playlist_items_added'|'on_playlist_items_reordered')
+ * 																								? (playlistIndex: number) => void
+ * 																								: smpEvent extends ('on_playlist_items_removed')
+ * 																									? (playlistIndex: number, newCount: number) => void
+ * 																									: smpEvent extends ('on_replaygain_mode_changed')
+ * 																										? (mode: (0|1|2|3)) => void
+ * 																										: smpEvent extends ('on_size')
+ * 																											? (width: number, height: number) => void
+ * 																											: smpEvent extends ('on_volume_change')
+ * 																												? (val: number) => void
+ * 																												: smpEvent extends ('on_button_click')
+ * 																													? (id: number) => void
+ * 																													: smpEvent extends ('on_panel_mouse_move')
+ * 																														? (name: string, x: number, y: number, mask: number) => void
+ * 																														: smpEvent extends ('on_panel_mouse_leave')
+ * 																															? (name: string) => void
+ * 																															: smpEvent extends ('on_download_file_done')
+ * 																																? (path: string, success: boolean, errorText: string) => void
+ * 																																: smpEvent extends ('on_locations_added')
+ * 																																	? (taskId: number, handleList: FbMetadbHandleList) => void
+ * 																																	: smpEvent extends ('on_http_request_done')
+ * 																																		? (taskId: number, success: boolean, responseText: string, status: number, contentType: string) => void
+ * 																																		: () => void
+ * } listener - Callback function
  * @param {boolean} bRegister? - Add to global context
- * @returns {false | { event: smpEvents; id: string; }}
+ * @returns {false | { event: smpEvent; id: string; }}
  */
 function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
 	if (!Object.hasOwn(callbacks, event)) { console.log('addEventListener: event does not exist -> ' + event); return false; }
@@ -151,6 +220,7 @@ function findEventListener(event, listener = null, id = null) {
 /**
  * Deletes the listener from any SMP callback using either the name, function or UUID
  *
+ * @final
  * @function
  * @name removeEventListener
  * @kind function
@@ -202,9 +272,9 @@ function moveEventListener(evenListener, pos = 0) { // eslint-disable-line no-re
 	const event = evenListener.event;
 	if (!event && !Object.hasOwn(callbacks, event)) { return false; }
 	const idx = findEventListener(event, evenListener.listener, evenListener.id);
-	return idx !== -1
-		? !!callbacks[event].listeners.splice(pos, 0, ...callbacks[event].listeners.splice(idx, 1))
-		: false;
+	return idx === -1
+		? false
+		: !!callbacks[event].listeners.splice(pos, 0, ...callbacks[event].listeners.splice(idx, 1));
 }
 
 /*
@@ -227,7 +297,7 @@ const fireEvents = function (event) {
 		if (event === 'on_drag_drop' && window.InstanceType === 0 && fb.GetSelectionType() === 0) { // BUG: CUI Album List not setting a selection during drag n' drop
 			const action = arguments[0];
 			if (action.IsInternal) { bReturn = runEvent(event); }
-			const idx = action.Playlist = plman.CreatePlaylist(plman.PlaylistCount,'.');
+			const idx = action.Playlist = plman.CreatePlaylist(plman.PlaylistCount, '.');
 			Promise.wait(20).then(() => { // Seems to be fast enough to not refresh the UI
 				const handleList = plman.GetPlaylistItems(idx);
 				plman.RemovePlaylist(idx);
@@ -245,15 +315,15 @@ const fireEvents = function (event) {
 };
 
 function registerCallback(event) {
-	if (typeof parentWindow[event] !== 'undefined') {
+	if (typeof parentWindow[event] === 'undefined') {
+		parentWindow[event] = fireEvents(event).bind(parentWindow);
+	} else {
 		const oldFunc = parentWindow[event];
 		parentWindow[event] = function () {
 			const cache = oldFunc.apply(parentWindow, arguments);
 			const output = fireEvents(event).apply(parentWindow, arguments);
 			return (cache || output); // To be used by on_mouse_rbtn_up to disable default menu
 		};
-	} else {
-		parentWindow[event] = fireEvents(event).bind(parentWindow);
 	}
 	callbacks[event].bRegistered = true;
 }
@@ -269,7 +339,7 @@ if (typeof UUID === 'undefined') {
 	// @ts-ignore
 	var UUID = () => { // NOSONAR[global]
 		return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { /* cspell:disable-line */
-			const rnd = Math.random() * 16 | 0;
+			const rnd = Math.trunc(Math.random() * 16);
 			const v = c === 'x' ? rnd : (rnd & 0x3 | 0x8);
 			return v.toString(16);
 		});
@@ -310,11 +380,11 @@ const callbacksListener = {
 };
 
 callbacksListener.checkPanelNames = function () {
-	if (!window.Name.length) {
-		console.popup('Panel has no name: "" (' + window.ScriptInfo.Name + ') \n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
-	} else {
+	if (window.Name.length) {
 		this.listenNames = true;
 		window.NotifyOthers('xxx-scripts: panel name', window.Name);
+	} else {
+		console.popup('Panel has no name: "" (' + window.ScriptInfo.Name + ') \n\nChange it at the SMP panel configuration.', 'Buttons: check panel name');
 	}
 };
 

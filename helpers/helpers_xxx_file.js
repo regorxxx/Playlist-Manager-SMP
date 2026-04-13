@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/03/26
+//06/04/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
 
@@ -388,8 +388,8 @@ function _moveFile(oldFilePath, newFilePath) {
 		_renameFile(newFilePath, newFilePath + '.old');
 	}
 	const bDone = _renameFile(oldFilePath, newFilePath);
-	if (!bDone) { _renameFile(newFilePath + '.old', newFilePath); }
-	else { _deleteFile(newFilePath + '.old'); }
+	if (bDone) { _deleteFile(newFilePath + '.old'); }
+	else { _renameFile(newFilePath + '.old', newFilePath); }
 	return bDone;
 }
 
@@ -536,7 +536,10 @@ function _recycleFile(file, bCheckBin = false) {
 // Long paths not supported
 function _restoreFile(file) {
 	file = _resolvePath(file);
-	if (!_isFile(file)) {
+	if (_isFile(file)) {
+		console.log('_restoreFile(): Can not restore file to \'' + file + '\' since there is already another file at the same path.');
+		return false;
+	} else {
 		const arr = utils.SplitFilePath(file);
 		const originalFileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 		let numItems, items;
@@ -553,9 +556,6 @@ function _restoreFile(file) {
 		const bFound = _isFile(file);
 		if (!bFound) { console.log('_restoreFile(): Can not restore file, \'' + originalFileName + '\' was not found at the bin.'); }
 		return bFound;
-	} else {
-		console.log('_restoreFile(): Can not restore file to \'' + file + '\' since there is already another file at the same path.');
-		return false;
 	}
 }
 
@@ -636,12 +636,12 @@ function _saveSplitJson(file, value, replacer = void (0), space = void (0), spli
 	if (_isFolder(filePath)) {
 		const fileName = utils.SplitFilePath(file)[1];
 		const len = value.length;
-		const add = len > splitBy ? splitBy : len;
+		const add = Math.min(len, splitBy);
 		const count = Math.ceil(len / splitBy);
 		let bDone = true;
 		for (let i = 0; i < count; i++) {
 			const newFilename = file.replace(fileName, fileName + i);
-			bDone = bDone && _save(newFilename, JSON.stringify(value.slice(i * add, ((i + 1) * add < len ? (i + 1) * add : len)), replacer, space), bBOM);
+			bDone = bDone && _save(newFilename, JSON.stringify(value.slice(i * add, Math.min((i + 1) * add, len)), replacer, space), bBOM);
 		}
 		return bDone;
 	}
@@ -677,7 +677,7 @@ function _jsonParseFileSplit(filePath, codePage = 0) {
 	return result;
 }
 
-function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.FullPanelName, codePage = 0, notFoundText, corruptText) {
+function _jsonParseFileCheck(file, fileName = 'Json', popupName = window.FullPanelName, codePage = 0, notFoundText = '', corruptText = '') {
 	file = _resolvePath(file);
 	let data = null;
 	if (_isFile(file)) {
@@ -836,14 +836,15 @@ function editTextFile(filePath, originalString, newString, bBOM = false) {
 			} else if (isString(originalString) && isString(newString)) {
 				fileTextNew = fileTextNew.replace(originalString, newString);
 			}
-			if (fileTextNew !== fileText) {
+			if (fileTextNew === fileText) { reason = 1; }
+			else {
 				bDone = utils.WriteTextFile(filePath, fileTextNew, bBOM);
 				// Check
 				if (_isFile(filePath) && bDone) {
 					const check = _open(filePath, utf8);
 					bDone = (check === fileTextNew);
 				} else { reason = -1; }
-			} else { reason = 1; }
+			}
 		} else { reason = 0; }
 	} else { reason = -1; }
 	return [bDone, reason];
@@ -927,7 +928,7 @@ function findRelPathInAbsPath(relPath, absPath = fb.FoobarPath) {
 			}
 			finalPath = relPathArr.join('\\');
 		} else {
-			finalPath = relPathArr.map((folder) => { return (folder !== '..' ? folder : ''); }).filter(Boolean);
+			finalPath = relPathArr.map((folder) => { return (folder === '..' ? '' : folder); }).filter(Boolean);
 			finalPath = absPathArr.slice(0, absPathArr.length - (relPathArr.length - finalPath.length)).concat(finalPath);
 			finalPath = finalPath.join('\\');
 		}
@@ -962,7 +963,7 @@ function sanitizePath(value) { // Sanitize illegal chars but skip drive
 
 function UUID() {
 	return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => { /* cspell:disable-line */
-		const rnd = Math.random() * 16 | 0;
+		const rnd = Math.trunc(Math.random() * 16);
 		const v = c === 'x' ? rnd : (rnd & 0x3 | 0x8);
 		return v.toString(16);
 	});
@@ -1016,7 +1017,7 @@ function formatFileSize(val) {
 	const regexUnit = /(^\d*.*\d* )(\w*)/;
 	val = utils.FormatFileSize(val);  // X.XX bb
 	if (regexHundreds.test(val)) {
-		val = val.replace(regexHundreds, round(parseFloat(val.match(regexHundreds)[0] / 1024), 3));
+		val = val.replace(regexHundreds, round(Number.parseFloat(val.match(regexHundreds)[0] / 1024), 3));
 		const unit = val.match(regexUnit)[2];
 		let toUnit = '';
 		switch (unit) {
@@ -1028,7 +1029,7 @@ function formatFileSize(val) {
 		val = val.replace(regexUnit, '$1' + toUnit);
 	}
 	if (regexTwoDecs.test(val)) {
-		val = val.replace(regexTwoDecs, round(parseFloat(val.match(regexTwoDecs)[0]), 1));
+		val = val.replace(regexTwoDecs, round(Number.parseFloat(val.match(regexTwoDecs)[0]), 1));
 	}
 	return val;
 }
@@ -1062,7 +1063,10 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 			out.folder.path = folder.Path || out.path;
 			out.folder.type = folder.Type || out.type;
 			out.folder.isRoot = folder.IsRootFolder;
-			if (!out.folder.isRoot) {
+			if (out.folder.isRoot) {
+				out.folder.size = out.size.total;
+				out.folder.sizePercent = 100;
+			} else {
 				if (!bSkipFolderSize) { // Is slow...
 					try {
 						out.folder.size = round(folder.Size, 2);
@@ -1071,9 +1075,6 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 				}
 				out.folder.dateCreated = folder.DateCreated; // .toString()
 				out.folder.dateModified = folder.DateLastModified;
-			} else {
-				out.folder.size = out.size.total;
-				out.folder.sizePercent = 100;
 			}
 		}
 		return out;
@@ -1085,5 +1086,5 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 function parseWinApiError(message, bAddLink = true) {
 	const code = (/\((\w*)\)/gi.exec(message)[1] || 'UNKNOWN').toUpperCase().replace('0X', '0x');
 	return 'WinAPI error: ' + code + ' - ' + WinApiError[code] +
-		(bAddLink ? '\n\t Check: https://www.hresult.info/FACILITY_CONTROL' + (code !== 'UNKNOWN' ? '/' + code : '') : '');
+		(bAddLink ? '\n\t Check: https://www.hresult.info/FACILITY_CONTROL' + (code === 'UNKNOWN' ? '' : '/' + code) : '');
 }

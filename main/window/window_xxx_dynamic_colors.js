@@ -1,5 +1,5 @@
-﻿'use strict';
-//01/04/26
+'use strict';
+//13/04/26
 
 /* exported dynamicColors */
 
@@ -59,8 +59,8 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 				if (Chroma.deltaE(cMain, cSec) < 15) {
 					const lum = cMain.luminance();
 					cMain = lum > 0.01
-						? cMain.luminance(Math.min(lum * 1 / 2, lum - 0.10))
-						: cMain.luminance(Math.max(lum * 3 / 2, lum + 0.10));
+						? cMain.luminance(Math.min(lum * 1 / 2, lum - 0.1))
+						: cMain.luminance(Math.max(lum * 3 / 2, lum + 0.1));
 					if (cMain.get('hsl.s') > 0.3) { cMain = cMain.desaturate(2); }
 				}
 			}
@@ -99,8 +99,8 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 				if (Chroma.deltaE(cMain, cSec) < 15) {
 					const lum = cMain.luminance();
 					cMain = lum > 0.01
-						? cMain.luminance(Math.min(lum * 1 / 2, lum - 0.10))
-						: cMain.luminance(Math.max(lum * 3 / 2, lum + 0.10));
+						? cMain.luminance(Math.min(lum * 1 / 2, lum - 0.1))
+						: cMain.luminance(Math.max(lum * 3 / 2, lum + 0.1));
 					if (cMain.get('hsl.s') > 0.3) { cMain = cMain.desaturate(2); }
 				}
 			}

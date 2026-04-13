@@ -1,7 +1,7 @@
 ﻿'use strict';
-//05/01/26
+//13/04/26
 
-/* exported _sb, fillWithPattern */
+/* exported _sb, fillWithPattern, getStarPoints, getHeartPoints */
 
 /* global SF_CENTRE:readable, IDC_HAND:readable */
 include('helpers_xxx_UI.js');
@@ -78,7 +78,7 @@ function drawDottedLine(gr, x1, y1, x2, y2, line_width, colour, dot_sep) {
 		}
 	} else { // Any angle: Would work alone, but checking coordinates first is faster for vertical and horizontal...
 		const numberDots = Math.floor(((x2 - x1) ** 2 + (y2 - y1) ** 2) ** (1 / 2) / dot_sep / 2);
-		const angle = (y2 !== y1) ? Math.atan((x2 - x1) / (y2 - y1)) : 0;
+		const angle = (y2 === y1) ? 0 : Math.atan((x2 - x1) / (y2 - y1));
 		const xStep = dot_sep * Math.cos(angle);
 		const yStep = dot_sep * Math.sin(angle);
 		let newX1 = x1;
@@ -132,4 +132,51 @@ function fillWithPattern(gr, x1, y1, x2, y2, colour, lineWidth, size, pattern) {
 			break;
 		}
 	}
+}
+
+function getStarPoints(nodeSize, innerCirclePoints = 5, innerOuterRadiusRatio = 2.5, offsetX = 0, offsetY = 0) {
+	const centerX = nodeSize / 2 + offsetX;
+	const centerY = nodeSize / 2 + offsetY;
+	const innerRadius = nodeSize / innerCirclePoints;
+	const outerRadius = innerRadius * innerOuterRadiusRatio;
+	return calcStarPoints(centerX, centerY, innerCirclePoints, innerRadius, outerRadius);
+}
+
+function calcStarPoints(centerX, centerY, innerCirclePoints, innerRadius, outerRadius) {
+	const angle = (Math.PI / innerCirclePoints);
+	const angleOffsetToCenterStar = 0;
+	const totalPoints = innerCirclePoints * 2; // 10 in a 5-points star
+	let points = [];
+	for (let i = 0; i < totalPoints; i++) {
+		const isEvenIndex = i % 2 === 0;
+		const r = isEvenIndex ? outerRadius : innerRadius;
+		const a = i * angle + angleOffsetToCenterStar;
+		points.push(
+			centerX + Math.cos(a) * r,
+			centerY + Math.sin(a) * r
+		);
+	}
+	return points;
+}
+
+function getHeartPoints(nodeSize, points = 9, offsetX = 0, offsetY = 0) {
+	const centerX = nodeSize / 2 + offsetX;
+	const centerY = nodeSize / 2 + offsetY;
+	return calcHeartPoints(nodeSize, centerX, centerY, points);
+}
+
+function calcHeartPoints(nodeSize, centerX, centerY, numPoints) {
+	numPoints -= 1;
+	const angle = Math.PI / numPoints * 2;
+	const r = nodeSize / 35;
+	let points = [];
+	for (let i = 0; i < numPoints; i++) {
+		const a = i * angle;
+		points.push(
+			centerX - (a < Math.Pi * 2 ? 0 :  (16 * Math.sin(a) **3) * r),
+			centerY - (13 * Math.cos(a) - 5 * Math.cos(2*a) - 2 * Math.cos(3*a) - Math.cos(4*a)) * r
+		);
+	}
+	points.push(points[0], points[1]); // End at first point to avoid painting errors with gr.DrawPolygon();
+	return points;
 }

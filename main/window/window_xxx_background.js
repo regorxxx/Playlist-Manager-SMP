@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/04/26
+//13/04/26
 
 /* exported _background */
 
@@ -66,21 +66,21 @@ function _background({
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
 		if (!this.useColors || this.useColorsBlend) { this.colorImg = null; }
 		else if (!this.useCover) { this.colorsChanged(bRepaint, true, false); }
-		if (!this.useCover) { return Promise.resolve(false); }
+		if (!this.useCover) { return false; }
 		if (!handle) { handle = this.getHandle(); }
 		const bPath = ['path', 'folder'].includes(this.coverMode);
 		const path = bPath ? this.getArtPath(void (0), handle) : '';
 		const bFoundPath = bPath && path.length;
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
-		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return Promise.resolve(false); }
+		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return false; }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
 			id = tf.EvalWithMetadb(handle);
 			if (!bForce && id === this.coverImg.id) {
 				if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
-				return Promise.resolve(false);
+				return false;
 			}
 		}
 		let profiler;
@@ -518,10 +518,10 @@ function _background({
 			const topColor = bGradient
 				? blendColors(color, invert(color, false, false), scale, false)
 				: color;
-			if (color !== topColor) {
-				gr.FillGradRect(xPoint, yPoint, barW, valH, 90.1, topColor, color);
-			} else {
+			if (color === topColor) {
 				gr.FillSolidRect(xPoint, yPoint, barW, valH, color);
+			} else {
+				gr.FillGradRect(xPoint, yPoint, barW, valH, 90.1, topColor, color);
 			}
 			gr.DrawRect(xPoint, yPoint, barW, valH, Math.max(barW / 10, 1), borderColor);
 		});
@@ -627,7 +627,7 @@ function _background({
 				gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, color[0]);
 				break;
 			}
-			case 'blend': {
+			case 'blend': { // NOSONAR
 				if (this.coverImg.art.image) { break; }
 			}
 			case 'bigradient': { // eslint-disable-line no-fallthrough
@@ -678,11 +678,12 @@ function _background({
 		if (this.useColorsBlend && !!this.coverImg.art.image && limits.h > 1 && limits.w > 1) {
 			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 			// To mimic Biography blend, HighQuality interpolation must be used. Cache img for given size
-			const img = this.coverImg.art.blendImage && this.coverImg.art.blendImage.Width === limits.w && this.coverImg.art.blendImage.Height === limits.h
-				? this.coverImg.art.blendImage
-				: this.coverImg.art.blendImage = this.coverImg.art.image
+			if (!this.coverImg.art.blendImage || this.coverImg.art.blendImage.Width !== limits.w || this.coverImg.art.blendImage.Height !== limits.h) {
+				this.coverImg.art.blendImage = this.coverImg.art.image
 					.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
 					.Resize(limits.w, limits.h, InterpolationMode.HighQuality);
+			}
+			const img = this.coverImg.art.blendImage;
 			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
 			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			const offset = 90 - intensity;
@@ -1007,10 +1008,11 @@ function _background({
 	 * @name cycleArtMode
 	 * @kind method
 	 * @memberof _background
-	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @param {1|-1} next - [=1] Cycle direction
+	 * @param {any} callbackArgs - [=null]
 	 * @returns {string} New art mode
 	 */
-	this.cycleArtMode = (next = 1, callbackArgs) => {
+	this.cycleArtMode = (next = 1, callbackArgs = null) => {
 		const modes = [...trackCoverModes].rotate(trackCoverModes.indexOf(this.coverMode) + Math.sign(next));
 		this.changeConfig({ config: { coverMode: modes[0] }, callbackArgs });
 		return modes[0];
@@ -1022,10 +1024,11 @@ function _background({
 	 * @name cycleArtModeAsync
 	 * @kind method
 	 * @memberof _background
-	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @param {1|-1} next - [=1] Cycle direction
+	 * @param {any} callbackArgs - [=null]
 	 * @returns {Promise.<string>} New art mode
 	 */
-	this.cycleArtModeAsync = async (next = 1, callbackArgs) => {
+	this.cycleArtModeAsync = async (next = 1, callbackArgs = null) => {
 		const modes = [...trackCoverModes].rotate(trackCoverModes.indexOf(this.coverMode) + Math.sign(next));
 		let bDone;
 		const handle = this.getHandle();
@@ -1049,10 +1052,11 @@ function _background({
 	 * @name cycleArt
 	 * @kind method
 	 * @memberof _background
-	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @param {1|-1} next - [=1] Cycle direction
+	 * @param {any} callbackArgs - [=null]
 	 * @returns {string}
 	 */
-	this.cycleArt = (next = 1, callbackArgs) => {
+	this.cycleArt = (next = 1, callbackArgs = null) => {
 		if (this.coverMode === 'folder') { return this.cycleArtFolder(next); }
 		else if (trackCoverModes.includes(this.coverMode)) { return this.cycleArtMode(next, callbackArgs); }
 	};
@@ -1062,10 +1066,11 @@ function _background({
 	 * @name cycleArt
 	 * @kind method
 	 * @memberof _background
-	 * @param {1|-1|void} next - [=1] Cycle direction
+	 * @param {1|-1} next - [=1] Cycle direction
+	 * @param {any} callbackArgs - [=null]
 	 * @returns {Promise.<string>}
 	 */
-	this.cycleArtAsync = (next = 1, callbackArgs) => {
+	this.cycleArtAsync = (next = 1, callbackArgs = null) => {
 		if (this.coverMode === 'folder') { return Promise.resolve(this.cycleArtFolder(next)); }
 		else if (trackCoverModes.includes(this.coverMode)) { return this.cycleArtModeAsync(next, callbackArgs); }
 	};
@@ -1294,14 +1299,14 @@ function _background({
 		].filter((c) => c.col !== null);
 		if (extraColors && extraColors.length) {
 			const extraFreq = extraColors.reduce((prev, curr) => prev + Object.hasOwn(curr, 'freq') ? curr.freq : 0, 0);
-			if (extraFreq !== 0) {
-				const freqLeft = Math.max(1 - extraFreq, 0);
-				bgColors.forEach((c) => c.freq = freqLeft / c.freq);
-			} else {
+			if (extraFreq === 0) {
 				const freqLeft = Math.max(1 - bgColors.reduce((prev, curr) => prev + curr.freq, 0), 0);
 				extraColors.map((c) => {
 					return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : freqLeft / extraColors.length };
 				}).forEach((c) => bgColors.push(c));
+			} else {
+				const freqLeft = Math.max(1 - extraFreq, 0);
+				bgColors.forEach((c) => c.freq = freqLeft / c.freq);
 			}
 		}
 		return this.getAvgColor(bgColors.filter((c) => c.col !== null));
@@ -1332,42 +1337,42 @@ function _background({
 		return this.callbacks.artColorsNotify(this.getArtColors());
 	};
 	/** @type {boolean} */
-	this.useColors;
+	this.useColors; // NOSONAR
 	Object.defineProperty(this, 'useColors', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.colorMode !== 'none'
 	});
 	/** @type {boolean} */
-	this.useColorsBlend;
+	this.useColorsBlend; // NOSONAR
 	Object.defineProperty(this, 'useColorsBlend', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.colorMode === 'blend' && this.useCover
 	});
 	/** @type {boolean} - Flag which indicates wether panel is using any art or not  */
-	this.useCover;
+	this.useCover; // NOSONAR
 	Object.defineProperty(this, 'useCover', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.coverMode !== 'none'
 	});
 	/** @type {boolean} - Flag which indicates if panel is using any art and also if it's visible */
-	this.showCover;
+	this.showCover; // NOSONAR
 	Object.defineProperty(this, 'showCover', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.useCover && this.coverModeOptions.alpha > 0
 	});
 	/** @type {boolean} - Flag which indicates if panel can be used as color server  */
-	this.useCoverColors;
+	this.useCoverColors; // NOSONAR
 	Object.defineProperty(this, 'useCoverColors', {
 		enumerable: true,
 		configurable: false,
 		get: () => this.useCover && this.coverModeOptions.bProcessColors
 	});
 	/** @type {boolean} - Flag which indicates if panel uses D2D rendering */
-	this.useD2D;
+	this.useD2D; // NOSONAR
 	Object.defineProperty(this, 'useD2D', {
 		enumerable: true,
 		configurable: false,
@@ -1427,13 +1432,12 @@ function _background({
 				case true:
 					key = ['offsetH']; min = 0; max = this.h - 1; delta = - Math.sign(step) * _scale(5); break;
 			}
-			if (!key) { return; }
-			else {
+			if (key) {
 				const newConfig = {};
 				const value = Math.min(Math.max(min, getNested(this, ...key) + delta), max);
 				addNested(newConfig, value, ...key);
 				this.changeConfig({ config: newConfig, bRepaint: true, callbackArgs });
-			}
+			} else { return; }
 			this.repaint(this.timer);
 			return true;
 		}

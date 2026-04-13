@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/23
+//06/04/26
 
 /* exported similarity */
 
@@ -13,10 +13,8 @@ function similarity(s1, s2) {
 		shorter = s1;
 	}
 	const longerLength = longer.length;
-	if (longerLength === 0) {
-		return 1.0;
-	}
-	return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+	if (longerLength === 0) { return 1; }
+	return (longerLength - editDistance(longer, shorter)) / Number.parseFloat(longerLength);
 }
 
 function editDistance(s1, s2) {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/26
+//13/04/26
 
 /* exported _chart */
 
@@ -441,22 +441,7 @@ function _chart({
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
 			}
 			if (j !== 0) {
-				if (minColor !== topColor) {
-					const img = applyAsMask(
-						gdi.CreateImage(tickW, y - h),
-						(img, gr, w, h) => {
-							gr.SetSmoothingMode(smoothMode);
-							gr.FillGradRect(0, 0, w, h, 90.1, color, minColor);
-						},
-						(mask, gr, w, h) => {
-							const lineArr = [0, h - series[j - 1].y / (maxY || 1) * h, 0, h, w, h, w, h - scale * h ];
-							gr.SetSmoothingMode(smoothMode);
-							gr.FillPolygon(RGB(0, 0, 0), 0, lineArr);
-						},
-						true
-					);
-					gr.DrawImage(img, xPoint - tickW, h, tickW + 0.25, y - h, 0, 0, img.Width, img.Height);
-				} else {
+				if (minColor === topColor) {
 					const paintPoint = (color) => {
 						const newValH = series[j - 1].y / (maxY || 1) * (y - h);
 						const newXPoint = x + (idx - 1) * tickW;
@@ -465,6 +450,21 @@ function _chart({
 						gr.FillPolygon(color, 0, lineArr);
 					};
 					paintPoint(color);
+				} else {
+					const img = applyAsMask(
+						gdi.CreateImage(tickW, y - h),
+						(img, gr, w, h) => {
+							gr.SetSmoothingMode(smoothMode);
+							gr.FillGradRect(0, 0, w, h, 90.1, color, minColor);
+						},
+						(mask, gr, w, h) => {
+							const lineArr = [0, h - series[j - 1].y / (maxY || 1) * h, 0, h, w, h, w, h - scale * h];
+							gr.SetSmoothingMode(smoothMode);
+							gr.FillPolygon(RGB(0, 0, 0), 0, lineArr);
+						},
+						true
+					);
+					gr.DrawImage(img, xPoint - tickW, h, tickW + 0.25, y - h, 0, 0, img.Width, img.Height);
 				}
 			}
 		});
@@ -502,10 +502,10 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: barW, h: valH };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
-			if (minColor !== topColor) {
-				gr.FillGradRect(point.x, point.y, point.w, point.h, 90.1, topColor, minColor);
-			} else {
+			if (minColor === topColor) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, color);
+			} else {
+				gr.FillGradRect(point.x, point.y, point.w, point.h, 90.1, topColor, minColor);
 			}
 			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor); }
 			// Borders
@@ -549,10 +549,10 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: valW, h: barW };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
-			if (minColor !== topColor) {
-				gr.FillGradRect(point.x, point.y, point.w, point.h, 0.1, minColor, topColor);
-			} else {
+			if (minColor === topColor) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, color);
+			} else {
+				gr.FillGradRect(point.x, point.y, point.w, point.h, 0.1, minColor, topColor);
 			}
 			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor); }
 			// Borders
@@ -594,12 +594,12 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: barW, h: valH + this.axis.x.width };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
-			if (minColor !== topColor) {
-				gr.FillGradRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, 270.1, minColor, topColor);
-				gr.FillGradRect(point.x, point.y + point.h + this.axis.x.width / 2 - this.axis.x.width * (this.axis.x.show ? 0 : 1), point.w, point.h - this.axis.x.width * (this.axis.x.show ? 0.5 : 0), 90.1, minColor, topColor);
-			} else {
+			if (minColor === topColor) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, color);
 				gr.FillSolidRect(point.x, point.y + point.h + this.axis.x.width / 2 - this.axis.x.width * (this.axis.x.show ? 0 : 1), point.w, point.h - this.axis.x.width * (this.axis.x.show ? 0.5 : 0), color);
+			} else {
+				gr.FillGradRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, 270.1, minColor, topColor);
+				gr.FillGradRect(point.x, point.y + point.h + this.axis.x.width / 2 - this.axis.x.width * (this.axis.x.show ? 0 : 1), point.w, point.h - this.axis.x.width * (this.axis.x.show ? 0.5 : 0), 90.1, minColor, topColor);
 			}
 			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h * 2 + this.axis.x.width, borderColor); }
 			// Borders
@@ -650,11 +650,11 @@ function _chart({
 			const borderColor = RGBA(...toRGB(invert(this.colors[i][j], true)), getBrightness(...toRGB(this.colors[i][j])) < 50 ? this.graph.pointAlpha : 25);
 			const color = RGBA(...toRGB(this.colors[i][j]), this.graph.pointAlpha);
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
-			circleArr = [...Object.values(c)];
+			circleArr = Object.values(c);
 			const sumY = thisSeries.reduce((acc, val) => acc + val.y, 0);
-			const perc = sumY !== 0
-				? value.y / sumY
-				: 1 / thisSeries.length;
+			const perc = sumY === 0
+				? 1 / thisSeries.length
+				: value.y / sumY;
 			const sliceTicks = perc * ticks;
 			const iAlpha = 2 * Math.PI * perc;
 			for (let h = 0; h < sliceTicks; h++) {
@@ -671,7 +671,7 @@ function _chart({
 					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr);
 				}
 			}
-			circleArr = [...Object.values(c)];
+			circleArr = Object.values(c);
 			alpha += iAlpha;
 			this.dataCoords[i][j] = { c: { ...c }, r1: 0, r2: r, alpha1: alpha - iAlpha, alpha2: alpha };
 			labelCoord.push({ from: { ...c }, to: { x: c.x + iX, y: c.y + iY }, val: perc * 100, alpha });
@@ -710,9 +710,9 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			circleArr = [];
 			const sumY = thisSeries.reduce((acc, val) => acc + val.y, 0);
-			const perc = sumY !== 0
-				? value.y / sumY
-				: 1 / thisSeries.length;
+			const perc = sumY === 0
+				? 1 / thisSeries.length
+				: value.y / sumY;
 			const sliceTicks = perc * ticks;
 			const iAlpha = 2 * Math.PI * perc;
 			for (let h = 0; h < sliceTicks; h++) {
@@ -740,6 +740,10 @@ function _chart({
 			labelCoord.push({ from: { ...c }, to: { x: c.x + iX, y: c.y + iY }, val: perc * 100, alpha });
 		});
 		return labelCoord;
+	};
+
+	const getUniqueListBy = (arr, key) => {
+		return [...new Map(arr.map((item) => [item[key], item])).values()];
 	};
 
 	this.paintGraph = (gr) => {
@@ -781,9 +785,6 @@ function _chart({
 			points.push([]);
 			series.forEach((value) => points[i].push(value));
 		});
-		const getUniqueListBy = function getUniqueListBy(arr, key) {
-			return [...new Map(arr.map(item => [item[key], item])).values()];
-		};
 		const xAxisValues = getUniqueListBy(points.flat(Infinity), 'x').map((value) => value.x);
 		const xAxisValuesLen = xAxisValues.length;
 		const labelOver = { coord: [] }; // For pie Graphs
@@ -1031,13 +1032,13 @@ function _chart({
 						const offsetLabels = labelOver.coord.reduce((prev, series) => {
 							return Math.max(prev, series.slice(1).reduce((prev, point) => {
 								return point.xAxis && (point.xAxis.y >= yTitle && point.xAxis.y <= yTitle + keyW || point.xAxis.y + point.xAxis.h >= yTitle && point.xAxis.y + point.xAxis.h <= yTitle + keyW) && (initXTitle >= point.xAxis.x && initXTitle <= point.xAxis.x + point.xAxis.w || initXTitle + keyH >= point.xAxis.x && (initXTitle + keyH) <= point.xAxis.x + point.xAxis.w)
-									? prev !== 0 ? Math.min(point.xAxis.x, point.xAxis.x, prev) : Math.min(point.xAxis.x, point.xAxis.x)
+									? prev === 0 ? Math.min(point.xAxis.x, point.xAxis.x) : Math.min(point.xAxis.x, point.xAxis.x, prev)
 									: prev;
 							}, 0));
 						}, 0);
-						const xTitle = offsetLabels !== 0
-							? Math.min(offsetLabels - keyH * 1.5, initXTitle)
-							: initXTitle;
+						const xTitle = offsetLabels === 0
+							? initXTitle
+							: Math.min(offsetLabels - keyH * 1.5, initXTitle);
 						if (this.configuration.bAltVerticalText) { // Flip chars
 							gr.SetTextRenderingHint(TextRenderingHint.ClearTypeGridFit);
 							gr.DrawString(key, this.gFont, yAxisColor, xTitle, yTitle, w, this.h, StringFormatFlags.DirectionVertical);
@@ -1170,20 +1171,20 @@ function _chart({
 						const yTickText = yTick - tickH / 2;
 						if (yTickText < 0) { return; }
 						if (this.axis.y.showTicks) {
-							if (i !== 0) {
+							if (i === 0) {
+								gr.DrawLine(x - this.axis.x.width * 2, yTick + this.axis.x.width, x + this.axis.x.width, yTick + this.axis.x.width, this.axis.y.width / 2, yAxisColor);
+							} else {
 								gr.DrawLine(x - this.axis.x.width * 2, yTick + this.axis.x.width * 1.5, x + this.axis.x.width, yTick + this.axis.x.width * 1.5, this.axis.y.width / 2, yAxisColor);
 								gr.DrawLine(x - this.axis.x.width * 2, y + this.margin.top - yTick, x + this.axis.x.width, y + this.margin.top - yTick, this.axis.y.width / 2, yAxisColor);
-							} else {
-								gr.DrawLine(x - this.axis.x.width * 2, yTick + this.axis.x.width, x + this.axis.x.width, yTick + this.axis.x.width, this.axis.y.width / 2, yAxisColor);
 							}
 						}
 						if (this.axis.y.labels) {
 							const flags = DT_RIGHT | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
-							if (i !== 0) {
+							if (i === 0) {
+								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText, this.margin.leftAuto, tickH, flags);
+							} else {
 								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText + this.axis.x.width, this.margin.leftAuto, tickH, flags);
 								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, y - h + this.margin.top - yTick - this.axis.y.width / 2 + this.axis.x.width, this.margin.leftAuto, tickH, flags);
-							} else {
-								gr.GdiDrawText(tickText[i], this.gFont, yAxisColor, this.x - this.axis.y.width / 2 - _scale(4) + xOffsetKey, yTickText, this.margin.leftAuto, tickH, flags);
 							}
 						}
 					});
@@ -1515,7 +1516,7 @@ function _chart({
 				}
 		}
 		if (!this.pop.bEnabled) {
-			gr.GdiDrawText('~ No data ~' + (!this.configuration.bLoadAsyncData ? '\n\nDouble L. Click to refresh' : ''), this.gFont, RGBA(...toRGB(xAxisColorInverted), 200), x, y, w, h, DT_CENTER | DT_VCENTER | DT_CALCRECT);
+			gr.GdiDrawText('~ No data ~' + (this.configuration.bLoadAsyncData ? '' : '\n\nDouble L. Click to refresh'), this.gFont, RGBA(...toRGB(xAxisColorInverted), 200), x, y, w, h, DT_CENTER | DT_VCENTER | DT_CALCRECT);
 		}
 	};
 
@@ -1554,7 +1555,7 @@ function _chart({
 		const minSep = Math.round(len / 5);
 		if (len / num < minSep) { num = Math.round(len / minSep); }
 		const step = Math.floor((max - min) / num);
-		return min !== max ? range(min, max, step || 1) : [min];
+		return min === max ? [min] : range(min, max, step || 1);
 	};
 
 	this.randomColor = () => {
@@ -1576,7 +1577,9 @@ function _chart({
 
 	this.nFormatter = (num) => { // Y axis formatter
 		const SI_SYMBOL = ['', 'k', 'M', 'G', 'T', 'P', 'E'];
-		const tier = Math.log10(Math.abs(num)) / 3 | 0;
+		const tier = num === 0
+			? 0
+			: Math.trunc(Math.log10(Math.abs(num)) / 3);
 		// if zero, we don't need a suffix
 		if (tier === 0) { return num; }
 		// get suffix and determine scale
@@ -1802,7 +1805,14 @@ function _chart({
 					}
 				}
 				const [series, idx] = this.tracePoint(x, y, true); // This must be calculated always to have a point after zoom clicking
-				if (!bInButton) {
+				if (bInButton) {
+					// Repaint around old point
+					if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
+						const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true);
+						this.repaint(...Object.values(coords));
+					}
+					this.currPoint = [-1, -1];
+				} else {
 					const bPoint = this.isValidPoint(series, idx);
 					const bPaint = this.currPoint[0] !== series || this.currPoint[1] !== idx;
 					if (bPaint) {
@@ -1846,13 +1856,6 @@ function _chart({
 								: '';
 						}
 					}
-				} else {
-					// Repaint around old point
-					if (this.currPoint[0] !== -1 && this.currPoint[1] !== -1) {
-						const coords = this.sizePoint(this.dataCoords[this.currPoint[0]][this.currPoint[1]], true);
-						this.repaint(...Object.values(coords));
-					}
-					this.currPoint = [-1, -1];
 				}
 				if (ttText.length) { this.tooltip.SetValue(ttText, true); }
 				else { this.tooltip.SetValue(null); }
@@ -2269,11 +2272,11 @@ function _chart({
 		if (!this.dataManipulation.filter) { return; }
 		if (typeof this.dataManipulation.filter === 'string') {
 			let filter = null;
-			const matches = this.dataManipulation.filter.match(/function ?(?:.*)?\((.*)\n?\) {\n?((?:.|\n)*)?\n?}/i);
+			const matches = new RegExp(/function ?(?:[^()]+)?\((.*)\n?\) {\n?((?:.|\n)+)?\n?}/i).exec(this.dataManipulation.filter);
 			if (matches) {
 				const args = (matches[1] || '').split(',');
 				const body = matches[2] || null;
-				if (args.length && body) { try { filter = Function(...args, body); } catch (e) { /* empty */ } } // eslint-disable-line no-unused-vars
+				if (args.length && body) { try { filter = new Function(...args, body); } catch (e) { /* empty */ } } // eslint-disable-line no-unused-vars
 			}
 			if (filter) {
 				if (this.configuration.bDebug) {
@@ -2288,7 +2291,7 @@ function _chart({
 			if (!this.dataManipulation.filter) { return; }
 		}
 		if (this.configuration.bProfile) { this.profile.CheckPoint('Filter data'); }
-		this.dataDraw = this.dataDraw.map((series) => series.filter(this.dataManipulation.filter));
+		this.dataDraw = this.dataDraw.map((series) => series.filter((el, idx, arr) => this.dataManipulation.filter(el, idx, arr)));
 		if (this.configuration.bDebug) { memoryPrint('filter', this.dataDraw); }
 		if (this.configuration.bProfile) { this.profile.CheckPointStep('Filter data'); }
 	};
@@ -2487,8 +2490,7 @@ function _chart({
 		}
 	};
 
-	this.computeStatistics = (series, options = { bClampRange: true }) => {
-		options = { bClampRange: true, ...(options || {}) };
+	this.computeStatistics = (series, { bClampRange = true } = {}) => {
 		const statistics = {
 			max: -Infinity,
 			min: +Infinity,
@@ -2536,11 +2538,11 @@ function _chart({
 			statistics.popRange.universal['75%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
 			statistics.popRange.universal['89%'].push(statistics.mean - 3 * statistics.sigma, statistics.mean + 3 * statistics.sigma);
 			statistics.popRange.universal['95%'].push(statistics.mean - 4 * statistics.sigma, statistics.mean + 4 * statistics.sigma);
-			statistics.popRange.normal['50%'].push(statistics.mean - 0.674490 * statistics.sigma, statistics.mean + 0.674490 * statistics.sigma);
+			statistics.popRange.normal['50%'].push(statistics.mean - 0.67449 * statistics.sigma, statistics.mean + 0.67449 * statistics.sigma);
 			statistics.popRange.normal['75%'].push(statistics.mean - 1.149954 * statistics.sigma, statistics.mean + 1.149954 * statistics.sigma);
 			statistics.popRange.normal['89%'].push(statistics.mean - 1.644854 * statistics.sigma, statistics.mean + 1.644854 * statistics.sigma);
 			statistics.popRange.normal['95%'].push(statistics.mean - 2 * statistics.sigma, statistics.mean + 2 * statistics.sigma);
-			if (options.bClampRange) {
+			if (bClampRange) {
 				for (let key in statistics.popRange) {
 					for (let subKey in statistics.popRange[key]) {
 						statistics.popRange[key][subKey][0] = Math.max(statistics.min, statistics.popRange[key][subKey][0]);
@@ -2812,7 +2814,13 @@ function _chart({
 		}
 		if (bResizeButtons) { this.resizeButtons(); }
 		if ([x, y, w, h].some((n) => typeof n !== 'undefined')) {
-			this.resize(typeof x !== 'undefined' ? x : this.x, typeof y !== 'undefined' ? y : this.y, typeof w !== 'undefined' ? w : this.w, typeof h !== 'undefined' ? h : this.h, false);
+			this.resize(
+				typeof x === 'undefined' ? this.x : x,
+				typeof y === 'undefined' ? this.y : y,
+				typeof w === 'undefined' ? this.w : w,
+				typeof h === 'undefined' ? this.h : h,
+				false
+			);
 		}
 		if (title) { this.title = title; }
 		if (configuration) {
@@ -3161,7 +3169,7 @@ function _chart({
 	/** @type {Map[]>} */
 	this.dataTotal = [];
 	/** @type {{sort: {x:string|null, y:string|null, z:string|null, my:string|null, mz:string|null}, filter: null|string|function, slice: [number, number], distribution: null|string, probabilityPlot: null|string, group: number}} */
-	this.dataManipulation;
+	this.dataManipulation; // NOSONAR
 	if (dataManipulation) {
 		if (dataManipulation.sort) { this.dataManipulation.sort = { ...this.dataManipulation.sort, ...dataManipulation.sort }; }
 		Object.keys(this.dataManipulation).filter((key) => !['sort'].includes(key)).forEach((key) => {
@@ -3173,34 +3181,34 @@ function _chart({
 	/** @type {number}} */
 	this.series = data ? data.length : 0;
 	/** @type {{type: _chartGraphType, multi: Boolean, borderWidth: number, point:_chartGraphPoint, pointAlpha: number}} */
-	this.graph = { ...this.graph, ...(graph || {}) };
+	this.graph = { ...this.graph, ...graph };
 	/** @type {{color: number, image: {imageGDI: GdiGraphics}}} */
-	this.background = { ...this.background, ...(background || {}) };
+	this.background = { ...this.background, ...background };
 	/** @type {number[]|number[][]} */
 	this.colors = colors;
 	/** @type {{scheme: 'diverging'|'qualitative'|'sequential'|'random'|number[], colorBlindSafe: Boolean, interpolation: _chartChromaInterpolation}} @see https://vis4.net/chromajs/#color-scales */
-	this.chroma = { ...this.chroma, ...(chroma || {}) };
+	this.chroma = { ...this.chroma, ...chroma };
 	/** @type {{x: {show:boolean, showKey:boolean, showTicks:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string, bSingleLabels:boolean, bAltLabels:boolean, mergeLabels:boolean}, y: {show:boolean, showKey:boolean, showTicks:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}, z: {show:boolean, showKey:boolean, showTicks:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}}} */
-	this.axis;
+	this.axis; // NOSONAR
 	if (axis) {
 		if (axis.x) { this.axis.x = { ...this.axis.x, ...axis.x }; }
 		if (axis.y) { this.axis.y = { ...this.axis.y, ...axis.y }; }
 		if (axis.z) { this.axis.z = { ...this.axis.z, ...axis.z }; }
 	}
 	/** @type {{x: {show:boolean, color:number, width:number}, y: {show:boolean, color:number, width:number}}} */
-	this.grid;
+	this.grid; // NOSONAR
 	if (grid) {
 		if (grid.x) { this.grid.x = { ...this.grid.x, ...grid.x }; }
 		if (grid.y) { this.grid.y = { ...this.grid.y, ...grid.y }; }
 	}
 	/** @type {{left: number, right: number, top: number, bottom: number}} */
-	this.margin = { ...this.margin, ...(margin || {}) };
+	this.margin = { ...this.margin, ...margin };
 	/** @type {{timeline: {bAxisCenteredX:boolean}} */
-	this.graphSpecs;
+	this.graphSpecs; // NOSONAR
 	if (graphSpecs) {
 		if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
 	}
-	this.buttons = { ...this.buttons, ...(buttons || {}) };
+	this.buttons = { ...this.buttons, ...buttons };
 	if (callbacks) {
 		if (callbacks.point) { this.callbacks.point = { ...this.callbacks.point, ...callbacks.point }; }
 		if (callbacks.focus) { this.callbacks.focus = { ...this.callbacks.focus, ...callbacks.focus }; }
@@ -3226,10 +3234,10 @@ function _chart({
 	this.mX = -1;
 	this.mY = -1;
 	this.inFocus = false;
-	this.title = typeof title !== 'undefined' ? title : window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
+	this.title = typeof title === 'undefined' ? window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}' : title;
 	this.tooltipText = tooltipText;
 	/** @type {{bLoadAsyncData: boolean, bAltVerticalText: boolean, bPopupBackground: boolean, bDebug: boolean, bProfile: boolean, bSlicePerKey: boolean, bDynLabelColor: boolean, bDynLabelColorBW: boolean, maxSliceOnDataChange: 50, bGradientPoints: boolean}} */
-	this.configuration = { ...this.configuration, ...(configuration || {}) };
+	this.configuration = { ...this.configuration, ...configuration };
 	this.leftBtn = new _button({
 		text: chars.left,
 		x: this.x, y: this.y, w: this.buttons.size / 2, h: this.buttons.size / 2,

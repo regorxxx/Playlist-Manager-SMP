@@ -97,8 +97,21 @@ function getPropertyByKey(propertiesDescriptor, key, prefix = '', count = 1, bPa
 	return output;
 }
 
-// Recreates the property object and returns it: {propertyKey : ['description',defaultValue]} -> {propertyKey : ['prefix + count(padded) + 'description', userSetValue]}
-// Use this to get descriptions along the values, instead of the previous ones
+/**
+ * Recreates the property object and returns it: {propertyKey : ['description',defaultValue]} -> {propertyKey : ['prefix + count(padded) + 'description', userSetValue]}
+ * Use this to get descriptions along the values, instead of the previous ones
+ *
+ * @function
+ * @name getPropertiesPairs
+ * @kind function
+ * @template P
+ * @param {P} propertiesDescriptor
+ * @param {string} prefix - [='']
+ * @param {number} count - [=1]
+ * @param {boolean} bPadding - [=true]
+ * @param {boolean} bOnlyValues - [=false]
+ * @returns {P}
+ */
 function getPropertiesPairs(propertiesDescriptor, prefix = '', count = 1, bPadding = true, bOnlyValues = false) {
 	const bNumber = count > 0;
 	const output = {};
