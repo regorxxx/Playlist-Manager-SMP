@@ -1,14 +1,15 @@
 ﻿'use strict';
-//30/03/26
+//14/04/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
-if (window.Parent === 'foo_uie_jsplitter') { include(fb.ComponentPath + '\\docs\\Effects.js'); }
-/* global Effects:readable */
 include('helpers_xxx.js');
 /* global globFonts:readable, globSettings:readable, doOnce:readable, globSettings:readable */
+/* global _isFile:readable */
+if (window.Parent === 'foo_uie_jsplitter' && _isFile(fb.ComponentPath + '\\docs\\Effects.js')) { include(fb.ComponentPath + '\\docs\\Effects.js'); }
+/* global Effects:readable */
 include('helpers_xxx_UI_chars.js');
 include('callbacks_xxx.js');
 include('helpers_xxx_prototypes.js');

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/04/26
+//14/04/26
 
 /* exported _background */
 
@@ -1376,7 +1376,7 @@ function _background({
 	Object.defineProperty(this, 'useD2D', {
 		enumerable: true,
 		configurable: false,
-		get: () => window.DrawMode === 1 && !this.coverModeOptions.bGdiEffects
+		get: () => window.DrawMode === 1 && typeof Effects !== 'undefined' && !this.coverModeOptions.bGdiEffects
 	});
 	/**
 	 * Called on on_mouse_move.

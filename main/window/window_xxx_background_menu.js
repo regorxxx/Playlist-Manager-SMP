@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/03/26
+//14/04/26
 
 /* exported createBackgroundMenu */
 
@@ -255,7 +255,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		[
 			{ isEq: null, key: this.coverModeOptions.bFlipY, value: null, newValue: !this.coverModeOptions.bFlipY, entryText: 'Flip on Y-axis' }
 		].forEach(createMenuOption('coverModeOptions', 'bFlipY', subMenu, true));
-		if (window.DrawMode === 1) {
+		if (window.DrawMode === 1 && typeof Effects !== 'undefined') {
 			menu.newSeparator(subMenu);
 			[
 				{ isEq: null, key: this.coverModeOptions.bGdiEffects, value: null, newValue: !this.coverModeOptions.bGdiEffects, entryText: 'Force GDI+ effects' }
