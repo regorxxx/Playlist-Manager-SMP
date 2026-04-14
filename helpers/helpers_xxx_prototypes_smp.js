@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/03/26
+//14/03/26
 
 /* exported extendGR, checkCompatible */
 
@@ -111,8 +111,8 @@ Object.defineProperty(fb, 'tfCache', {
 */
 // Augment gr.DrawRoundRect() with error handling
 function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true, FillRoundRect: true, Repaint: true, Highlight: false, ImgBox: true, Debug: false }) {
-	if (!gr.Extended) { gr.Extended = options; }
-	else { Object.keys(options).forEach((opt) => { if (options[opt]) { gr.Extended[opt] = true; } }); }
+	if (gr.Extended) { Object.keys(options).forEach((opt) => { if (options[opt]) { gr.Extended[opt] = true; } }); }
+	else { gr.Extended = options; }
 	if (!gr.ExtendedDone) { gr.ExtendedDone = {}; }
 	if (options.DrawRoundRect && !gr.ExtendedDone.DrawRoundRect) {
 		const old = gr.DrawRoundRect.bind(gr);
@@ -280,11 +280,11 @@ fb.GetQueryItemsCheck = (handleList = fb.GetLibraryItems(), query = 'ALL', bCach
 plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePath, ...]*/, bSync = false) => {
 	if (items.length === 0) { return bSync ? Promise.resolve(false) : false; }
 	if (plsIdx === -1) { return bSync ? Promise.resolve(false) : false; }
-	let lastType = typeof items[0].RawPath !== 'undefined'
-		? 'handle'
-		: typeof items[0].Count !== 'undefined'
-			? 'handleList'
-			: 'path';
+	let lastType = typeof items[0].RawPath === 'undefined'
+		? typeof items[0].Count === 'undefined'
+			? 'path'
+			: 'handleList'
+		: 'handle';
 	let queue = lastType === 'path' ? [] : new FbMetadbHandleList();
 	const timer = (item, type) => {
 		if (!bSync) { return 0; }
@@ -323,11 +323,11 @@ plman.AddPlaylistItemsOrLocations = (plsIdx, items /*[handle, handleList, filePa
 		}
 	};
 	const processItem = (item) => {
-		const type = typeof item.RawPath !== 'undefined'
-			? 'handle'
-			: typeof item.Count !== 'undefined'
-				? 'handleList'
-				: 'path';
+		const type = typeof item.RawPath === 'undefined'
+			? typeof item.Count === 'undefined'
+				? 'path'
+				: 'handleList'
+			: 'handle';
 		// Send queue
 		if (bSync) {
 			if (type !== lastType) { // Avoid crash if first item is a handle
@@ -447,18 +447,18 @@ if (FbProfiler) {
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			return (point ? this.Time - point.last : null);
 		}).bind(that);
-		that.CheckPointPrint = (function CheckPointStep(name, message, options = { bAverage: false, bPerInterval: false, bOnVisible: false }) {
-			if (options.bOnVisible && !window.IsVisible) { return null; }
+		that.CheckPointPrint = (function CheckPointStep(name, message, { bAverage= false, bPerInterval= false, bOnVisible= false } = {}) {
+			if (bOnVisible && !window.IsVisible) { return null; }
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			if (point) {
-				const msTotal = options.bAverage
+				const msTotal = bAverage
 					? (point.timeAcc / point.callsAcc).toFixed(1) + ' ms/call'
 					: point.timeAcc.toFixed(1) + ' ms';
-				if (options.bPerInterval) {
-					if (options.bAverage) {
+				if (bPerInterval) {
+					if (bAverage) {
 						const avg = (point.time / point.calls).toFixed(1);
 						const total = point.time.toFixed(1);
-						const max = Math.max.apply(Math, point.times).toFixed(1);
+						const max =  point.times.reduce((max, v) => Math.max(max, v), -Infinity).toFixed(1);
 						const fps = (1000 / avg).toFixed(1);
 						console.log(
 							'--------------------------------------------------------------\n' +
@@ -500,7 +500,7 @@ if (FbProfiler) {
 			return point && point.report.id !== null;
 		}).bind(that);
 		that.HasCheckPoint = (function HasCheckPoint(name) {
-			return !!this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
+			return this.CheckPoints.some((check) => check.name.toLowerCase() === name.toLowerCase());
 		}).bind(that);
 		that.GetCheckPoint = (function GetCheckPoint(name) {
 			return this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
@@ -540,7 +540,7 @@ if (fb.AddLocationsAsync) {
 				});
 				setTimeout(() => removeEventListener(listener.event, void (0), listener.id), 60000);
 			} else {
-				throw new Error('callbacks_xxx.js is missing');
+				throw new TypeError('callbacks_xxx.js is missing');
 			}
 		});
 	};
@@ -598,9 +598,9 @@ window.Bugs.GetPlaybackQueueContents = ![
 function compareVersions(from, to) {
 	if (typeof from === 'string') { from = from.split('.'); }
 	if (typeof to === 'string') { to = to.split('.'); }
-	const collator = typeof strNumCollator !== 'undefined'
-		? strNumCollator // eslint-disable-line no-undef
-		: new Intl.Collator(void (0), { sensitivity: 'base', numeric: true });
+	const collator = typeof strNumCollator === 'undefined'
+		? new Intl.Collator(void (0), { sensitivity: 'base', numeric: true })
+		: strNumCollator; // eslint-disable-line no-undef
 	for (let i = 0; i < to.length; ++i) {
 		if (to[i] !== from[i]) {
 			return typeof from[i] === 'undefined'
