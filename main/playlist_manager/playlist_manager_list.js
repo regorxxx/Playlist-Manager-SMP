@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/26
+//19/04/26
 
 /* exported _list */
 
@@ -111,15 +111,14 @@ function _list({ x, y, w, h, properties } = {}) {
 	// Global tooltip
 	// Timers follow the double click timer
 	this.tooltip = new _tt(null, void (0), void (0), 600);
-	this.updateUIElements = (bReload = false, options = { bScroll: false, bCenter: false, bOmitType: false }) => {
-		options = { ...{ bScroll: false, bCenter: false, bOmitType: false }, ...options };
+	this.updateUIElements = (bReload = false, { bScroll = false, bCenter = false, bOmitType = false } = {}) => {
 		if (bReload) { window.Reload(); }
 		if (!this.uiElements['Search filter'].enabled) { this.searchInput = null; }
 		for (let key in this.headerButtons) {
 			const button = this.headerButtons[key];
 			button.x = button.y = button.w = button.h = 0;
 		}
-		this.size(options);
+		this.size({ bScroll, bCenter, bOmitType });
 		if (this.uiElements['Scrollbar'].enabled && scrollBar) {
 			this.repaint(true);
 			scrollBar.resize();
@@ -154,7 +153,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			let icon = playlistDescriptors[key].icon;
 			if (Object.hasOwn(this.playlistIcons, key)) {
 				if (Object.hasOwn(this.playlistIcons[key], 'icon')) {
-					icon = this.playlistIcons[key].icon ? String.fromCharCode(parseInt(this.playlistIcons[key].icon, 16)) : null;
+					icon = this.playlistIcons[key].icon ? String.fromCodePoint(Number.parseInt(this.playlistIcons[key].icon, 16)) : null;
 				}
 			}
 			iconCharPlaylistWidth[key] = icon ? _textWidth(icon, gfontIconChar()) : 0;
@@ -201,7 +200,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					if (val === 0) { val = '-'; break; }
 					val = utils.FormatFileSize(val);  // X.XX bb
 					if (regexHundreds.test(val)) {
-						val = val.replace(regexHundreds, round(parseFloat(val.match(regexHundreds)[0] / 1024), 3));
+						val = val.replace(regexHundreds, round(Number.parseFloat(val.match(regexHundreds)[0] / 1024), 3));
 						const unit = val.match(regexUnit)[2];
 						let toUnit = '';
 						switch (unit) {
@@ -213,7 +212,7 @@ function _list({ x, y, w, h, properties } = {}) {
 						val = val.replace(regexUnit, '$1' + toUnit);
 					}
 					if (regexTwoDecs.test(val)) {
-						val = val.replace(regexTwoDecs, round(parseFloat(val.match(regexTwoDecs)[0]), 1));
+						val = val.replace(regexTwoDecs, round(Number.parseFloat(val.match(regexTwoDecs)[0]), 1));
 					}
 					break;
 				}
@@ -268,7 +267,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		const perLabel = {};
 		if (toColumn) {
 			const columns = this.columns.width.slice(0, toColumn);
-			if (columns.filter((_, i) => this.columns.bShown[i]).some((val) => val === 'auto')) {
+			if (columns.filter((_, i) => this.columns.bShown[i]).includes('auto')) {
 				columns.forEach((val, i) => {
 					if (!this.columns.bShown[i]) { return; }
 					let maxVal = 0;
@@ -331,8 +330,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		return keys.some((subKey) => header.elements[subKey].enabled);
 	};
 
-	this.size = (options = { bScroll: false, bCenter: false, bOmitType: false, bMaintainFocus: true }) => {
-		options = { ...{ bScroll: false, bCenter: false, bOmitType: false, bMaintainFocus: true }, ...options };
+	this.size = ({ bScroll = false, bCenter = false, bOmitType = false, bMaintainFocus = true } = {}) => {
 		this.cacheLastPosition();
 		yOffset = (panel.rowHeight >= 22
 			? panel.rowHeight / 2
@@ -353,7 +351,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.calcRowWidthCache = null;
 		this.headerTextUpdate();
 		this.updatePlaylistIcons();
-		if (options.bMaintainFocus) { this.jumpLastPosition(options); }
+		if (bMaintainFocus) { this.jumpLastPosition({ bScroll, bCenter, bOmitType }); }
 	};
 
 	this.getHeaderSize = (bOnlyButtons) => {
@@ -384,8 +382,8 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.headerTooltip = (mask, bActions = true, bForceActions = false) => {
 		let tooltipText = _foldPath(this.playlistsPath);
-		tooltipText += '\n' + 'Categories: ' + (!isArrayEqual(this.categoryState, this.categories()) ? this.categoryState.join(', ') + ' (filtered)' : '(All)');
-		tooltipText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] !== this.constAutoPlaylistStates()[0] ? this.autoPlaylistStates[0] : '(All)') + ' | ' + (this.lockStates[0] !== this.constLockStates()[0] ? this.lockStates[0] : '(All)');
+		tooltipText += '\n' + 'Categories: ' + (isArrayEqual(this.categoryState, this.categories()) ? '(All)' : this.categoryState.join(', ') + ' (filtered)');
+		tooltipText += '\n' + 'Filters: ' + (this.autoPlaylistStates[0] === this.constAutoPlaylistStates()[0] ? '(All)' : this.autoPlaylistStates[0]) + ' | ' + (this.lockStates[0] === this.constLockStates()[0] ? '(All)' : this.lockStates[0]);
 		const autoPlsCount = this.data.reduce((sum, pls) => { return (pls.query.length ? sum + 1 : sum); }, 0); // Counts autoplaylists and smart playlists
 		tooltipText += '\n' + 'Current view: ' + this.items + ' Playlists (' + autoPlsCount + ' AutoPlaylists)';
 		// Tips
@@ -397,35 +395,35 @@ function _list({ x, y, w, h, properties } = {}) {
 				tooltipText += '\n----------------------------------------------';
 			}
 			if (mask === MK_CONTROL) {
-				tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-				tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
+				tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')';
 			} else if (mask === MK_SHIFT) {
-				tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-				tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
+				tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
+				tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')';
 			} else if (mask === MK_SHIFT + MK_CONTROL) {
-				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 			} else if (this.tooltipSettings.bShowTips || bForceActions) {
 				if (this.modeUI === 'traditional' || bForceActions) {
 					tooltipText += '\n(R. Click for config menus)';
 				}
 				// L. Click
-				tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-				tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
-				tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-				tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
+				tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')';
+				tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
+				tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
+				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 				// Middle button
-				tooltipText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
-				tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-				tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+				tooltipText += mShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')';
+				tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
+				tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
+				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 			}
 			if (headerRe.test(tooltipText)) { // If no shortcut was found, show default ones
 				tooltipText += '\n(R. Click for config menus)';
 				// L. Click
-				tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-				tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+				tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
+				tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')';
 			}
 			if (this.bLiteMode) {
 				const replaceActions = [
@@ -458,10 +456,14 @@ function _list({ x, y, w, h, properties } = {}) {
 		const showTt = this.tooltipSettings.show;
 		let tooltipText = (pls.isAutoPlaylist ? 'AutoPlaylist' : (pls.extension === '.xsp' ? 'Smart Playlist' : pls.isFolder ? 'Folder' : 'Playlist')) + ': ';
 		tooltipText += pls.nameId + ' - ' + (pls.isFolder ? this.calcColumnVal('size', pls, true) : pls.size) + ' Tracks ' + path;
-		if (!pls.isFolder) {
+		if (pls.isFolder) {
+			const total = pls.pls.lengthDeep;
+			const totalCurrentView = pls.pls.lengthFilteredDeep;
+			tooltipText += '\n' + 'Children: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total === totalCurrentView ? '' : ' (of ' + total + ' total)');
+		} else {
 			if (showTt.locks) {
 				tooltipText += '\n' + 'Status: ' + (pls.isLocked ? 'Locked (read-only)' : 'Writable');
-				tooltipText += locks.isLocked ? ' ' + _b((pls.extension !== '.ui' ? 'UI-locked: ' : '') + locks.name.replace('playlist', 'Playlist')) : '';
+				tooltipText += locks.isLocked ? ' ' + _b((pls.extension === '.ui' ? '' : 'UI-locked: ') + locks.name.replace('playlist', 'Playlist')) : '';
 				if (showMenus['UI playlist locks']) {
 					tooltipText += locks.isLocked ? '\n' + 'Locks: ' + locks.types.joinEvery(', ', 4, '\n          ') : '';
 				}
@@ -473,17 +475,13 @@ function _list({ x, y, w, h, properties } = {}) {
 				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ').cut(200) : '-');
 				tooltipText += '\n' + 'Track Tags: ' + (isArray(pls.trackTags) ? pls.trackTags.map((_) => Object.keys(_)[0]).join(', ').cut(100) : '-');
 			}
-		} else {
-			const total = pls.pls.lengthDeep;
-			const totalCurrentView = pls.pls.lengthFilteredDeep;
-			tooltipText += '\n' + 'Children: ' + totalCurrentView + ' item' + (totalCurrentView > 1 ? 's' : '') + (total !== totalCurrentView ? ' (of ' + total + ' total)' : '');
 		}
 		if (showTt.duration) {
 			tooltipText += '\n' + 'Duration: ' + (pls.isFolder
 				? utils.FormatDuration(this.calcColumnVal('duration', pls, true))
-				: pls.duration !== -1
-					? utils.FormatDuration(pls.duration)
-					: '?'
+				: pls.duration === -1
+					? '?'
+					: utils.FormatDuration(pls.duration)
 			);
 		}
 		if (showTt.trackSize) {
@@ -495,8 +493,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		// Text for AutoPlaylists
 		if (showTt.query && (pls.isAutoPlaylist || pls.query)) {
-			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query.cut(400) : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
-			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort.cut(100) + (pls.bSortForced ? ' (forced)' : '') : (pls.extension !== '.ui' ? '-' : '(cloning required)'));
+			tooltipText += '\n' + 'Query: ' + (pls.query ? pls.query.cut(400) : (pls.extension === '.ui' ? '(cloning required)' : '-'));
+			tooltipText += '\n' + 'Sort: ' + (pls.sort ? pls.sort.cut(100) + (pls.bSortForced ? ' (forced)' : '') : (pls.extension === '.ui' ? '(cloning required)' : '-'));
 			tooltipText += '\n' + 'Limit: ' + (pls.limit && Number.isFinite(pls.limit) ? pls.limit : '\u221E') + ' tracks';
 		}
 		const timeFormat = { month: '2-digit', day: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' };
@@ -532,41 +530,41 @@ function _list({ x, y, w, h, properties } = {}) {
 			tooltipText += '\n---------------------------------------------------';
 		}
 		if (mask === MK_CONTROL) {
-			tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-			tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-			tooltipText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
+			tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
+			tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
+			tooltipText += rShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
 		} else if (mask === MK_SHIFT) {
-			tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-			tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-			tooltipText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
+			tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
+			tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
+			tooltipText += rShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
 		} else if (mask === MK_SHIFT + MK_CONTROL) {
-			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
-			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 		} else if (this.tooltipSettings.bShowTips) { // All Tips
-			tooltipText += lShortcuts['SG_CLICK'].key !== defaultAction ? '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')' : '';
-			tooltipText += lShortcuts['DB_CLICK'].key !== defaultAction ? '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')' : '';
+			tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
+			tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')';
 			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) { tooltipText += '\n(R. Click for other tools / new playlists)'; }
-			tooltipText += lShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')' : '';
-			tooltipText += lShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')' : '';
-			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
+			tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
+			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 			// Middle button
-			tooltipText += mShortcuts['SG_CLICK'].key !== defaultAction ? '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')' : '';
-			tooltipText += mShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')' : '';
-			tooltipText += mShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')' : '';
-			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			tooltipText += mShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')';
+			tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
+			tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
+			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 			// R. Button
-			tooltipText += rShortcuts['SG_CLICK'].key !== defaultAction ? '\n(R. Click to ' + rShortcuts['SG_CLICK'].key + ')' : '';
-			tooltipText += rShortcuts[MK_CONTROL].key !== defaultAction ? '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')' : '';
-			tooltipText += rShortcuts[MK_SHIFT].key !== defaultAction ? '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')' : '';
-			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key !== defaultAction ? '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')' : '';
+			tooltipText += rShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(R. Click to ' + rShortcuts['SG_CLICK'].key + ')';
+			tooltipText += rShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')';
+			tooltipText += rShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')';
+			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 		}
 		if (headerRe.test(tooltipText)) { // If no shortcut was found, show default ones
-			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
+			if (this.uiElements['Header buttons'].elements['List menu'].enabled) {
 				tooltipText += '\n(L. Click to Manage playlist)';
-				tooltipText += '\n(R. Click for other tools / new playlists)';
 			} else {
 				tooltipText += '\n(L. Click to Manage playlist)';
+				tooltipText += '\n(R. Click for other tools / new playlists)';
 			}
 		}
 		if (pls.extension === '.ui') {  // Change text for UI-only playlists
@@ -986,7 +984,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		const categoryHeaderColor = blendColors(panelBgColor, panel.colors.text, 0.6);
 		const categoryHeaderLineColor = blendColors(panelBgColor, categoryHeaderColor, 0.5);
 		const altColorRow = RGBA(...toRGB(invert(panelBgColor, true)), getBrightness(...toRGB(panelBgColor)) < 50 ? 15 : 7);
-		const indexSortStateOffset = !this.getIndexSortState() ? -1 : 1; // Compare to the next one or the previous one according to sort order
+		const indexSortStateOffset = this.getIndexSortState() ? 1 : -1; // Compare to the next one or the previous one according to sort order
 		const rows = Math.min(this.items, this.rows);
 		const rowWidth = this.x + this.w; // Ignore separator UI config
 		const selWidth = this.bShowSep ? this.x + this.w - this.categoryHeaderOffset : this.x + this.w; // Adjust according to UI config
@@ -996,9 +994,10 @@ function _list({ x, y, w, h, properties } = {}) {
 			if (this.uiElements['Scrollbar'].enabled && scrollBar) { scrollBar.resize(); }
 		}
 		// Highlight
-		if (idxHighlight !== -1) {
+		if (idxHighlight === -1) { animation.bHighlight = false; }
+		else {
 			const currSelIdx = idxHighlight;
-			const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
+			const currSelOffset = this.offset;
 			const y = this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight);
 			const h = Math.min(panel.rowHeight, window.Height - y - (this.uiElements['Bottom toolbar'].enabled ? bottomToolbar.h : 0));
 			if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
@@ -1020,7 +1019,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			} else if (!this.lastCharsPressed.bDraw && !animation.bForce) {
 				idxHighlight = -1;
 			}
-		} else { animation.bHighlight = false; }
+		}
 		// Columns settings
 		const bColumnsEnabled = this.isColumnsEnabled();
 		const columns = this.columns.labels;
@@ -1077,7 +1076,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					// Show always current letter at top. Also shows number
 					if (indexSortStateOffset === -1 && i === 0) {
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
-						if (sepLetter in nums) { sepLetter = '#'; } // Group numbers
+						if (sepLetter in nums) { sepLetter = '#'; } // NOSONAR Group numbers
 						else if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
 						drawDottedLine(gr, this.x, textY, this.x + this.w - this.categoryHeaderOffset, textY, 1, categoryHeaderLineColor, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, textY - panel.rowHeight / 2, iconsRightW + offsetLetter, panel.rowHeight, RIGHT);
@@ -1088,7 +1087,7 @@ function _list({ x, y, w, h, properties } = {}) {
 						const nextIdx = currIdx + indexSortStateOffset;
 						const nextData = Array.isArray(this.data[nextIdx][dataKey]) ? this.data[nextIdx][dataKey][0] : this.data[nextIdx][dataKey]; // If it's an array get first value
 						const nextSepLetter = nextData.length ? nextData[0].toUpperCase() : '-';
-						if (sepLetter !== nextSepLetter && !(sepLetter in nums)) {
+						if (sepLetter !== nextSepLetter && !(sepLetter in nums)) { // NOSONAR
 							let sepIndex = indexSortStateOffset < 0 ? i : i + indexSortStateOffset;
 							if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
 							drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.rowHeight), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.rowHeight), 1, categoryHeaderLineColor, _scale(2));
@@ -1099,7 +1098,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					if (indexSortStateOffset === 1 && i === Math.min(this.items, this.rows) - 1) {
 						let sepIndex = i + indexSortStateOffset;
 						let sepLetter = data.length ? data[0].toUpperCase() : '-';
-						if (sepLetter in nums) { sepLetter = '#'; } // Group numbers
+						if (sepLetter in nums) { sepLetter = '#'; } // NOSONAR Group numbers
 						else if (sepLetter === 'W') { offsetLetter += gr.CalcTextWidth('W', panel.fonts.small) / 8; }
 						drawDottedLine(gr, this.x, this.y + yOffset + (sepIndex * panel.rowHeight), this.x + this.w - this.categoryHeaderOffset, this.y + yOffset + (sepIndex * panel.rowHeight), 1, categoryHeaderLineColor, _scale(2));
 						gr.GdiDrawText(sepLetter, panel.fonts.small, categoryHeaderColor, this.x, this.y + yOffset + (sepIndex * panel.rowHeight) - panel.rowHeight / 2, iconsRightW + offsetLetter, panel.rowHeight, RIGHT);
@@ -1145,21 +1144,21 @@ function _list({ x, y, w, h, properties } = {}) {
 				if (Object.hasOwn(this.playlistIcons, extension)) {
 					let bFallback = false;
 					if (Object.hasOwn(this.playlistIcons[extension], 'icon')) {
-						icon = this.playlistIcons[extension].icon ? String.fromCharCode(parseInt(this.playlistIcons[extension].icon, 16)) : null;
+						icon = this.playlistIcons[extension].icon ? String.fromCodePoint(Number.parseInt(this.playlistIcons[extension].icon, 16)) : null;
 						if (!icon && extension !== plsExtension) { // When playlist state icon is null (locked or blank), fallback to playlist type
 							icon = playlistDescriptors[plsExtension].icon ? playlistDescriptors[plsExtension].icon : null;
 							if (Object.hasOwn(this.playlistIcons, plsExtension) && Object.hasOwn(this.playlistIcons[plsExtension], 'icon')) {
-								icon = this.playlistIcons[plsExtension].icon ? String.fromCharCode(parseInt(this.playlistIcons[plsExtension].icon, 16)) : null;
+								icon = this.playlistIcons[plsExtension].icon ? String.fromCodePoint(Number.parseInt(this.playlistIcons[plsExtension].icon, 16)) : null;
 							}
 							bFallback = !!icon;
 						}
 					}
 					if (Object.hasOwn(this.playlistIcons[extension], 'iconBg')) {
-						iconBg = this.playlistIcons[extension].iconBg ? String.fromCharCode(parseInt(this.playlistIcons[extension].iconBg, 16)) : null;
+						iconBg = this.playlistIcons[extension].iconBg ? String.fromCodePoint(Number.parseInt(this.playlistIcons[extension].iconBg, 16)) : null;
 						if (bFallback && !iconBg && extension !== plsExtension) { // When playlist state icon is null (locked or blank), fallback to playlist type
 							iconBg = playlistDescriptors[plsExtension].iconBg ? playlistDescriptors[plsExtension].iconBg : null;
 							if (Object.hasOwn(this.playlistIcons, plsExtension) && Object.hasOwn(this.playlistIcons[plsExtension], 'iconBg')) {
-								iconBg = this.playlistIcons[plsExtension].iconBg ? String.fromCharCode(parseInt(this.playlistIcons[plsExtension].iconBg, 16)) : null;
+								iconBg = this.playlistIcons[plsExtension].iconBg ? String.fromCodePoint(Number.parseInt(this.playlistIcons[plsExtension].iconBg, 16)) : null;
 							}
 						}
 					}
@@ -1334,17 +1333,17 @@ function _list({ x, y, w, h, properties } = {}) {
 				const len = this.internalPlsDrop.length;
 				const playlistDataText = pls.name + (len > 1 ? '... (' + len + ' playlists)' : '');
 				const bInFolder = this.isInFolder(pls);
-				const bToFolder = this.index !== -1 ? this.data[this.index].isFolder : false;
-				const bToSameFolder = this.index !== -1
-					? this.internalPlsDrop.every((idx) => {
+				const bToFolder = this.index === -1 ? false : this.data[this.index].isFolder;
+				const bToSameFolder = this.index === -1
+					? false
+					: this.internalPlsDrop.every((idx) => {
 						return bToFolder && this.data[idx].inFolder === this.data[this.index].nameId || !bToFolder && this.data[idx].inFolder === this.data[this.index].inFolder;
-					})
-					: false;
-				const bFolderToChildFolder = this.index !== -1
-					? this.internalPlsDrop.every((idx) => {
+					});
+				const bFolderToChildFolder = this.index === -1
+					? false
+					: this.internalPlsDrop.every((idx) => {
 						return bToFolder && this.isUpperFolder(this.data[idx], this.data[this.index]);
-					})
-					: false;
+					});
 				const bValid = this.isInternalDropValid();
 				const backgroundColor = bValid
 					? this.colors.selectedPlaylist
@@ -1419,7 +1418,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			if (idxHighlight !== -1) {
 				// And highlight a few ms the found playlist
 				const currSelIdx = idxHighlight;
-				const currSelOffset = idxHighlight !== - 1 ? this.offset : 0;
+				const currSelOffset = this.offset;
 				if ((currSelIdx - currSelOffset) >= 0 && (currSelIdx - currSelOffset) < this.rows) {
 					gr.DrawRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight), selWidth, panel.rowHeight, 0, opaqueColor(this.colors.selectedPlaylist, 80));
 					gr.FillSolidRect(this.x - 5, this.y + yOffset + ((((currSelIdx) || currSelOffset) - currSelOffset) * panel.rowHeight), selWidth, panel.rowHeight, opaqueColor(this.colors.selectedPlaylist, 50));
@@ -1530,7 +1529,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	const smoothScroll = {
 		steps: [],
 		timer: null,
-		stop: function() { this.steps.length = 0; this.timer = Date.now(); }
+		stop: function () { this.steps.length = 0; this.timer = Date.now(); }
 	};
 	this.wheel = ({ s, bPaint = true, bForce = false, scrollDelta = this.scrollSettings.unit || this.getAutoScrollDelta(), bSmooth = true } = {}) => {
 		if (this.trace(this.mX, this.mY) || !bPaint || bForce) {
@@ -1564,7 +1563,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							new Promise((resolve, reject) => {
 								smoothScroll.steps.reduce((prev, curr) => {
 									return prev.then(() => {
-										if (smoothScroll.timer !== timer) { reject();}
+										if (smoothScroll.timer !== timer) { reject(); }
 										return Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: curr, bSmooth: false })).then(() => Promise.wait(45));
 									});
 								}, Promise.resolve([])).then(() => resolve()).catch(() => void (0));
@@ -1629,15 +1628,14 @@ function _list({ x, y, w, h, properties } = {}) {
 		return key;
 	};
 
-	this.jumpToIndex = (idx, options = { bScroll: false, bCenter: true }) => { // Puts selected playlist in the middle of the window, if possible
-		options = { ...{ bScroll: false, bCenter: true }, ...options };
+	this.jumpToIndex = (idx, { bScroll = false, bCenter = true } = {}) => { // Puts selected playlist in the middle of the window, if possible
 		const cache = { index: this.index, offset: this.offset };
 		this.index = idx;
 		// Safechecks
 		if (this.items < this.rows) { this.offset = 0; }
 		if (this.index >= this.items) { this.index = this.items - 1; }
 		// Jump
-		if (options.bCenter) {
+		if (bCenter) {
 			this.offset = this.index > this.rows / 2
 				? Math.floor(this.index / this.rows) * this.rows + this.index % this.rows - Math.round(this.rows / 2 - 1)
 				: 0;
@@ -1647,7 +1645,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				: 0;
 		}
 		if (this.offset + this.rows >= this.items) { this.offset = this.items > this.rows ? this.items - this.rows : 0; }
-		if (options.bScroll) { this.index = -1; }
+		if (bScroll) { this.index = -1; }
 		if (cache.index !== this.index || cache.offset !== this.offset) { this.repaint(false, 'list'); }
 		return this.index;
 	};
@@ -1745,9 +1743,9 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.getPls = (oldPls, bAlsoHidden = false) => {
 		const idx = this.getIndex(oldPls, bAlsoHidden);
-		return idx !== -1
-			? (bAlsoHidden ? this.dataAll : this.data)[idx]
-			: null;
+		return idx === -1
+			? null
+			: (bAlsoHidden ? this.dataAll : this.data)[idx];
 	};
 
 	this.getIndexSortedBy = ({ key = 'modified', bInverse = false, bSkipLibraryViewer = true } = {}) => {
@@ -1881,15 +1879,15 @@ function _list({ x, y, w, h, properties } = {}) {
 								if (bDebug && bMoved && this.index !== this.lastIndex) { console.log(pls); }
 								if (this.isInternalDrop()) {
 									const currY = this.y + yOffset + (this.index - this.offset) * panel.rowHeight;
-									if (this.methodState !== this.manualMethodState()) {
-										this.dropUp = this.dropDown = false;
-									} else {
+									if (this.methodState === this.manualMethodState()) {
 										this.dropUp = pls.isFolder
 											? y < (currY + panel.rowHeight / 3)
 											: y < (currY + panel.rowHeight / 2);
 										this.dropDown = pls.isFolder
 											? y > (currY + panel.rowHeight * 2 / 3)
 											: !this.dropUp;
+									} else {
+										this.dropUp = this.dropDown = false;
 									}
 									this.dropIn = !this.dropUp && !this.dropDown;
 								} else {
@@ -1897,10 +1895,10 @@ function _list({ x, y, w, h, properties } = {}) {
 								}
 								if (this.index !== this.lastIndex || bChangedMask) {
 									const playlistDataText = this.plsTooltip(pls, mask);
-									if (this.tooltip.text !== playlistDataText) {
-										if (bMoved) { this.tooltip.Deactivate(); }
+									if (this.tooltip.text === playlistDataText) {
 										this.tooltip.SetValue(playlistDataText, true);
 									} else {
+										if (bMoved) { this.tooltip.Deactivate(); }
 										this.tooltip.SetValue(playlistDataText, true);
 									}
 								}
@@ -1959,7 +1957,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		currentItemIndex = -1;
 		bMaintainFocus = (currentItemIndex !== -1); // Skip at init or when mouse leaves panel
-		const item = (currentItemIndex !== -1) ? this.data[currentItemIndex] : null; // Skip at init or when mouse leaves panel
+		const item = currentItemIndex === -1 ? null : this.data[currentItemIndex]; // Skip at init or when mouse leaves panel
 		currentItemPath = item ? item.path : null;
 		currentItemNameId = item ? item.nameId : null;
 		currentItemIsAutoPlaylist = item ? item.isAutoPlaylist : null;
@@ -1969,35 +1967,34 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.offset = 0;
 	};
 
-	this.jumpLastPosition = (options = { bScroll: false, bCenter: true, bOmitType: false }) => {
-		options = { ...{ bScroll: false, bCenter: true, bOmitType: false }, ...options };
+	this.jumpLastPosition = ({ bScroll = false, bCenter = true, bOmitType = false } = {}) => {
 		if (currentItemIndex < this.items) {
-			if (!options.bOmitType) {
+			if (bOmitType) {
+				this.jumpToIndex(currentItemIndex, { bScroll, bCenter, bOmitType });
+			} else {
 				for (let i = 0; i < this.items; i++) { // Also this separate for the same reason, to
 					// Get current index of the previously selected item to not move the list focus when updating...
 					// Offset is calculated simulating the wheel, so it moves to the previous location
 					if (currentItemIsAutoPlaylist) { // AutoPlaylists
 						if (this.data[i].isAutoPlaylist && this.data[i].nameId === currentItemNameId) {
-							this.jumpToIndex(i, options);
+							this.jumpToIndex(i, { bScroll, bCenter, bOmitType });
 							break;
 						}
 					} else if (currentItemIsUI) {
 						if (this.data[i].extension === '.ui' && this.data[i].nameId === currentItemNameId) {
-							this.jumpToIndex(i, options);
+							this.jumpToIndex(i, { bScroll, bCenter, bOmitType });
 							break;
 						}
 					} else if (currentItemIsFolder) { // Standard Playlists
 						if (this.data[i].isFolder && this.data[i].nameId === currentItemNameId) {
-							this.jumpToIndex(i, options);
+							this.jumpToIndex(i, { bScroll, bCenter, bOmitType });
 							break;
 						}
 					} else if (this.data[i].path === currentItemPath) { // Standard Playlists
-						this.jumpToIndex(i, options);
+						this.jumpToIndex(i, { bScroll, bCenter, bOmitType });
 						break;
 					}
 				}
-			} else {
-				this.jumpToIndex(currentItemIndex, options);
 			}
 		} else {
 			this.clearLastPosition();
@@ -2108,11 +2105,12 @@ function _list({ x, y, w, h, properties } = {}) {
 										const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
 										if (bInverted) { this.sortingFile.reverse(); } // For reverse sorting, list must be sorted first too!
 										const toMove = [...this.internalPlsDrop].reverse().map((idx) => {
-											const sortIdx = this.sortingFile.findIndex((n) => n === this.data[idx].nameId);
-											return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
+											const sortIdx = this.sortingFile.indexOf(this.data[idx].nameId);
+											return sortIdx === -1 ? null : this.sortingFile.splice(sortIdx, 1)[0];
 										}).filter((n) => n !== null).reverse();
-										const toIdx = this.sortingFile.findIndex((n) => n === name);
-										if (toIdx !== -1) {
+										const toIdx = this.sortingFile.indexOf(name);
+										if (toIdx === -1) { this.sortingFile = cache; }
+										else {
 											this.sortingFile.splice(toIdx + (this.dropDown && z === (this.items - 1) ? 1 : 0), 0, ...toMove); // Move one lower at end
 											if (bInverted) { this.sortingFile.reverse(); } // And revert back
 											// Move items to/out of folders
@@ -2136,7 +2134,7 @@ function _list({ x, y, w, h, properties } = {}) {
 											if (plsSel.length) { // Restore multiple selection
 												this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 											} else { this.indexes.length = 0; }
-										} else { this.sortingFile = cache; }
+										}
 									} else if (currItem.isFolder) {
 										this.internalPlsDrop.forEach((idx) => {
 											if (!this.isUpperFolder(this.data[idx], currItem)) {
@@ -2161,7 +2159,8 @@ function _list({ x, y, w, h, properties } = {}) {
 							this.executeAction(z, x, y, shortcuts[mask]);
 						} else { // Only mouse
 							const currItem = this.data[z];
-							if (!this.bDoubleClick) { // It's not a second lbtn click
+							if (this.bDoubleClick) { this.bDoubleClick = false; }
+							else { // It's not a second lbtn click
 								if (currItem) {
 									if (!this.uiElements['Header buttons'].elements['List menu'].enabled) {
 										this.playlistMenu(z, x, y);
@@ -2172,7 +2171,7 @@ function _list({ x, y, w, h, properties } = {}) {
 										this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(z, x, y, shortcuts['SG_CLICK']); // Creates the menu and calls it later
 									}
 								}
-							} else { this.bDoubleClick = false; }
+							}
 						}
 					} else if (this.isInternalDrop()) { this.internalPlsDrop = []; }
 					break;
@@ -2208,9 +2207,10 @@ function _list({ x, y, w, h, properties } = {}) {
 					const shortcuts = this.getShortcuts('L', 'HEADER');
 					const sgShortcut = shortcuts[Object.hasOwn(shortcuts, mask) ? mask : 'SG_CLICK'];
 					if (sgShortcut) { // Select all from current view or clean selection
-						if (!this.bDoubleClick) { // It's not a second lbtn click
+						if (this.bDoubleClick) { this.bDoubleClick = false; }
+						else { // It's not a second lbtn click
 							this.timeOut = delayFn(this.executeAction, this.iDoubleClickTimer)(void (0), x, y, sgShortcut, false);
-						} else { this.bDoubleClick = false; }
+						}
 					}
 					this.move(this.mX, this.mY, mask); // Updates tooltip even when mouse hasn't moved
 				}
@@ -2490,7 +2490,7 @@ function _list({ x, y, w, h, properties } = {}) {
 									const inFolder = this.isInFolder(pls) ? this.getParentFolder(pls) : null;
 									return !!this.addFolder(name, inFolder);
 								} else if (pls.isAutoPlaylist) {
-									return cloneAsAutoPls(this, z, pls.extension !== '.ui' ? -1 : plman.FindPlaylist(pls.nameId));
+									return cloneAsAutoPls(this, z, pls.extension === '.ui' ? plman.FindPlaylist(pls.nameId) : -1);
 								} else if (pls.extension === '.xsp') { return cloneAsSmartPls(this, z); }
 								else { return clonePlaylistFile(this, z, pls.extension); }
 							}
@@ -2625,7 +2625,7 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.quickSearch = (keyChar, next = 0) => {
 		if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
-		if (isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false }; }
+		if (Number.isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false }; }
 		let method = this.methodState.split('\t')[0].replace('By ', '');
 		if (method === 'name' || this.properties.bQuickSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 		let bNext = false;
@@ -2635,16 +2635,16 @@ function _list({ x, y, w, h, properties } = {}) {
 			this.lastCharsPressed.mask = getKeyboardMask();
 			if (this.lastCharsPressed.mask === kMask.shift || this.lastCharsPressed.mask === kMask.ctrl) { this.lastCharsPressed.bAnyPosition = true; }
 		}
-		if (next !== 0) {
-			if (next > 0) { bNext = true; }
-			else if (next < 0) { bPrev = true; }
-		} else {
-			if (!this.properties.bQuickSearchNext[1]) {
-				this.lastCharsPressed.str += keyChar;
-			} else { // Jump to next item with same char
+		if (next === 0) {
+			if (this.properties.bQuickSearchNext[1]) { // Jump to next item with same char
 				if (this.lastCharsPressed.str !== keyChar) { this.lastCharsPressed.str += keyChar; } // NOSONAR
 				else { bNext = true; }
+			} else {
+				this.lastCharsPressed.str += keyChar;
 			}
+		} else {
+			if (next > 0) { bNext = true; }
+			else if (next < 0) { bPrev = true; }
 		}
 		// Helper
 		const searchStr = (pls) => {
@@ -2706,14 +2706,13 @@ function _list({ x, y, w, h, properties } = {}) {
 			'\n• ' + this.getGlobalShortcut('search tracks', { bTab: false, bForce: true }) + ': search playlists with selected tracks.' +
 			'\n• ' + this.getGlobalShortcut('settings menu', { bTab: false, bForce: true }) + ': settings menu or list menu (+ Shift).' +
 			'\n• ' + this.getGlobalShortcut('documentation', { bTab: false, bForce: true }) + ': documentation (pdf) or quick help (+ Shift).' +
-			'\n• ' + this.getGlobalShortcut('tracked folder', { bTab: false, bForce: true }) + ': ' + (!this.bLiteMode ? 'open playlists tracked folder.' : '-none-\t(disabled File tracking -lite mode-)') +
+			'\n• ' + this.getGlobalShortcut('tracked folder', { bTab: false, bForce: true }) + ': ' + (this.bLiteMode ? '-none-\t(disabled File tracking -lite mode-)' : 'open playlists tracked folder.') +
 			(bTips ? '\n(*) Also applies to multiple selection and recursively to folders.' : '')
 			: '');
 	};
 
-	this.getGlobalShortcut = (action = '', options = { bTab: true, bParen: false, bForce: false }) => {
-		options = { bTab: true, bParen: false, ...options };
-		const bEnabled = this.properties.bGlobalShortcuts[1] || options.bForce;
+	this.getGlobalShortcut = (action = '', { bTab=true, bParen=false, bForce= false } = {}) => {
+		const bEnabled = this.properties.bGlobalShortcuts[1] || bForce;
 		let shortcut = '';
 		switch (action.toLowerCase()) {
 			case 'lock file': shortcut = bEnabled ? 'F1' : ''; break;
@@ -2722,20 +2721,20 @@ function _list({ x, y, w, h, properties } = {}) {
 			case 'clone ui': shortcut = bEnabled ? 'F3' : ''; break;
 			case 'load': shortcut = bEnabled ? 'F4' : ''; break;
 			case 'clone': shortcut = bEnabled ? 'F5' : ''; break;
-			case 'export': shortcut = bEnabled && !this.bLiteMode || options.bForce ? 'F6' : ''; break;
-			case 'export listenbrainz': shortcut = bEnabled && this.properties.lBrainzToken[1].length > 0 || options.bForce ? 'Shift + F6' : ''; break;
-			case 'new ui': shortcut = bEnabled && this.bLiteMode || options.bForce ? 'F7' : ''; break;
-			case 'new file': shortcut = bEnabled && !this.bLiteMode || options.bForce ? 'F7' : ''; break;
+			case 'export': shortcut = bEnabled && !this.bLiteMode || bForce ? 'F6' : ''; break;
+			case 'export listenbrainz': shortcut = bEnabled && this.properties.lBrainzToken[1].length > 0 || bForce ? 'Shift + F6' : ''; break;
+			case 'new ui': shortcut = bEnabled && this.bLiteMode || bForce ? 'F7' : ''; break;
+			case 'new file': shortcut = bEnabled && !this.bLiteMode || bForce ? 'F7' : ''; break;
 			case 'new folder': shortcut = bEnabled ? 'Shift + F7' : ''; break;
 			case 'cycle category': shortcut = bEnabled ? 'F8' : ''; break;
 			case 'search tracks': {
 				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
-				shortcut = bEnabled && bValidSearchMethods || options.bForce ? 'F9' : '';
+				shortcut = bEnabled && bValidSearchMethods || bForce ? 'F9' : '';
 				break;
 			}
 			case 'find': {
 				const bValidSearchMethods = this.searchMethod.bPath || this.searchMethod.bQuery || this.searchMethod.bMetaTracks;
-				shortcut = bEnabled || options.bForce
+				shortcut = bEnabled || bForce
 					? bValidSearchMethods ? 'Shift + F9' : 'F9'
 					: '';
 				break;
@@ -2744,16 +2743,16 @@ function _list({ x, y, w, h, properties } = {}) {
 			case 'list menu': shortcut = bEnabled ? 'Shift + F10' : ''; break;
 			case 'documentation': shortcut = bEnabled ? 'F11' : ''; break;
 			case 'quick help': shortcut = bEnabled ? 'Shift + F11' : ''; break;
-			case 'tracked folder': shortcut = bEnabled && !this.bLiteMode || options.bForce ? 'F12' : ''; break;
+			case 'tracked folder': shortcut = bEnabled && !this.bLiteMode || bForce ? 'F12' : ''; break;
 			case 'columns': shortcut = 'º, \\ or Numpad /'; break;
 			case 'delete': shortcut = 'Del'; break;
 			case 'search': shortcut = 'Ctrl + E'; break;
 			case 'flat view': shortcut = 'Ctrl + B'; break;
 		}
 		if (shortcut.length) {
-			if (options.bParen) { shortcut = _p(shortcut); }
-			if (options.bTab) { shortcut = '\t' + shortcut; }
-			else if (options.bParen) { shortcut = ' ' + shortcut; }
+			if (bParen) { shortcut = _p(shortcut); }
+			if (bTab) { shortcut = '\t' + shortcut; }
+			else if (bParen) { shortcut = ' ' + shortcut; }
 		}
 		return shortcut;
 	};
@@ -2983,7 +2982,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			const getHandleList = (pls) => {
 				let handleList;
 				const idx = plman.FindPlaylist(pls.nameId);
-				handleList = idx !== -1 ? plman.GetPlaylistItems(idx) : null;
+				handleList = idx === -1 ? null : plman.GetPlaylistItems(idx);
 				if (handleList === null) {
 					if (pls.isAutoPlaylist) {
 						handleList = fb.GetQueryItemsCheck(library, stripSort(pls.query), true); // Cached
@@ -3019,7 +3018,13 @@ function _list({ x, y, w, h, properties } = {}) {
 						return fuse.search(term, { limit: 1 }).length;
 					};
 				}
-			} else if (!bIsQuery) {
+			} else if (bIsQuery) {
+				match = (pls) => {
+					const handleList = getHandleList(pls);
+					const queryItems = handleList ? fb.GetQueryItemsCheck(handleList, str) : null;
+					if (queryItems && queryItems.Count) { return true; }
+				};
+			} else {
 				let rgExp, re, flag;
 				try {
 					[, re, flag] = term.startsWith('/')
@@ -3035,12 +3040,6 @@ function _list({ x, y, w, h, properties } = {}) {
 						? val.some((v) => rgExp.test(v))
 						: rgExp.test(val);
 				};
-			} else {
-				match = (pls) => {
-					const handleList = getHandleList(pls);
-					const queryItems = handleList ? fb.GetQueryItemsCheck(handleList, str) : null;
-					if (queryItems && queryItems.Count) { return true; }
-				};
 			}
 			const found = [...this.dataAll].filter((pls) => {
 				if (bIsQuery) { return this.searchMethod.bQuery && match(pls); } // Breaks here
@@ -3052,15 +3051,15 @@ function _list({ x, y, w, h, properties } = {}) {
 				if (this.searchMethod.bPath) {
 					let paths;
 					const idx = plman.FindPlaylist(pls.nameId);
-					if (idx !== -1) {
-						paths = plman.GetPlaylistItems(idx).GetLibraryRelativePaths();
-					} else {
+					if (idx === -1) {
 						if (pls.isAutoPlaylist) {
 							const handleList = getHandleList(pls);
 							paths = handleList.GetLibraryRelativePaths();
 						} else {
 							paths = getFilePathsFromPlaylist(pls.path);
 						}
+					} else {
+						paths = plman.GetPlaylistItems(idx).GetLibraryRelativePaths();
 					}
 					paths = paths.map((path) => path.split('\\').slice(- (this.searchMethod.pathLevel || Infinity)));
 					if (match(paths)) { return true; }
@@ -3093,8 +3092,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (playlistIndex === -1) { this.resetMultSelect(); }
 		else {
 			const found = this.indexes.indexOf(playlistIndex);
-			if (found !== -1) { this.indexes.splice(found, 1); }
-			else { this.indexes.push(playlistIndex); }
+			if (found === -1) { this.indexes.push(playlistIndex); }
+			else { this.indexes.splice(found, 1); }
 		}
 		return this.indexes;
 	};
@@ -3104,17 +3103,17 @@ function _list({ x, y, w, h, properties } = {}) {
 		else {
 			const found = this.indexes.indexOf(playlistIndex);
 			if (this.indexes.length) {
-				if (found !== -1) {
-					const start = this.indexes.slice(-1)[0];
-					const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
-					this.indexes.splice(0, Infinity);
-					Array.prototype.push.apply(this.indexes, idxArr);
-				} else {
-					const start = this.indexes.slice(-1)[0] || 0;
+				if (found === -1) {
+					const start = this.indexes.at(-1) || 0;
 					const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
 					idxArr.forEach((idx) => {
 						if (!this.indexes.includes(idx)) { this.indexes.push(idx); }
 					});
+				} else {
+					const start = this.indexes.at(-1);
+					const idxArr = range(start, playlistIndex, start > playlistIndex ? -1 : 1);
+					this.indexes.splice(0, Infinity);
+					Array.prototype.push.apply(this.indexes, idxArr);
 				}
 			} else {
 				this.indexes.push(playlistIndex);
@@ -3378,7 +3377,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							search = '/' + tags.join('|') + '/i';
 
 						} else {
-							search = getHandleTags(selItems[0], [globTags.titleRaw]).flat(Infinity).filter(Boolean)[0] || '';
+							search = getHandleTags(selItems[0], [globTags.titleRaw]).flat(Infinity).find(Boolean) || '';
 						}
 						return true;
 					}
@@ -3458,16 +3457,16 @@ function _list({ x, y, w, h, properties } = {}) {
 				level++;
 			}
 			const bMaxLevel = level <= this.folders.maxDepth;
-			const bToSameFolder = currSelIdx !== -1
-				? this.internalPlsDrop.every((idx) => {
+			const bToSameFolder = currSelIdx === -1
+				? false
+				: this.internalPlsDrop.every((idx) => {
 					return bToFolder && this.data[idx].inFolder === this.data[currSelIdx].nameId || !bToFolder && this.data[idx].inFolder === this.data[currSelIdx].inFolder;
-				})
-				: false;
-			const bFolderToChildFolder = currSelIdx !== -1
-				? this.internalPlsDrop.every((idx) => {
+				});
+			const bFolderToChildFolder = currSelIdx === -1
+				? false
+				: this.internalPlsDrop.every((idx) => {
 					return bToFolder && this.isUpperFolder(this.data[idx], this.data[currSelIdx]);
-				})
-				: false;
+				});
 			return bFolder && bMaxLevel && !bToSameFolder && !bFolderToChildFolder;
 		}
 	};
@@ -3478,13 +3477,13 @@ function _list({ x, y, w, h, properties } = {}) {
 			const filePathLength = filePath.length;
 			for (let i = 0; i < filePathLength; i++) {
 				const path = filePath[i];
-				if (!_isFile(path)) {
-					console.log('Playlist Manager: Error adding items to tracked folder. Path not found.\n' + path);
-					return false;
-				} else {
+				if (_isFile(path)) {
 					const arr = utils.SplitFilePath(path);
 					const fileName = (arr[1].endsWith(arr[2])) ? arr[1] : arr[1] + arr[2]; // <1.4.0 Bug: [directory, filename + filename_extension, filename_extension]
 					bDone = _renameFile(path, this.playlistsPathDirName + fileName);
+				} else {
+					console.log('Playlist Manager: Error adding items to tracked folder. Path not found.\n' + path);
+					return false;
 				}
 				if (!bDone) {
 					console.log('Playlist Manager: Error while moving item to tracked folder.\n' + path);
@@ -3519,9 +3518,9 @@ function _list({ x, y, w, h, properties } = {}) {
 		} else if (!pls.isAutoPlaylist && !pls.query && (pls.extension !== '.fpl' || bFplWrite) && pls.size) {
 			const selItems = fb.GetSelections(1);
 			if (selItems && selItems.Count) {
-				const filePaths = pls.extension !== '.ui'
-					? new Set(getFilePathsFromPlaylist(pls.path))
-					: new Set(fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])));
+				const filePaths = pls.extension === '.ui'
+					? new Set(fb.TitleFormat(pathTF).EvalWithMetadbs(getHandlesFromUIPlaylists([pls.nameId])))
+					: new Set(getFilePathsFromPlaylist(pls.path));
 				const selItemsPaths = fb.TitleFormat(pathTF).EvalWithMetadbs(selItems);
 				if (filePaths.intersectionSize(new Set(selItemsPaths))) {
 					if (this.bForbidDuplicates) { this.selPaths = { sel: selItemsPaths }; }
@@ -3620,7 +3619,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			const total = plsArr.length;
 			return plsArr.map((item, i) => this.sendSelectionToPlaylist({ pls: item, bCheckDup, bPaint: !!(bPaint && total === (i + 1)), bDelSource: !!(bDelSource && total === (i + 1)), bAlsoHidden: true }))
 				.flat(Infinity)
-				.some((result) => result === true);
+				.includes(true);
 		} else {
 			if (pls.isAutoPlaylist || pls.isLocked || (pls.extension === '.fpl' && !bFplWrite) || pls.query) { return false; } // Skip non writable playlists
 			let selItems = fb.GetSelections(1);
@@ -3641,8 +3640,8 @@ function _list({ x, y, w, h, properties } = {}) {
 						selItems = selItems.Convert().filter((_, idx) => { return !toRemove.has(idx); });
 						selItems = new FbMetadbHandleList(selItems);
 						// Warn about duplication
-						if (!selItems.Count) { console.log('Playlist Manager: No tracks added, all are duplicated.'); }
-						else { console.log('Playlist Manager: Skipped duplicated tracks.'); }
+						if (selItems.Count) { console.log('Playlist Manager: Skipped duplicated tracks.'); }
+						else { console.log('Playlist Manager: No tracks added, all are duplicated.'); }
 					}
 				}
 				if (selItems && selItems.Count) {
@@ -3668,17 +3667,17 @@ function _list({ x, y, w, h, properties } = {}) {
 						if (pls.extension === '.ui') {
 							this.editData(pls, {
 								size: pls.size + selItems.Count,
-								duration: (pls.duration !== - 1
-									? pls.duration + selItems.CalcTotalDuration()
-									: pls.size === 0
+								duration: (pls.duration === - 1
+									? pls.size === 0
 										? selItems.CalcTotalDuration()
 										: plman.GetPlaylistItems(index).CalcTotalDuration()
+									: pls.duration + selItems.CalcTotalDuration()
 								),
-								trackSize: (pls.trackSize !== - 1
-									? pls.trackSize + selItems.CalcTotalSize()
-									: pls.size === 0
+								trackSize: (pls.trackSize === - 1
+									? pls.size === 0
 										? selItems.CalcTotalSize()
 										: plman.GetPlaylistItems(index).CalcTotalSize()
+									: pls.trackSize + selItems.CalcTotalSize()
 								),
 								modified: Date.now(),
 							});
@@ -3693,17 +3692,17 @@ function _list({ x, y, w, h, properties } = {}) {
 						if (sourcePls && pls !== sourcePls) {
 							this.editData(sourcePls, {
 								size: sourcePls.size - selItems.Count,
-								duration: (sourcePls.duration !== - 1
-									? sourcePls.duration - selItems.CalcTotalDuration()
-									: sourcePls.size - selItems.Count === 0
+								duration: (sourcePls.duration === - 1
+									? sourcePls.size - selItems.Count === 0
 										? 0
 										: plman.GetPlaylistItems(index).CalcTotalDuration()
+									: sourcePls.duration - selItems.CalcTotalDuration()
 								),
-								trackSize: (sourcePls.trackSize !== - 1
-									? sourcePls.trackSize - selItems.CalcTotalSize()
-									: sourcePls.size - selItems.Count === 0
+								trackSize: (sourcePls.trackSize === - 1
+									? sourcePls.size - selItems.Count === 0
 										? 0
 										: plman.GetPlaylistItems(index).CalcTotalSize()
+									: sourcePls.trackSize - selItems.CalcTotalSize()
 								),
 								modified: Date.now(),
 							});
@@ -3769,8 +3768,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		pls = this.getPls(pls, true);
 		this.editData(pls, {
 			size: pls.size + handleList.Count,
-			duration: (pls.duration !== - 1 ? pls.duration + handleList.CalcTotalDuration() : handleList.CalcTotalDuration()),
-			trackSize: (pls.trackSize !== - 1 ? pls.trackSize + handleList.CalcTotalSize() : handleList.CalcTotalSize()),
+			duration: (pls.duration === - 1 ? handleList.CalcTotalDuration() : pls.duration + handleList.CalcTotalDuration()),
+			trackSize: (pls.trackSize === - 1 ? handleList.CalcTotalSize() : pls.trackSize + handleList.CalcTotalSize()),
 			fileSize: bUI ? 0 : utils.GetFileSize(done), // done points to new path, note playlist extension is not always = 'playlistPath
 			modified: Date.now(),
 		});
@@ -3926,7 +3925,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.dataAll.forEach((pls, playlistIndex) => {
 			if (pls.isLocked && !bForceLocked || pls.extension === '.ui' || pls.isAutoPlaylist || pls.query) { return; }
 			if (pls.extension === '.xspf' && this.playlistsExtension !== pls.extension) { return; } // Don't save XSPF playlists unless format will not be changed
-			if (current.findIndex((uiPls) => uiPls.name === pls.nameId) !== -1) { // There may be other checks later, but at least omit these ones...
+			if (current.some((uiPls) => uiPls.name === pls.nameId) ) { // There may be other checks later, but at least omit these ones...
 				if (this.updatePlaylist({ playlistIndex, bCallback: false, bForceLocked })) { count++; }
 			}
 		});
@@ -4066,8 +4065,8 @@ function _list({ x, y, w, h, properties } = {}) {
 						});
 						if (plsData.nameId !== playlistNameId) {
 							const currentLocks = plman.GetPlaylistLockedActions(fbPlaylistIndex) || [];
-							if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId); }
-							else { console.log('updatePlaylist: can not rename playlist due to lock. ' + plsData.nameId); }
+							if (currentLocks.includes('RenamePlaylist')) { console.log('updatePlaylist: can not rename playlist due to lock. ' + plsData.nameId); }
+							else { plman.RenamePlaylist(fbPlaylistIndex, plsData.nameId); }
 						}
 						// Warn about dead items
 						if (!bCallback || (!bCallback && this.bDeadCheckAutoSave)) {
@@ -4510,7 +4509,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		return filter ? this.getFilter()[filter] : Object.values(this.getFilter()).some(Boolean);
 	};
 	this.filter = ({ autoPlaylistState = this.autoPlaylistStates[0], lockState = this.lockStates[0], extState = this.extStates[0], categoryState = this.categoryState, tagState = this.tagState, mbidState = this.mbidStates[0], plsState = this.plsState, bReusePlsFilter = false, bSkipSel = false, bSkipSearch = false, bRepaint = true, focusOptions = {} } = {}) => {
-		const plsSel = !bSkipSel ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
+		const plsSel = bSkipSel ? [] : this.indexes.map((idx) => this.data[idx]).filter(Boolean);
 		// Apply current search
 		const bPlsFilter = plsState.length;
 		if (this.searchInput && this.searchInput.text.length && !bSkipSearch) {
@@ -4519,9 +4518,9 @@ function _list({ x, y, w, h, properties } = {}) {
 			} else if (bReusePlsFilter && bPlsFilter) {
 				const newPlsState = this.search(false).plsState;
 				plsState = plsState.filter((oldPls) => {
-					return newPlsState.includes(oldPls) || (newPlsState.findIndex((pls) =>
+					return newPlsState.includes(oldPls) || (newPlsState.some((pls) =>
 						pls.nameId === oldPls.nameId && pls.path === oldPls.path && oldPls.extension === pls.extension
-					) !== -1);
+					) );
 				});
 			}
 		}
@@ -4531,9 +4530,9 @@ function _list({ x, y, w, h, properties } = {}) {
 			// In case there has been an update, objects can change, look for other properties
 			if (!this.data.length) {
 				this.data = this.dataAll.filter((dataPls) =>
-					plsState.findIndex((pls) =>
+					plsState.some((pls) =>
 						pls.nameId === dataPls.nameId && pls.path === dataPls.path && dataPls.extension === pls.extension
-					) !== -1
+					)
 				);
 			}
 		} else { // On first filter we use this.dataAll as origin
@@ -4555,12 +4554,12 @@ function _list({ x, y, w, h, properties } = {}) {
 			const isAutoPls = (item) => item.isAutoPlaylist || item.query || (item.isFolder && item.pls.some(isAutoPls));
 			this.data = this.data.filter(isAutoPls);
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
-			if (!this.bLiteMode) {
-				const isFilePls = (item) => !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls));
-				this.data = this.data.filter(isFilePls);
-			} else {
+			if (this.bLiteMode) {
 				const isUiPls = (item) => { return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls)); };
 				this.data = this.data.filter(isUiPls);
+			} else {
+				const isFilePls = (item) => !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls));
+				this.data = this.data.filter(isFilePls);
 			}
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
 			const isUiPls = (item) => item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls));
@@ -4697,7 +4696,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		const bListenBrainz = this.properties.lBrainzToken[1].length > 0;
 		return [
 			showMenus['Category'] ? 'Category' : '',
-			!this.bLiteMode ? 'Extension' : '',
+			this.bLiteMode ? '' : 'Extension',
 			'Lock state',
 			showMenus['Online sync'] && bListenBrainz ? 'MBID' : '',
 			'Playlist type', showMenus['Tags'] ? 'Tag' : ''
@@ -4715,9 +4714,9 @@ function _list({ x, y, w, h, properties } = {}) {
 			} else if (bReusePlsFilter && bPlsFilter) {
 				const newPlsState = this.search(false).plsState;
 				plsState = plsState.filter((oldPls) => {
-					return newPlsState.includes(oldPls) || (newPlsState.findIndex((pls) =>
+					return newPlsState.includes(oldPls) || (newPlsState.some((pls) =>
 						pls.nameId === oldPls.nameId && pls.path === oldPls.path && oldPls.extension === pls.extension
-					) !== -1);
+					) );
 				});
 			}
 		}
@@ -4727,9 +4726,9 @@ function _list({ x, y, w, h, properties } = {}) {
 			// In case there has been an update, objects can change, look for other properties
 			if (!outData.length) {
 				outData = data.filter((dataPls) =>
-					plsState.findIndex((pls) =>
+					plsState.some((pls) =>
 						pls.nameId === dataPls.nameId && pls.path === dataPls.path && dataPls.extension === pls.extension
-					) !== -1
+					)
 				);
 			}
 		} else { // On first filter we use original data as source
@@ -4742,12 +4741,12 @@ function _list({ x, y, w, h, properties } = {}) {
 			const isAutoPls = (item) => { return item.isAutoPlaylist || item.query || (item.isFolder && item.pls.some(isAutoPls)); };
 			outData = outData.filter(isAutoPls);
 		} else if (autoPlaylistState === this.constAutoPlaylistStates()[2]) {
-			if (!this.bLiteMode) {
-				const isFilePls = (item) => { return !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls)); };
-				outData = outData.filter(isFilePls);
-			} else {
+			if (this.bLiteMode) {
 				const isUiPls = (item) => { return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls)); };
 				outData = outData.filter(isUiPls);
+			} else {
+				const isFilePls = (item) => { return !item.isAutoPlaylist && !item.query && item.extension !== '.ui' || (item.isFolder && item.pls.some(isFilePls)); };
+				outData = outData.filter(isFilePls);
 			}
 		} else if (this.bAllPls && autoPlaylistState === this.constAutoPlaylistStates()[3]) {
 			const isUiPls = (item) => { return item.extension === '.ui' || (item.isFolder && item.pls.some(isUiPls)); };
@@ -4959,7 +4958,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		return Object.keys(this.sortMethods(false)[method])[0];
 	};
 	this.manualMethodState = () => {
-		return Object.keys(this.sortMethods(false)).slice(-1)[0];
+		return Object.keys(this.sortMethods(false)).at(-1);
 	};
 
 	this.changeSorting = (newMethod) => {
@@ -4979,7 +4978,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	};
 
 	this.sort = (sortMethod = this.sortMethods(false)[this.methodState][this.sortState], bPaint = false, bSkipSel = false, focusOptions = void (0)) => {
-		const plsSel = !bSkipSel ? this.indexes.map((idx) => this.data[idx]).filter(Boolean) : [];
+		const plsSel = bSkipSel ? [] : this.indexes.map((idx) => this.data[idx]).filter(Boolean);
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
 		if (showMenus['Folders']) { this.collapseFolders(); }
 		const bManual = this.methodState === this.manualMethodState();
@@ -4990,8 +4989,8 @@ function _list({ x, y, w, h, properties } = {}) {
 				// Assign Ids and remove not present playlists
 				this.sortingFile = this.sortingFile.filter((plsSort) => this.dataAll.some((pls) => pls.nameId === plsSort));
 				this.dataAll.forEach((pls) => {
-					const idx = this.sortingFile.findIndex((plsSort) => pls.nameId === plsSort);
-					pls.sortIdx = idx !== -1 ? idx : this.sortingFile.push(pls.nameId);
+					const idx = this.sortingFile.indexOf(pls.nameId);
+					pls.sortIdx = idx === -1 ? this.sortingFile.push(pls.nameId) : idx;
 					if (idx === -1) { bSave = true; }
 				});
 			} else { // Create new one sorted by name
@@ -5055,15 +5054,15 @@ function _list({ x, y, w, h, properties } = {}) {
 			const bInverted = this.getSortState() !== this.defaultSortState(this.manualMethodState());
 			if (bInverted) { this.sortingFile.reverse(); } // For reverse sorting, list must be sorted first too!
 			const toMove = [...plsArr].reverse().map((pls) => {
-				const sortIdx = this.sortingFile.findIndex((n) => n === pls.nameId);
-				return sortIdx !== -1 ? this.sortingFile.splice(sortIdx, 1)[0] : null;
+				const sortIdx = this.sortingFile.indexOf(pls.nameId);
+				return sortIdx === -1 ? null : this.sortingFile.splice(sortIdx, 1)[0];
 			}).filter((n) => n !== null).reverse();
 			if (toMove.length) {
 				if (isFunction(toIdx)) {
-					const ref = cache.findIndex((n) => n === toMove[0]);
-					toIdx = ref !== -1 ? toIdx(ref) : -1;
+					const ref = cache.indexOf(toMove[0]);
+					toIdx = ref === -1 ? -1 : toIdx(ref);
 				}
-				if (toIdx !== -1 && (toMove.length !== 1 || (toMove[0] !== cache.slice(-1)[0] || toIdx < cache.length))) { // Don't move past limits...
+				if (toIdx !== -1 && (toMove.length !== 1 || (toMove[0] !== cache.at(-1) || toIdx < cache.length))) { // Don't move past limits...
 					if (toIdx > this.sortingFile.length) { toIdx = this.sortingFile.length; }
 					this.sortingFile.splice(toIdx, 0, ...toMove);
 					if (this.indexes.length) { this.indexes = toMove.map((_, i) => toIdx + i); }
@@ -5456,7 +5455,27 @@ function _list({ x, y, w, h, properties } = {}) {
 		} else { this.itemsFoobar = 0; }
 		// Folders
 		if (this.itemsFolder) {
-			if (!bReuseData) {
+			if (bReuseData) {
+				this.dataAll.forEach((folder) => {
+					if (folder.isFolder) {
+						folder.pls.forEach((subPls, i, thisArr) => {
+							if (subPls.extension === '.ui') {
+								const idx = this.dataUI.findIndex((pls) => pls.nameId === subPls.nameId);
+								if (idx === -1) { thisArr[i] = null; }
+								else {
+									thisArr[i] = this.dataUI[idx];
+									thisArr[i].inFolder = folder.nameId;
+								}
+							}
+						});
+						folder.pls = folder.pls.filter(Boolean);
+						this.addFolderProperties(folder);
+					}
+				});
+				if (showMenus['Folders']) {
+					this.data = this.data.filter((item) => !this.isInFolder(item));
+				}
+			} else {
 				this.dataFolder.forEach((folder) => {
 					const itemList = new Set(folder.pls.map((subPls) => subPls.nameId + subPls.extension));
 					folder.pls = folder.pls.map((subPls) => { // Find matches by name and extension, filter duplicates or non found items
@@ -5481,25 +5500,6 @@ function _list({ x, y, w, h, properties } = {}) {
 					this.data = this.data.concat(this.dataFolder);
 				}
 				this.dataAll = this.dataAll.concat(this.dataFolder);
-			} else {
-				this.dataAll.forEach((folder) => {
-					if (folder.isFolder) {
-						folder.pls.forEach((subPls, i, thisArr) => {
-							if (subPls.extension === '.ui') {
-								const idx = this.dataUI.findIndex((pls) => pls.nameId === subPls.nameId);
-								if (idx !== -1) {
-									thisArr[i] = this.dataUI[idx];
-									thisArr[i].inFolder = folder.nameId;
-								} else { thisArr[i] = null; }
-							}
-						});
-						folder.pls = folder.pls.filter(Boolean);
-						this.addFolderProperties(folder);
-					}
-				});
-				if (showMenus['Folders']) {
-					this.data = this.data.filter((item) => !this.isInFolder(item));
-				}
 			}
 		}
 		// Always
@@ -5516,8 +5516,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (plsSel.length) { // Update multiple selection
 			this.indexes = plsSel.map((pls) => this.getIndex(pls)).filter((idx) => idx !== -1);
 		} else { this.indexes.length = 0; }
-		if (!bMaintainFocus) { this.offset = 0; } // Don't move the list focus...
-		else { this.jumpLastPosition(focusOptions); }
+		if (bMaintainFocus) { this.jumpLastPosition(focusOptions); }
+		else { this.offset = 0; } // Don't move the list focus...
 		this.save(bInit); // Updates this.dataAutoPlaylists
 		this.itemsAutoPlaylist = this.dataAutoPlaylists.length;
 		if (this.bUpdateAutoPlaylist) { this.bUpdateAutoPlaylist = false; }
@@ -5584,9 +5584,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			playlistObj.id = newId;
 			playlistObj.nameId = newNameId;
 			let duplicated = plman.FindPlaylist(newNameId);
-			if (duplicated !== -1) { // Playlist already exists on foobar2000...
-				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.FullPanelName);
-			} else {
+			if (duplicated === -1) {
 				const plsIdx = plman.FindPlaylist(oldNameId);
 				if (plsIdx !== -1) {
 					if (playlistObj.isAutoPlaylist || playlistObj.extension === '.fpl' || playlistObj.extension === '.xsp' || playlistObj.extension === '.ui') {
@@ -5615,18 +5613,20 @@ function _list({ x, y, w, h, properties } = {}) {
 										if (bDone) { bDone = editTextFile(path, originalStrings, newStrings, this.bBOM); }
 									}
 								} else { bDone = true; }
-								if (!bDone) {
+								if (bDone) {
+									if (_isFile(backPath)) { _deleteFile(backPath); }
+									this.updatePlman(newNameId, oldNameId); // Update with new id
+								} else {
 									fb.ShowPopupMessage('Error editing playlist file: ' + oldNameId + ' --> ' + newNameId + '\n\nPath: ' + path + '\n\nRestoring backup...', window.FullPanelName);
 									_renameFile(backPath, path); // Restore backup in case something goes wrong
 									console.log('Playlist Manager: Restoring backup...');
-								} else {
-									if (_isFile(backPath)) { _deleteFile(backPath); }
-									this.updatePlman(newNameId, oldNameId); // Update with new id
 								}
 							}
 						} else { fb.ShowPopupMessage('Playlist file does not exist: ' + playlistObj.name + '\nPath: ' + path, window.FullPanelName); }
 					}
 				}
+			} else { // Playlist already exists on foobar2000...
+				fb.ShowPopupMessage('Duplicated playlist names within foobar2000 are not allowed: ' + oldName + '\n' + 'Choose another unique name for renaming.', window.FullPanelName);
 			}
 		}
 		clearInterval(delay);
@@ -5637,7 +5637,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	};
 
 	this.switchTracking = (forced = null, bNotify = false, bCachePls = true) => {
-		this.bTracking = forced !== null ? forced : !this.bTracking;
+		this.bTracking = forced === null ? !this.bTracking : forced;
 		if (this.bTracking) {
 			this.clearSelPlaylistCache();
 			fb.queryCache.clear();
@@ -5749,7 +5749,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (typeof dataIdx === 'undefined') {
 			dataIdx = this.getPlaylistIdxByUI({ uiIdx, name });
 		}
-		const plsCheck = typeof dataIdx !== 'undefined' ? !this.skipRwLock.has(dataIdx) : true;
+		const plsCheck = typeof dataIdx === 'undefined' ? true : !this.skipRwLock.has(dataIdx);
 		return this.properties.bRwLock[1] && !this.bLiteMode && plsCheck;
 	};
 
@@ -5759,15 +5759,14 @@ function _list({ x, y, w, h, properties } = {}) {
 		const playlistPathArray = getFiles(this.playlistsPath, loadablePlaylistFormats); // Workaround for win7 bug on extension matching with utils.Glob()
 		const playlistPathArrayLength = playlistPathArray.length;
 		let bDone = false;
-		if (playlistPathArrayLength !== (this.getPlaylistNum())) { bDone = true; }
-		else {
+		if (playlistPathArrayLength === (this.getPlaylistNum())) {
 			let totalFileSize = 0;
 			for (let i = 0; i < playlistPathArrayLength; i++) {
 				totalFileSize += utils.GetFileSize(playlistPathArray[i]);
 				if (totalFileSize > this.totalFileSize) { break; }
 			}
 			if (totalFileSize !== this.totalFileSize) { bDone = true; }
-		}
+		} else { bDone = true; }
 		if (test) { test.Print(); }
 		return bDone;
 	};
@@ -5890,7 +5889,10 @@ function _list({ x, y, w, h, properties } = {}) {
 			}
 		}
 		const index = this.getIndex(objectPlaylist, true);
-		if (index !== -1) { // Changes data on the other arrays too since they link to same object
+		if (index === -1) {
+			console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));
+			return false;
+		} else { // Changes data on the other arrays too since they link to same object
 			['duration', 'trackSize'].forEach((key) => {
 				if (Object.hasOwn(properties, key)) {
 					properties[key] = round(properties[key], 2);
@@ -5921,9 +5923,6 @@ function _list({ x, y, w, h, properties } = {}) {
 					item[property] = properties[property];
 				}
 			});
-		} else {
-			console.log('Playlist Manager: error editing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));
-			return false;
 		}
 		if (bSave) { this.save(); }
 		clearInterval(delay);
@@ -5939,45 +5938,53 @@ function _list({ x, y, w, h, properties } = {}) {
 		let index;
 		if (objectPlaylist.extension === '.ui') {
 			index = this.dataUI.indexOf(objectPlaylist);
-			if (index !== -1) {
+			if (index === -1) { console.log('Playlist Manager: error removing playlist object from \'this.dataUI\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			else {
 				this.dataUI.splice(index, 1);
 				this.itemsFoobar--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataUI\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			}
 		} else if (objectPlaylist.isAutoPlaylist) {
 			index = this.dataAutoPlaylists.indexOf(objectPlaylist);
-			if (index !== -1) {
+			if (index === -1) { console.log('Playlist Manager: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			else {
 				this.dataAutoPlaylists.splice(index, 1);
 				this.itemsAutoPlaylist--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataAutoPlaylists\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			}
 		} else if (objectPlaylist.extension === '.fpl') {
 			index = this.dataFpl.indexOf(objectPlaylist);
-			if (index !== -1) {
+			if (index === -1) { console.log('Playlist Manager: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			else {
 				this.dataFpl.splice(index, 1);
 				this.itemsFpl--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataFpl\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			}
 		} else if (objectPlaylist.extension === '.xsp') {
 			index = this.dataXsp.indexOf(objectPlaylist);
-			if (index !== -1) {
+			if (index === -1) { console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			else {
 				this.dataXsp.splice(index, 1);
 				this.itemsXsp--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataXsp\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			}
 		} else if (objectPlaylist.isFolder) {
 			index = this.dataFolder.indexOf(objectPlaylist);
-			if (index !== -1) {
+			if (index === -1) { console.log('Playlist Manager: error removing playlist object from \'this.dataFolder\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			else {
 				this.dataFolder.splice(index, 1);
 				this.itemsFolder--;
-			} else { console.log('Playlist Manager: error removing playlist object from \'this.dataFolder\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+			}
 		}
 		index = this.data.indexOf(objectPlaylist);
-		if (index !== -1) {
+		if (index === -1) { console.log('Playlist Manager: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		else {
 			this.data.splice(index, 1);
 			this.items--;
-		} else { console.log('Playlist Manager: error removing playlist object from \'this.data\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		}
 		index = this.dataAll.indexOf(objectPlaylist);
-		if (index !== -1) {
+		if (index === -1) {
+			console.log('Playlist Manager: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist));
+		} else {
 			this.dataAll.splice(index, 1);
 			this.itemsAll--;
-		} else { console.log('Playlist Manager: error removing playlist object from \'this.dataAll\'. Index was expect, but got -1.\n' + JSON.stringify(objectPlaylist)); }
+		}
 		clearInterval(delay);
 	};
 
@@ -6131,7 +6138,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	};
 
 	this.getTopFolder = (item) => {
-		return this.getUpperFolders(item).slice(-1)[0] || null;
+		return this.getUpperFolders(item).at(-1) || null;
 	};
 
 	this.getUpperFoldersNames = (item) => {
@@ -6245,7 +6252,10 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) { oPlaylistCategory = this.categoryState[0]; }
 		// Save file
 		// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
-		if (!_isFile(oPlaylistPath)) { // Just for safety
+		if (_isFile(oPlaylistPath)) {
+			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', 'Playlist Manager: ' + newName, bShowPopups);
+			return null;
+		} else { // Just for safety
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
 			const nameId = newName + UUID;
 			if (oldNameId === nameId) {
@@ -6282,8 +6292,8 @@ function _list({ x, y, w, h, properties } = {}) {
 					plman.ActivePlaylist = new_playlist;
 				} else if (UUID.length) {
 					const currentLocks = plman.GetPlaylistLockedActions(idx) || [];
-					if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(idx, newName + UUID); }
-					else { console.popup('add: can not rename playlist due to lock. ' + oldName); }
+					if (currentLocks.includes('RenamePlaylist')) { console.popup('add: can not rename playlist due to lock. ' + oldName); }
+					else { plman.RenamePlaylist(idx, newName + UUID); }
 				}
 				// Warn about dead items
 				const selItems = plman.GetPlaylistItems(idx).Convert();
@@ -6305,9 +6315,6 @@ function _list({ x, y, w, h, properties } = {}) {
 					, 'Playlist Manager: ' + newName, bShowPopups);
 				return null;
 			}
-		} else {
-			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', 'Playlist Manager: ' + newName, bShowPopups);
-			return null;
 		}
 		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data
 		this.filter();
@@ -6329,8 +6336,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (bInputName) {
 			input = Input.string('string', name, 'Enter playlist name:', 'Playlist Manager: playlist name', 'New playlist');
 			if (input === null) {
-				if (!Input.isLastEqual) { return null; }
-				else { input = Input.lastInput; }
+				if (Input.isLastEqual) { input = Input.lastInput; }
+				else { return null; }
 			}
 		}
 		let i = 0;
@@ -6509,15 +6516,14 @@ function _list({ x, y, w, h, properties } = {}) {
 		const bPlaylist = newQuery.includes('#PLAYLIST# IS');
 		if (!checkQuery(newQuery, false, true, bPlaylist)) { fb.ShowPopupMessage('Query not valid:\n' + newQuery, 'Playlist Manager: Smart Playlist query'); return null; }
 		const { rules, match } = XSP.getRules(newQuery);
-		if (!rules.length) { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', 'Playlist Manager: Smart Playlist query'); return null; }
-		else {
+		if (rules.length) {
 			const jsp = XSP.emptyJSP('songs');
 			jsp.playlist.rules = rules;
 			if (this.checkCircularXsp({ jsp, name: newName })) {
 				console.popup(newName + ': Playlist has circular references, using other playlist as sources which produce infinite recursion.\n\nIt may also happen when the playlist references itself or if the lookup nesting is higher than 100 steps.', 'Playlist Manager: Smart Playlist query');
 				return null;
 			}
-		}
+		} else { fb.ShowPopupMessage('Query has no equivalence on XSP format:\n' + newQuery + '\n\nhttps://kodi.wiki/view/Smart_playlists/Rules_and_groupings', 'Playlist Manager: Smart Playlist query'); return null; }
 		let sortFromQuery = newQuery;
 		newQuery = stripSort(newQuery);
 		sortFromQuery = sortFromQuery.replace(newQuery, '').trimStart();
@@ -6529,16 +6535,16 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (newSort.length && !checkSort(newSort)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + newSort + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', 'Playlist Manager: Smart Playlist sort'); return null; }
 		const newForced = false;
 		const newQueryObj = { query: newQuery, sort: newSort, bSortForced: newForced };
-		let handleList = hasSize && hasQuery && pls.query === newQuery ? null : (!bPlaylist ? fb.GetQueryItems(fb.GetLibraryItems(), newQuery) : null);
+		let handleList = hasSize && hasQuery && pls.query === newQuery ? null : (bPlaylist ? null : fb.GetQueryItems(fb.GetLibraryItems(), newQuery));
 		if (this.bRemoveDuplicatesSmartPls) {
 			handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 		}
-		const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (!bPlaylist ? handleList.Count : '?');
-		const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (!bPlaylist ? handleList.CalcTotalDuration() : -1);
-		const trackSize = hasSize && hasQuery && pls.query === newQuery ? pls.trackSize : (!bPlaylist ? handleList.CalcTotalSize() : -1);
+		const queryCount = hasSize && hasQuery && pls.query === newQuery ? pls.size : (bPlaylist ? '?' : handleList.Count);
+		const duration = hasSize && hasQuery && pls.query === newQuery ? pls.duration : (bPlaylist ? -1 : handleList.CalcTotalDuration());
+		const trackSize = hasSize && hasQuery && pls.query === newQuery ? pls.trackSize : (bPlaylist ? -1 : handleList.CalcTotalSize());
 		let newLimit = 0;
 		if (hasLimit) {
-			if (isFinite(pls.limit)) { newLimit = pls.limit; }
+			if (Number.isFinite(pls.limit)) { newLimit = pls.limit; }
 		} else if (bEdit) {
 			try { newLimit = Number(utils.InputBox(window.ID, 'Set limit of tracks to retrieve\n(0 equals Infinity)', 'Playlist Manager: Smart Playlist limit', newLimit, true)); }
 			catch (e) { return null; } // eslint-disable-line no-unused-vars
@@ -6630,7 +6636,10 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0)) { oPlaylistCategory = this.categoryState[0]; }
 		// Save file
 		// const delay = setInterval(delayAutoUpdate, this.autoUpdateDelayTimer)
-		if (!_isFile(oPlaylistPath)) { // Just for safety
+		if (_isFile(oPlaylistPath)) {
+			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', 'Playlist Manager: ' + newName, bShowPopups);
+			return null;
+		} else { // Just for safety
 			const UUID = (this.bUseUUID) ? nextId(this.optionsUUIDTranslate()) : ''; // Last UUID or nothing for pls playlists...
 			const nameId = newName + UUID;
 			if (!bEmpty && oldNameId === nameId) {
@@ -6672,8 +6681,8 @@ function _list({ x, y, w, h, properties } = {}) {
 							plman.ActivePlaylist = indexFound;
 							if (UUID.length) {
 								const currentLocks = plman.GetPlaylistLockedActions(indexFound) || [];
-								if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(indexFound, newName + UUID); }
-								else { console.popup('add: can not rename playlist due to lock. ' + newName); }
+								if (currentLocks.includes('RenamePlaylist')) { console.popup('add: can not rename playlist due to lock. ' + newName); }
+								else { plman.RenamePlaylist(indexFound, newName + UUID); }
 							}
 							this.updatePlaylist({ playlistIndex: plman.ActivePlaylist, bCallback: true }); // This updates size too. Must replicate callback call since the playlist may not be visible on the current filter view!
 						}
@@ -6684,8 +6693,8 @@ function _list({ x, y, w, h, properties } = {}) {
 						plman.ActivePlaylist = new_playlist;
 					} else if (UUID.length) {
 						const currentLocks = plman.GetPlaylistLockedActions(plman.ActivePlaylist) || [];
-						if (!currentLocks.includes('RenamePlaylist')) { plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID); }
-						else { console.popup('add: can not rename playlist due to lock. ' + oldName); }
+						if (currentLocks.includes('RenamePlaylist')) { console.popup('add: can not rename playlist due to lock. ' + oldName); }
+						else { plman.RenamePlaylist(plman.ActivePlaylist, newName + UUID); }
 					}
 				}
 				// Warn about dead items
@@ -6708,9 +6717,6 @@ function _list({ x, y, w, h, properties } = {}) {
 					, 'Playlist Manager: ' + newName, bShowPopups);
 				return null;
 			}
-		} else {
-			console.popup('Playlist \'' + newName + '\' already exists on path: \'' + oPlaylistPath + '\'', 'Playlist Manager: ' + newName, bShowPopups);
-			return null;
 		}
 		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data
 		this.filter();
@@ -6773,8 +6779,8 @@ function _list({ x, y, w, h, properties } = {}) {
 			if (autoBackTimer && debouncedUpdate && !this.bLiteMode) { backup(this.properties.autoBackN[1], true, this.logOpt.profile); } // Async backup before future changes
 			let [fbPlaylistIndex] = clearPlaylistByName(oldNameId); //only 1 index expected after previous check. Clear better than removing, to allow undo
 			if (pls.isAutoPlaylist) { // AutoPlaylist
-				if (!fbPlaylistIndex) { fbPlaylistIndex = plman.PlaylistCount; }
-				else { removePlaylistByName(oldNameId); }
+				if (fbPlaylistIndex) { removePlaylistByName(oldNameId); }
+				else { fbPlaylistIndex = plman.PlaylistCount; }
 				if (!checkQuery(pls.query, true, true)) {
 					fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.FullPanelName);
 					return loadPromise;
@@ -6826,8 +6832,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		return loadPromise;
 	};
 
-	this.queuePlaylist = (idxOrPls, options = { bAsync: false, bRandom: false, bDedup: false }) => {
-		options = { bAsync: false, bRandom: false, bDedup: false, ...options };
+	this.queuePlaylist = (idxOrPls, { bAsync= false, bRandom= false, bDedup= false } = {}) => {
 		if (plman.GetPlaybackQueueHandles().Count >= MAX_QUEUE_ITEMS) {
 			console.log('Playlist Manager: Queue is full (' + MAX_QUEUE_ITEMS + ' items). Skip queueing playlist.');
 			return false;
@@ -6852,15 +6857,15 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (bLoaded) {
 			count = plman.PlaylistItemCount(uiIdx);
 			if (count) {
-				const itemIdx = options.bDedup
+				const itemIdx = bDedup
 					? []
 					: range(0, count - 1, 1);
-				if (options.bDedup) {
+				if (bDedup) {
 					const plsItems = plman.GetPlaylistItems(uiIdx);
 					handleList = removeDuplicates({ handleList: plsItems, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 					handleList.Convert().forEach((handle) => itemIdx.push(plsItems.Find(handle)));
 				}
-				if (options.bRandom) {
+				if (bRandom) {
 					itemIdx.shuffle();
 				}
 				count = itemIdx.length;
@@ -6868,7 +6873,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					console.log('Playlist Manager: Queue is full (' + MAX_QUEUE_ITEMS + ' items). Skip queueing ' + (count - MAX_QUEUE_ITEMS) + ' items.');
 					itemIdx.length = MAX_QUEUE_ITEMS;
 				}
-				if (options.bAsync) {
+				if (bAsync) {
 					Promise.serial(
 						itemIdx,
 						(trackIdx) => plman.AddPlaylistItemToPlaybackQueue(uiIdx, trackIdx),
@@ -6881,10 +6886,10 @@ function _list({ x, y, w, h, properties } = {}) {
 			}
 		} else {
 			handleList = this.getHandleFrom(idx, false);
-			if (options.bDedup) {
+			if (bDedup) {
 				handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 			}
-			if (options.bRandom) {
+			if (bRandom) {
 				handleList.OrderByFormat(fb.TitleFormat('$rand()'), 1);
 			}
 			count = handleList.Count;
@@ -6894,7 +6899,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				count = handleList.Count;
 			}
 			if (count) {
-				if (options.bAsync) {
+				if (bAsync) {
 					Promise.serial(
 						handleList.Convert(),
 						(handle) => plman.AddItemToPlaybackQueue(handle),
@@ -6956,9 +6961,9 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.getPlaylistIdxByUI = ({ uiIdx, name }) => {
 		if (typeof uiIdx === 'undefined' && typeof name === 'undefined') { return -1; }
 		const idx = this.getPlaylistsIdxByName([
-			typeof name !== 'undefined'
-				? name
-				: plman.GetPlaylistName(uiIdx)
+			typeof name === 'undefined'
+				? plman.GetPlaylistName(uiIdx)
+				: name
 		]);
 		return idx.length ? idx[0] : -1;
 	};
@@ -6991,11 +6996,10 @@ function _list({ x, y, w, h, properties } = {}) {
 			handleList = getHandlesFromUIPlaylists([pls.nameId], false);
 			if (handleList) { this.updatePlaylistHandleMeta(pls, handleList, true, true); }
 		} else if (pls.isAutoPlaylist) { // AutoPlaylist
-			if (!checkQuery(pls.query, true, true)) { console.popup('Query not valid:\n' + pls.query, window.FullPanelName); }
-			else {
+			if (checkQuery(pls.query, true, true)) {
 				handleList = fb.GetQueryItems(fb.GetLibraryItems(), pls.query);
 				this.updatePlaylistHandleMeta(pls, handleList, true, true); // Update size on load
-			}
+			} else { console.popup('Query not valid:\n' + pls.query, window.FullPanelName); }
 		} else if (_isFile(pls.path)) { // Or file
 			// Try to load handles from library first, greatly speeds up non fpl large playlists
 			// But it will fail as soon as any track is not found on library
@@ -7095,7 +7099,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		// Delete from data
 		const oldNameId = pls.nameId;
 		const duplicated = plman.FindPlaylist(oldNameId);
-		const currentLocks = duplicated !== -1 ? plman.GetPlaylistLockedActions(duplicated) || [] : [];
+		const currentLocks = duplicated === -1 ? [] : plman.GetPlaylistLockedActions(duplicated) || [];
 		if (currentLocks.includes('RemovePlaylist') && bUI) { fb.ShowPopupMessage('UI-Playlist is locked: ' + pls.name, window.FullPanelName); return; }
 		if (pls.size) { this.totalFileSize -= pls.size; }
 		this.deletedItems.unshift(pls);
@@ -7396,7 +7400,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 		this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 		this.bBOM = this.properties['bBOM'][1];
-		this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
+		this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter(Boolean);
 		this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 		this.bRemoveDuplicatesSmartPls = this.properties['bRemoveDuplicatesSmartPls'][1];
 		this.bAdvTitle = this.properties['bAdvTitle'][1];
@@ -7505,8 +7509,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		// Check playlists path
 		if (!this.playlistsPath.endsWith('\\')) {
 			this.playlistsPath += '\\';
-			this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
-			this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
+			this.playlistsPathDirName = this.playlistsPath.split('\\').findLast(Boolean);
+			this.playlistsPathDisk = this.playlistsPath.split('\\').find(Boolean).replace(':', '').toUpperCase();
 			this.properties['playlistsPath'][1] += '\\';
 			bDone = true;
 		}
@@ -7524,9 +7528,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		// Check UUID option
 		if (this.optionsUUID().includes(this.optionUUID)) {
-			if (this.optionUUID !== this.optionsUUID().pop()) { // Last option is no UUID
-				this.bUseUUID = true;
-			} else { this.bUseUUID = false; }
+			this.bUseUUID = this.optionUUID !== this.optionsUUID().pop();
 		} else {
 			fb.ShowPopupMessage('Wrong UUID method set at properties panel: \'' + this.optionUUID + '\'\n' + 'Only allowed: \n\n' + this.optionsUUID().join('\n') + '\n\nUsing default method as fallback', window.FullPanelName);
 			this.bUseUUID = false;
@@ -7743,7 +7745,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (!Array.isArray(newNames)) { newNames = [newNames]; }
 		if (entries.length !== newNames.length) { return false; }
 		const bDone = entries.every((entry, i) => {
-			const idx = this.sortingFile.findIndex((n) => n === entry);
+			const idx = this.sortingFile.indexOf(entry);
 			if (idx !== -1) {
 				this.sortingFile[idx] = newNames[i];
 				return true;
@@ -8092,7 +8094,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			if (test) { test.Print('Post startup'); test = null; }
 			globProfiler.Print('list.init.post');
 			const autoUpdateTimer = Number(this.properties.autoUpdate[1]);
-			if (autoUpdateTimer !== 0 && isFinite(autoUpdateTimer)) {
+			if (autoUpdateTimer !== 0 && Number.isFinite(autoUpdateTimer)) {
 				setInterval(
 					() => { this.trackedFolderChanged = this.checkTrackedFolderChanged(); },
 					autoUpdateTimer
@@ -8156,8 +8158,8 @@ function _list({ x, y, w, h, properties } = {}) {
 	// Properties
 	this.properties = properties;
 	this.playlistsPath = _resolvePath(this.properties['playlistsPath'][1]);
-	this.playlistsPathDirName = this.playlistsPath.split('\\').filter(Boolean).pop();
-	this.playlistsPathDisk = this.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
+	this.playlistsPathDirName = this.playlistsPath.split('\\').findLast(Boolean);
+	this.playlistsPathDisk = this.playlistsPath.split('\\').find(Boolean).replace(':', '').toUpperCase();
 	this.playlistsExtension = this.properties['extension'][1].toLowerCase();
 	// Playlist behavior
 	this.bUpdateAutoPlaylist = this.properties['bUpdateAutoPlaylist'][1]; // Forces AutoPlaylist size update on startup according to query. Requires also this.bShowSize = true!
@@ -8206,7 +8208,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.bForbidDuplicates = this.properties['bForbidDuplicates'][1];
 	this.bDeadCheckAutoSave = this.properties['bDeadCheckAutoSave'][1];
 	this.bBOM = this.properties['bBOM'][1];
-	this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter((n) => n);
+	this.removeDuplicatesAutoPls = JSON.parse(this.properties['removeDuplicatesAutoPls'][1]).filter(Boolean);
 	this.bRemoveDuplicatesAutoPls = this.properties['bRemoveDuplicatesAutoPls'][1];
 	this.bAdvTitle = this.properties['bAdvTitle'][1];
 	this.bMultiple = this.properties['bMultiple'][1];
@@ -8243,7 +8245,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.colors = convertStringToObject(this.properties['listColors'][1], 'number');
 	this.autoUpdateDelayTimer = (() => { // Timer should be at least 1/100 autoupdate timer to work reliably
 		const autoUpdateTimer = Number(this.properties.autoUpdate[1]);
-		return autoUpdateTimer !== 0 && isFinite(autoUpdateTimer)
+		return autoUpdateTimer !== 0 && Number.isFinite(autoUpdateTimer)
 			? Math.max(autoUpdateTimer / 100, 1)
 			: 1;
 	})();
@@ -8408,8 +8410,8 @@ function _list({ x, y, w, h, properties } = {}) {
 					(
 						this.bLiteMode
 							? ''
-							: (!this.bTracking ? (bHighlighting ? '\n' : '') +
-								'Library tracking disabled\n' : '') +
+							: (this.bTracking ? '' : (bHighlighting ? '\n' : '') +
+								'Library tracking disabled\n') +
 							'(Shift + L. Click to switch library tracking)' +
 							'\n(Shift + Win + R. Click for SMP panel menu)' +
 							'\n(Ctrl + Win + R. Click for script panel menu)'
@@ -8483,13 +8485,13 @@ function _list({ x, y, w, h, properties } = {}) {
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process
 function getQueryPlaylistHandles(pls, libItems = fb.GetLibraryItems()) {
 	let handleList = null;
-	if (!checkQuery(pls.query, false, true)) {
-		if (!pls.query.includes('#PLAYLIST# IS')) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.FullPanelName); }
-	} else {
+	if (checkQuery(pls.query, false, true)) {
 		handleList = fb.GetQueryItemsCheck(libItems, stripSort(pls.query), true); // Cache output
 		if (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) {
 			handleList = removeDuplicates({ handleList, checkKeys: this.removeDuplicatesAutoPls, sortBias: globQuery.remDuplBias, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
 		}
+	} else {
+		if (!pls.query.includes('#PLAYLIST# IS')) { fb.ShowPopupMessage('Query not valid:\n' + pls.query, window.FullPanelName); }
 	}
 	return handleList;
 }
