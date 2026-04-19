@@ -220,7 +220,7 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 // Patch GDI objects while using D2D to avoid breaking GDI-only code
 if (window.DrawMode === 1) {
 	if (typeof D2DBitmap !== 'undefined') { Object.defineProperty(GdiBitmap, Symbol.hasInstance, { value(instance) { return instance instanceof D2DBitmap; } }); }
-	if (typeof D2DBitmap !== 'D2DFont') { Object.defineProperty(GdiFont, Symbol.hasInstance, { value(instance) { return instance instanceof D2DFont; } }); }
+	if (typeof D2DFont !== 'undefined') { Object.defineProperty(GdiFont, Symbol.hasInstance, { value(instance) { return instance instanceof D2DFont; } }); }
 }
 
 /*
