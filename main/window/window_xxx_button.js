@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/01/26
+//17/04/26
 
 /* exported _button */
 
@@ -125,13 +125,13 @@ function _button({
 		if (downFunc) { clearInterval(downFunc); downFunc = null; draggingTime = 0; }
 		if (this.trace(x, y)) {
 			if (this.lbtnFunc) {
-				if (!this.bDblClk) {
+				if (this.bDblClk) { this.bDblClk = false; } else {
 					if (parent) {
 						this.timeoutLClick = setTimeout(() => this.lbtnFunc.call(parent, x, y, mask, parent, 1), this.iDoubleClickTimer);
 					} else {
 						this.timeoutLClick = setTimeout(() => this.lbtnFunc(x, y, mask, 1), this.iDoubleClickTimer);
 					}
-				} else { this.bDblClk = false; }
+				}
 			}
 			return true;
 		} else {

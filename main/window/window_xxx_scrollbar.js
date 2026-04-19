@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/26
+//16/04/26
 
 /* exported _scrollBar */
 
@@ -108,12 +108,12 @@ function _scrollBar({
 		const buttonBgColor = {
 			visible: this.visible ? RGBA(...toRGB(this.bgColor), Math.max(getAlpha(this.bgColor) - 50, 0)) : null,
 			bHovered: this.bHoveredUp || this.bHoveredDown ? tintColor(RGBA(...toRGB(this.bgColor), Math.max(getAlpha(this.bgColor) - 75, 0)), 5) : null,
-			notVisible: !this.visible ? RGBA(...toRGB(this.bgColor), Math.max(getAlpha(this.bgColor) - 125, 0)) : null
+			notVisible: this.visible ? null : RGBA(...toRGB(this.bgColor), Math.max(getAlpha(this.bgColor) - 125, 0))
 		};
 		const buttonColor = {
 			visible: this.visible ? RGBA(...toRGB(this.color), Math.max(getAlpha(this.color) - 50, 0)) : null,
 			bHovered: this.bHoveredUp || this.bHoveredDown ? tintColor(RGBA(...toRGB(this.color), Math.max(getAlpha(this.color) - 75, 0)), 30) : null,
-			notVisible: !this.visible ? RGBA(...toRGB(this.color), Math.max(getAlpha(this.color) - 125, 0)) : null
+			notVisible: this.visible ? null : RGBA(...toRGB(this.color), Math.max(getAlpha(this.color) - 125, 0))
 		};
 		const up = {
 			bg: (this.visible ? (this.bHoveredUp ? buttonBgColor.bHovered : buttonBgColor.visible) : buttonBgColor.notVisible),

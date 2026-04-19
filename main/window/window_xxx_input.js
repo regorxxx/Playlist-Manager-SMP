@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/03/26
+//17/04/26
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -25,12 +25,12 @@ function _check({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4
 		if (this.w <= 1) { return; }
 		if (this.shape === 'square') {
 			if (this.value) {
-				gr.FillSolidRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, this.fillColor);
+				gr.FillSolidRect(this.x, this.y, Math.min(this.w, this.size), this.size, this.fillColor);
 				gr.GdiDrawText('\u2714', this.gFont, 0xFFFFFFFF, this.x, this.y - _scale(this.size * 2 / 7), this.w < this.size ? this.w + 2 : this.size + 2, _scale(this.size), DT_VCENTER | DT_CENTER | DT_NOPREFIX);
 			} else {
-				gr.FillSolidRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 0xFFFFFFFF);
+				gr.FillSolidRect(this.x, this.y, Math.min(this.w, this.size), this.size, 0xFFFFFFFF);
 			}
-			gr.DrawRect(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 2, 0xFF000000);
+			gr.DrawRect(this.x, this.y, Math.min(this.w, this.size), this.size, 2, 0xFF000000);
 			if (this.bHovered) {
 				const hoverCol = this.value ? 0x20ffffff & this.fillColor : RGBA(0, 0, 0, 15);
 				gr.FillEllipse(this.x - this.hoveredExtPad * 3 / 2, this.y - this.hoveredExtPad * 3 / 2, this.size + this.hoveredExtPad * 2 * 3 / 2, this.size + this.hoveredExtPad * 2 * 3 / 2, hoverCol);
@@ -38,15 +38,15 @@ function _check({ x, y, size = 4, value = false, shape = 'square', color = 0xFF4
 		} else if (this.shape === 'circle') {
 			gr.SetSmoothingMode(SmoothingMode.HighQuality);
 			if (this.value) {
-				gr.FillEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 0xFFFFFFFF);
-				gr.DrawEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 1, this.fillColor);
+				gr.FillEllipse(this.x, this.y, Math.min(this.w, this.size), this.size, 0xFFFFFFFF);
+				gr.DrawEllipse(this.x, this.y, Math.min(this.w, this.size), this.size, 1, this.fillColor);
 				const innerSizeMinus = 6;
 				if (this.w >= innerSizeMinus) {
 					gr.FillEllipse(this.x + innerSizeMinus / 2, this.y + innerSizeMinus / 2, this.w < this.size ? this.w - innerSizeMinus : this.size - innerSizeMinus, this.size - innerSizeMinus, this.fillColor);
 				}
 			} else {
-				gr.FillEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 0xFFFFFFFF);
-				gr.DrawEllipse(this.x, this.y, this.w < this.size ? this.w : this.size, this.size, 1, 0xFF000000);
+				gr.FillEllipse(this.x, this.y, Math.min(this.w, this.size), this.size, 0xFFFFFFFF);
+				gr.DrawEllipse(this.x, this.y, Math.min(this.w, this.size), this.size, 1, 0xFF000000);
 			}
 			if (this.bHovered) {
 				const hoverCol = this.value ? 0x20ffffff & this.fillColor : RGBA(0, 0, 0, 15);
@@ -198,10 +198,10 @@ function _colorPicker({ x, y, size = 10, color = 0xFF4354AF, hoverColor = 0xFF43
 	const offset = 10;
 
 	this.paint = (gr, x = this.x, y = this.y) => { // on_paint
-		gr.FillSolidRect(x, y, this.w < this.size ? this.w : this.size, this.size, this.color);
-		gr.DrawRect(x, y, this.w < this.size ? this.w : this.size, this.size, 1, 0xFF000000);
+		gr.FillSolidRect(x, y, Math.min(this.w, this.size), this.size, this.color);
+		gr.DrawRect(x, y, Math.min(this.w, this.size), this.size, 1, 0xFF000000);
 		if (this.bHovered) {
-			const hoverCol = this.hoverColor !== null ? 0x20ffffff & this.hoverColor : RGBA(...toRGB(this.color), 128);
+			const hoverCol = this.hoverColor === null ? RGBA(...toRGB(this.color), 128) : 0x20ffffff & this.hoverColor;
 			gr.FillEllipse(this.x - this.hoveredExtPad, this.y - this.hoveredExtPad, this.size + this.hoveredExtPad * 2, this.size + this.hoveredExtPad * 2, hoverCol);
 		}
 		gr.GdiDrawText('(R,G,B)\n' + toRGB(this.color), this.gFont, 0xFF000000, x + this.size + offset, y, this.w - this.size - offset, this.size, DT_VCENTER | DT_NOPREFIX);
@@ -269,7 +269,7 @@ function _dropdownList(
 	this.tt = '';
 	this.text = text;
 	this.textWidth = isFunction(this.text) ? () => { return _textWidth(this.text(), gFont); } : _textWidth(this.text, gFont);
-	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+	this.icon = this.gFontIcon.Name === 'Microsoft Sans Serif' ? null : icon; // if using the default font, then it has probably failed to load the right one, skip icon
 	this.iconWidth = isFunction(this.icon) ? () => { return _textWidth(this.icon(), gFontIcon); } : _textWidth(this.icon, gFontIcon);
 	this.opened = false;
 	this.list = { values: [], current: null, hover: null, count: 0 };
@@ -390,7 +390,10 @@ function _dropdownList(
 
 		this.gTheme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
 		const offset = 10;
-		if (this.icon !== null) {
+		if (this.icon === null) {
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+		} else {
 			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
 			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
 			let textCalculated = isFunction(this.text) ? this.text() : this.text;
@@ -400,9 +403,6 @@ function _dropdownList(
 			} else {
 				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + offset * 2 + iconWidthCalculated, yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			}
-		} else {
-			let textCalculated = isFunction(this.text) ? this.text() : this.text;
-			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 		}
 		const paintList = (gr) => {
 			this.list.values.forEach((val, i) => {
@@ -462,7 +462,7 @@ function _buttonList(
 	this.tt = '';
 	this.text = text;
 	this.textWidth = isFunction(this.text) ? () => { return _textWidth(this.text(), gFont); } : _textWidth(this.text, gFont);
-	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+	this.icon = this.gFontIcon.Name === 'Microsoft Sans Serif' ? null : icon; // if using the default font, then it has probably failed to load the right one, skip icon
 	this.iconWidth = isFunction(this.icon) ? () => { return _textWidth(this.icon(), gFontIcon); } : _textWidth(this.icon, gFontIcon);
 	this.opened = false;
 	this.menuFunc = (values, current) => {
@@ -545,7 +545,10 @@ function _buttonList(
 
 		this.gTheme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
 		const offset = 10;
-		if (this.icon !== null) {
+		if (this.icon === null) {
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+		} else {
 			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
 			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
 			let textCalculated = isFunction(this.text) ? this.text() : this.text;
@@ -555,9 +558,6 @@ function _buttonList(
 			} else {
 				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + offset * 2 + iconWidthCalculated, yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			}
-		} else {
-			let textCalculated = isFunction(this.text) ? this.text() : this.text;
-			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 		}
 	};
 
@@ -584,7 +584,7 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 	this.tt = '';
 	this.text = text;
 	this.textWidth = isFunction(this.text) ? () => { return _textWidth(this.text(), gFont); } : _textWidth(this.text, gFont);
-	this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+	this.icon = this.gFontIcon.Name === 'Microsoft Sans Serif' ? null : icon; // if using the default font, then it has probably failed to load the right one, skip icon
 	this.iconWidth = isFunction(this.icon) ? () => { return _textWidth(this.icon(), gFontIcon); } : _textWidth(this.icon, gFontIcon);
 	this.func = func;
 
@@ -645,7 +645,10 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 
 		this.gTheme.DrawThemeBackground(gr, xCalc, yCalc, wCalc, hCalc);
 		const offset = 10;
-		if (this.icon !== null) {
+		if (this.icon === null) {
+			let textCalculated = isFunction(this.text) ? this.text() : this.text;
+			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+		} else {
 			let iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
 			let iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
 			let textCalculated = isFunction(this.text) ? this.text() : this.text;
@@ -655,9 +658,6 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 			} else {
 				gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc + offset * 2 + iconWidthCalculated, yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			}
-		} else {
-			let textCalculated = isFunction(this.text) ? this.text() : this.text;
-			gr.GdiDrawText(textCalculated, this.gFont, RGB(0, 0, 0), xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 		}
 	};
 
@@ -733,7 +733,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 			}
 		}
 		// draw selection
-		if (this.SelBegin != this.SelEnd) {
+		if (this.SelBegin == this.SelEnd) {
+			this.select = false;
+			this.textSelected = '';
+		} else {
 			this.select = true;
 			this.calcText();
 			let px1, px2;
@@ -751,9 +754,6 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 			} else {
 				gr.FillSolidRect(this.x + px1, this.y + 2, px2 - px1, this.h - 4, blendColors(this.backSelectionColor, this.backColor, 0.2));
 			}
-		} else {
-			this.select = false;
-			this.textSelected = '';
 		}
 
 		// draw text
@@ -768,7 +768,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 				} else if (this.offset < this.SelEnd) {
 					const text = [this.text.substring(this.offset, this.SelEnd), this.text.substring(this.SelEnd)];
 					const textWidth = text.map((t) => { return gr.CalcTextWidth(t, this.font); });
-					gr.GdiDrawText(text[0], this.font, 0xFFFFFFFF, this.x, this.y, this.w > textWidth[0] ? textWidth[0] : this.w, this.h, DT);
+					gr.GdiDrawText(text[0], this.font, 0xFFFFFFFF, this.x, this.y, Math.min(this.w, textWidth[0]), this.h, DT);
 					gr.GdiDrawText(text[1], this.font, this.textColor, this.x + textWidth[0], this.y, this.w - textWidth[0], this.h, DT);
 				}
 			} else {
@@ -798,12 +798,12 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	};
 
 	this.repaint = function (bForce) {
-		if (!parent) {
-			window.RepaintRect(this.x, this.y, this.w, this.h, bForce);
-		} else {
+		if (parent) {
 			if (Object.hasOwn(parent, 'Repaint')) { parent.Repaint(bForce, 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); } // NOSONAR
 			else if (Object.hasOwn(parent, 'repaint')) { parent.repaint(bForce, 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
 			else { console.log('oInputBox: parentObject has no repaint method.', 'input', { x: this.x, y: this.y, w: this.w, h: this.h }); }
+		} else {
+			window.RepaintRect(this.x, this.y, this.w, this.h, bForce);
 		}
 	};
 
@@ -1435,10 +1435,10 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							} else if (this.Cpos <= this.text.length) {
 								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
 								const idx = leftTrim.search(/\b /);
-								this.text = idx !== -1
-									? this.text.substring(0, this.Cpos - idx) + this.text.substring(this.Cpos)
-									: '';
-								this.Cpos = idx !== -1 ? this.Cpos - idx : 0;
+								this.text = idx === -1
+									? ''
+									: this.text.substring(0, this.Cpos - idx) + this.text.substring(this.Cpos);
+								this.Cpos = idx === -1 ? 0 : this.Cpos - idx;
 								this.repaint();
 							}
 						}
@@ -1478,9 +1478,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									else { idx += offset; }
 									while (right[old] === ' ' && right[idx] === ' ') { idx++; }
 								}
-								this.text = idx !== -1
-									? this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + idx)
-									: this.text.substring(0, this.Cpos);
+								this.text = idx === -1
+									? this.text.substring(0, this.Cpos)
+									: this.text.substring(0, this.Cpos) + this.text.substring(this.Cpos + idx);
 								this.repaint();
 							}
 						}
@@ -1498,9 +1498,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							if (this.Cpos <= this.text.length) {
 								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
 								const idx = leftTrim.search(/\b /);
-								newSelIdx = idx !== -1
-									? this.Cpos - idx
-									: 0;
+								newSelIdx = idx === -1
+									? 0
+									: this.Cpos - idx;
 							}
 							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
 							this.select = false;
@@ -1522,9 +1522,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									else { idx += offset; }
 									while (right[idx] === ' ') { idx++; }
 								}
-								newSelIdx = idx !== -1
-									? this.Cpos + idx
-									: this.text.length;
+								newSelIdx = idx === -1
+									? this.text.length
+									: this.Cpos + idx;
 							}
 							this.SelEnd = this.SelBegin = this.Cpos = newSelIdx;
 							this.select = false;
@@ -1548,16 +1548,16 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 							if (this.Cpos <= this.text.length) {
 								const leftTrim = [...this.text.substring(0, this.Cpos)].reverse().join('').trimEnd();
 								const idx = leftTrim.search(/\b /);
-								newSelIdx = idx !== -1
-									? this.Cpos - idx
-									: 0;
+								newSelIdx = idx === -1
+									? 0
+									: this.Cpos - idx;
 							}
-							if (!this.select) {
+							if (this.select) {
+								this.anchor = this.Cpos = this.SelBegin = newSelIdx;
+							} else {
 								this.anchor = this.SelEnd = this.Cpos;
 								this.Cpos = this.SelBegin = newSelIdx;
 								this.select = true;
-							} else {
-								this.anchor = this.Cpos = this.SelBegin = newSelIdx;
 							}
 							this.calcText();
 							this.offset = this.offset >= this.textSelected.length ? this.offset - this.textSelected.length : 0;
@@ -1577,16 +1577,16 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 									else { idx += offset; }
 									while (right[idx] === ' ') { idx++; }
 								}
-								newSelIdx = idx !== -1
-									? this.Cpos + idx
-									: this.text.length;
+								newSelIdx = idx === -1
+									? this.text.length
+									: this.Cpos + idx;
 							}
-							if (!this.select) {
+							if (this.select) {
+								this.anchor = this.Cpos = this.SelEnd = newSelIdx;
+							} else {
 								this.anchor = this.SelBegin = this.Cpos;
 								this.SelEnd = this.Cpos = newSelIdx;
 								this.select = true;
-							} else {
-								this.anchor = this.Cpos = this.SelEnd = newSelIdx;
 							}
 							this.calcText();
 							this.offset = this.offset >= this.textSelected.length ? this.offset - this.textSelected.length : 0;
@@ -1617,9 +1617,9 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 				p2 = (this.text.length - this.Cpos) * -1;
 			}
 			if (this.Cpos < this.text.length) {
-				this.text = this.text.slice(0, p1) + String.fromCharCode(code) + this.text.slice(p2);
+				this.text = this.text.slice(0, p1) + String.fromCodePoint(code) + this.text.slice(p2);
 			} else {
-				this.text = this.text + String.fromCharCode(code);
+				this.text = this.text + String.fromCodePoint(code);
 			}
 			this.Cpos++;
 			if (this.select) {

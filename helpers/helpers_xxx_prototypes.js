@@ -1,7 +1,7 @@
 ﻿'use strict';
-//31/01/26
+//19/04/26
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, isImg */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable, strNumCollator:readable */
@@ -299,6 +299,10 @@ Object.defineProperty(Object.prototype, 'toStr', { // NOSONAR
 		}).join(separator) + (bClosure ? '}' : '');
 	}
 });
+
+function isImg(img) {
+	return img instanceof GdiBitmap || typeof D2DBitmap !== 'undefined' && img instanceof D2DBitmap;
+}
 
 /*
 	Maps

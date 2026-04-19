@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/11/25
+//17/04/26
 
 /*
 	Playlist Revive
@@ -29,7 +29,7 @@ include('..\\..\\helpers\\helpers_xxx_tags.js');
 
 function playlistRevive({
 	playlist = plman.ActivePlaylist, // Set to -1 to create a clone of selItems and output the revived list
-	selItems = playlist !== -1 ? plman.GetPlaylistItems(playlist) : null,
+	selItems = playlist === -1 ? null : plman.GetPlaylistItems(playlist),
 	simThreshold = 1, // 1 only allows exact matches, lower allows some tag differences, but at least the main tag must be the same!
 	bFindAlternative = false,
 	bSimulate = false,
@@ -113,21 +113,21 @@ function playlistRevive({
 					const dirSim = similarity(dir, dirLibr);
 					const fileSim = similarity(file, fileLibr);
 					let score = 0;
-					if (dirSim >= 0.90 && fileSim >= 0.6) {
+					if (dirSim >= 0.9 && fileSim >= 0.6) {
 						const trackNum = file.match(/\d+ *- */);
 						const trackNumLibr = fileLibr.match(/\d+ *- */);
 						if (trackNum && trackNum.length && trackNumLibr && trackNumLibr.length) {
 							if (trackNum[0] === trackNumLibr[0]) { score = Math.round((dirSim * 0.75 + fileSim * 0.25) * 100); }
 						} else { score = Math.round((dirSim * 0.75 + fileSim * 0.25) * 100); }
 					}
-					else if (fileSim >= 0.90 && dirSim >= 0.60) { score = Math.round((dirSim * 0.25 + fileSim * 0.75) * 100); }
+					else if (fileSim >= 0.9 && dirSim >= 0.6) { score = Math.round((dirSim * 0.25 + fileSim * 0.75) * 100); }
 					else if (pathSim >= 0.95) { score = Math.round(pathSim * 100); }
 					if (score >= simThreshold) {
 						alternativesSet.add(indexLibr);
 						alternativesObj.push({ idx: indexLibr, simil: score, bExact: false });
 					} else if (bFindAlternative) {
-						const trackNum = RegExp(/\d+ *- */).exec(file);
-						const trackNumLibr = RegExp(/\d+ *- */).exec(fileLibr);
+						const trackNum = new RegExp(/\d+ *- */).exec(file);
+						const trackNumLibr = new RegExp(/\d+ *- */).exec(fileLibr);
 						const fileName = file.replace(String(trackNum), '');
 						const fileNameLibr = fileLibr.replace(String(trackNumLibr), '');
 						if (fileName === fileNameLibr) {
@@ -216,7 +216,7 @@ function playlistRevive({
 						}
 					}
 				}
-				if (isFinite(numTags) && numTags !== 0 && count / numTags >= simThreshold && !alternativesSet.has(indexLibr)) {
+				if (Number.isFinite(numTags) && numTags !== 0 && count / numTags >= simThreshold && !alternativesSet.has(indexLibr)) {
 					alternativesSet.add(indexLibr);
 					alternativesObj.push({ idx: indexLibr, simil: Math.round(count / numTags * 100), bExact });
 				}
@@ -281,7 +281,10 @@ function playlistRevive({
 		// Remove all handles and insert new ones
 		if (!bSimulate && playlist !== -1) {
 			plman.UndoBackup(playlist);
-			if (selItems.Count !== plman.PlaylistItemCount(playlist)) { // When selecting only a portion, replace selection and left the rest untouched
+			if (selItems.Count === plman.PlaylistItemCount(playlist)) { // Just replace entire playlist
+				plman.ClearPlaylist(playlist);
+				plman.InsertPlaylistItems(playlist, 0, selItems);
+			} else { // When selecting only a portion, replace selection and left the rest untouched
 				const listItems = plman.GetPlaylistItems(playlist);
 				let selectedIdx = [];
 				listItems.Convert().forEach((handle, idx) => {
@@ -300,9 +303,6 @@ function playlistRevive({
 				plman.ClearPlaylist(playlist);
 				plman.InsertPlaylistItems(playlist, 0, listItems);
 				focusOnItem(playlist, selectedIdx[selectedIdx.length - 1]);
-			} else { 	// Just replace entire playlist
-				plman.ClearPlaylist(playlist);
-				plman.InsertPlaylistItems(playlist, 0, selItems);
 			}
 		}
 	}

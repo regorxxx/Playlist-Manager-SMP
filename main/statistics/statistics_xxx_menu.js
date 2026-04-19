@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/01/26
+//17/04/26
 
 /* exported createStatisticsMenu */
 
@@ -91,9 +91,9 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 		}.bind(this);
 	};
-	const filterGreat = (num) => Function('p', 'return p.y > ' + num + ';');
-	const filterLow = (num) => Function('p', 'return p.y < ' + num + ';');
-	const filterBetween = (lim) => Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';');
+	const filterGreat = (num) => new Function('p', 'return p.y > ' + num + ';');
+	const filterLow = (num) => new Function('p', 'return p.y < ' + num + ';');
+	const filterBetween = (lim) => new Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';');
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
 	const switchedGraphs = new Set(['horizontal-bars']);
@@ -325,7 +325,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		if (bShowMulti) {
 			menu.newSeparator();
 			{	// Z-Axis groups
-				const subMenuGroup = menu.newMenu('Filter (Z-Axis)' + (!this.graph.multi ? '\t[3D-Graphs]' : ''), void (0), this.graph.multi ? MF_STRING : MF_GRAYED);
+				const subMenuGroup = menu.newMenu('Filter (Z-Axis)' + (this.graph.multi ? '' : '\t[3D-Graphs]'), void (0), this.graph.multi ? MF_STRING : MF_GRAYED);
 				if (this.graph.multi) {
 					menu.newEntry({ menuName: subMenuGroup, entryText: 'Filter Z-points on groups:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuGroup);
@@ -336,7 +336,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 				}
 			}
 			{	// Z-Axis groups
-				const subMenuGroup = menu.newMenu('Groups (Z-Axis)' + (!this.graph.multi ? '\t[3D-Graphs]' : ''), void (0), this.graph.multi ? MF_STRING : MF_GRAYED);
+				const subMenuGroup = menu.newMenu('Groups (Z-Axis)' + (this.graph.multi ? '' : '\t[3D-Graphs]'), void (0), this.graph.multi ? MF_STRING : MF_GRAYED);
 				if (this.graph.multi) {
 					menu.newEntry({ menuName: subMenuGroup, entryText: 'Z-points per X-value to show:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuGroup);
@@ -359,7 +359,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 							this.changeConfig({ dataManipulation: { group: val }, callbackArgs: { bSaveProperties: true } });
 						}
 					});
-					menu.newCheckMenuLast(() => !options.some((val) => this.dataManipulation.group === val));
+					menu.newCheckMenuLast(() => !options.includes(this.dataManipulation.group));
 				}
 			}
 		}

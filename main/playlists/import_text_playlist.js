@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/01/26
+//17/04/26
 
 /* exported ImportTextPlaylist */
 
@@ -117,12 +117,12 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 				type: 'text'
 			}).then(
 				(resolve) => resolve || '',
-				(reject) => {
-					if (reject.responseText.startsWith('Type mismatch')) {
+				(error) => {
+					if (error.responseText.startsWith('Type mismatch')) {
 						console.log('ImportTexTPlaylist.importFile(): could not retrieve any text from ' + path);
-						console.log('ImportTexTPlaylist.importFile(): ' + reject.responseText);
+						console.log('ImportTexTPlaylist.importFile(): ' + error.responseText);
 					} else {
-						console.log('HTTP error: ' + reject.status);
+						console.log('HTTP error: ' + error.status);
 					}
 					return '';
 				}
@@ -222,8 +222,10 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 							breakPoint.push(0);
 							bPrevTag = true;
 						} else if (index === maskLength - 1) { // Or last value is a tag, so extract until the end
-							breakPoint.push(prevIdx + formatMask[index - 1].length);
-							breakPoint.push(line.length + 1);
+							breakPoint.push(
+								prevIdx + formatMask[index - 1].length,
+								line.length + 1
+							);
 						} else {
 							breakPoint.push(prevIdx + formatMask[index - 1].length);
 							bPrevTag = true;
@@ -269,7 +271,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 			['identifier', ['MUSICBRAINZ_TRACKID']],
 			['title', ['TITLE']],
 			['creator', ['ALBUM ARTIST', 'ARTIST']]
-		].map((pair) => pair[1].map((key) => [key, pair[0]])).flat());
+		].flatMap((pair) => pair[1].map((key) => [key, pair[0]])));
 		const sortBiasTF = sortBias.length ? fb.TitleFormat(sortBias) : null;
 		tags.forEach((handleTags, idx) => {
 			if (Object.keys(handleTags).length) {
@@ -288,19 +290,25 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 						let extraQuery = [];
 						extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + handleTagValForTF + '))" IS 1');
 						if ((key === '%ARTIST%' || key === '%ALBUM ARTIST%') && !handleTagVal.startsWith('the')) {
-							extraQuery.push(fallbackTagsQuery(key.replaceAll('%', ''), 'the ' + tfoKeyVal)); // Done to match multi-valued tags with 'the' on any item
-							extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(the ' + handleTagValForTF + '))" IS 1');
+							extraQuery.push(
+								fallbackTagsQuery(key.replaceAll('%', ''), 'the ' + tfoKeyVal), // Done to match multi-valued tags with 'the' on any item
+								'"$stricmp($ascii(' + key + '),$ascii(the ' + handleTagValForTF + '))" IS 1'
+							);
 							if (key === '%ALBUM ARTIST%') {
 								extraQuery.push('(ALBUM ARTIST PRESENT AND ("$stricmp($ascii(%ALBUM ARTIST%),$ascii(the ' + handleTagValForTF + '))" IS 1)) OR (ALBUM ARTIST MISSING AND ("$stricmp($ascii(%ARTIST%),$ascii(the ' + handleTagValForTF + '))" IS 1))');
 							}
 						} else if (key === '%TITLE%') {
 							if (handleTagVal.includes(',')) {
 								const val = handleTagVal.replace(/,/g, '');
-								extraQuery.push(key + ' IS ' + sanitizeQueryVal(val));
-								extraQuery.push('"$stricmp($ascii(' + key + '),$ascii(' + sanitizeTagTfo(val) + '))" IS 1');
+								extraQuery.push(
+									key + ' IS ' + sanitizeQueryVal(val),
+									'"$stricmp($ascii(' + key + '),$ascii(' + sanitizeTagTfo(val) + '))" IS 1'
+								);
 							}
-							extraQuery.push('"$replace(' + key + ',\',\',)" IS ' + handleTagValForQuery);
-							extraQuery.push('"$stricmp($ascii($replace(' + key + ',\',\',)),$ascii(' + handleTagValForTF + '))" IS 1');
+							extraQuery.push(
+								'"$replace(' + key + ',\',\',)" IS ' + handleTagValForQuery,
+								'"$stricmp($ascii($replace(' + key + ',\',\',)),$ascii(' + handleTagValForTF + '))" IS 1'
+							);
 						}
 						extraQuery = extraQuery.length ? queryJoin(extraQuery, 'OR') : '';
 						return queryJoin([query, tfoQuery, extraQuery], 'OR');
@@ -346,7 +354,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 			}
 		});
 		fb.queryCache.clear();
-		return { handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound };
+		return { handleList: new FbMetadbHandleList(handleArr.filter(Boolean)), handleArr, notFound };
 	},
 	bDebug: false,
 }));

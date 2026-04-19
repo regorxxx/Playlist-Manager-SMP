@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/04/26
+//17/04/26
 
 /* exported createBackgroundMenu */
 
@@ -283,7 +283,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				this.changeConfig({ config: { coverMode: this.getDefaultCoverMode() }, callbackArgs: { bSaveProperties: true } });
 			}
 		}));
-		menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
+		menu.getLastEntry().flags = this.useCover ? MF_STRING : MF_GRAYED;
 		menu.newCheckMenuLast(() => this.coverMode === 'none' ? 0 : (this.coverModeOptions.bNowPlaying ? 1 : 2), 4);
 		menu.newSeparator(subMenu);
 		[
@@ -363,7 +363,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 	[
 		{ isEq: null, key: this.coverModeOptions.bProcessColors, value: null, newValue: !this.coverModeOptions.bProcessColors, entryText: 'Process art colors' }
 	].forEach(createMenuOption('coverModeOptions', 'bProcessColors', mainMenuName, true));
-	menu.getLastEntry().flags = !this.useCover ? MF_GRAYED : MF_STRING;
+	menu.getLastEntry().flags = this.useCover ? MF_STRING : MF_GRAYED;
 
 	if (options.onInit) { options.onInit(menu); }
 

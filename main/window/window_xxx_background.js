@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/04/26
+//17/04/26
 
 /* exported _background */
 
@@ -1428,7 +1428,7 @@ function _background({
 	this.wheelResize = (step, bForce, callbackArgs) => {
 		if ((this.trace(this.mX, this.mY) || bForce) && step !== 0) {
 			let key, min, max, delta = Math.sign(step);
-			switch (true) {
+			switch (true) { // NOSONAR
 				case true:
 					key = ['offsetH']; min = 0; max = this.h - 1; delta = - Math.sign(step) * _scale(5); break;
 			}

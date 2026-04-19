@@ -1,5 +1,5 @@
-﻿'use strict';
-//11/03/25
+'use strict';
+//17/04/26
 
 /* exported Input */
 
@@ -77,36 +77,36 @@ const Input = Object.freeze({
 			input = utils.InputBox(window.ID, message, title, oldVal ? JSON.stringify(oldVal) : '', true);
 			if (!input || typeof input === 'string' && !input.length) { throw new Error('Invalid type'); }
 			else { newVal = JSON.parse(input); }
-			if (typeof newVal !== 'object') { throw new Error('Invalid type'); }
+			if (typeof newVal !== 'object') { throw new TypeError('Invalid type'); }
 			if (type.startsWith('array') && !Array.isArray(newVal)) { throw new Error('Invalid type'); }
 			switch (type) {
 				case 'array': {
 					newVal = bFilterFalse
-						? newVal.filter((n) => n)
+						? newVal.filter(Boolean)
 						: newVal.filter((n) => (n === '' || n === 0 || n));
 					break;
 				}
 				case 'array numbers': {
-					newVal = newVal.map((n) => Number(n));
+					newVal = newVal.map(Number);
 					newVal = bFilterFalse
-						? newVal.filter((n) => n)
+						? newVal.filter(Boolean)
 						: newVal.filter((n) => (n === 0 || n));
 					break;
 				}
 				case 'array strings': {
-					newVal = newVal.map((n) => String(n));
+					newVal = newVal.map(String);
 					newVal = bFilterFalse
-						? newVal.filter((n) => n)
+						? newVal.filter(Boolean)
 						: newVal.filter((n) => (n === '' || n));
 					break;
 				}
 				case 'array booleans': {
-					newVal = newVal.map((n) => Boolean(n));
-					if (bFilterFalse) { newVal = newVal.filter((n) => n); }
+					newVal = newVal.map(Boolean);
+					if (bFilterFalse) { newVal = newVal.filter(Boolean); }
 					break;
 				}
 				case 'object': {
-					if (Array.isArray(newVal)) { throw new Error('Invalid type'); }
+					if (Array.isArray(newVal)) { throw new TypeError('Invalid type'); }
 					break;
 				}
 			}
@@ -225,7 +225,7 @@ const Input = Object.freeze({
 		if (!types.has(type)) { throw new Error('Invalid type: ' + type); }
 		let input, newVal;
 		let uOldVal = null;
-		if (type === 'unicode') { uOldVal = oldVal.split(' ').map((s) => s !== '' ? s.codePointAt(0).toString(16) : '').join(' '); }
+		if (type === 'unicode') { uOldVal = oldVal.split(' ').map((s) => s === '' ? '' : s.codePointAt(0).toString(16)).join(' '); }
 		try {
 			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true);
 			if (input === null || typeof input === 'undefined') { throw new Error('Invalid type'); }
@@ -242,7 +242,7 @@ const Input = Object.freeze({
 				}
 				case 'unicode': { // https://www.rapidtables.com/code/text/unicode-characters.html
 					if (bFilterEmpty && !newVal.length) { throw new Error('Empty'); }
-					newVal = newVal.split(' ').map((s) => s !== '' ? String.fromCharCode(parseInt(s, 16)) : '').join(' ');
+					newVal = newVal.split(' ').map((s) => s === '' ? '' : String.fromCodePoint(Number.parseInt(s, 16))).join(' ');
 					break;
 				}
 				case 'file|url':
@@ -266,7 +266,7 @@ const Input = Object.freeze({
 			}
 			if (checks) {
 				if (!Array.isArray(checks)) {
-					throw new Error('Invalid checks argument');
+					throw new TypeError('Invalid checks argument');
 				} else if (checks.length && !checks.some((check) => check.call(this, newVal))) {
 					throw new Error('Invalid checks');
 				}

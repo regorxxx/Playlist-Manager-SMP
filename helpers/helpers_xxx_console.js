@@ -98,6 +98,8 @@ console.formatArg = (arg) => {
 								return 'FbMetadbHandleList ' + JSON.stringify({ Count: v.Count }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '');
 							} else if ('Handle' in v && 'PlaylistIndex' in v && 'PlaylistItemIndex' in v) {
 								return 'FbMetadbHandleList ' + JSON.stringify({ Handle: { Path: v.Handle.Path, SubSong: v.Handle.SubSong }, PlaylistIndex: v.PlaylistIndex, PlaylistItemIndex: v.PlaylistItemIndex }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
+							} else if (Array.isArray(v)) {
+								return JSON.stringify(v).replace(/["\n]/g, '');
 							} else if (v instanceof Set) {
 								return 'Set ' + JSON.stringify([...v]).replace(/["\n]/g, '');
 							} else if (v instanceof Map) {
@@ -116,6 +118,8 @@ console.formatArg = (arg) => {
 								return '-INFINITY';
 							} else if (v instanceof GdiFont) {
 								return 'GdiFont ' + JSON.stringify({ name: v.Name, height: v.Height, size: v.Size, style: v.Style }).replace(/["\n]/g, '');
+							} else {
+								return JSON.stringify(v);
 							}
 						}
 						return v;

@@ -1,7 +1,9 @@
 ﻿'use strict';
-//13/04/26
+//16/04/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
+
+/* on_mouse_lbtn_tplclk:readable */
 
 
 /*
@@ -61,6 +63,7 @@ const callbacks = {
 	on_main_menu_dynamic: { listeners: [], bRegistered: false },
 	on_metadb_changed: { listeners: [], bRegistered: false },
 	on_mouse_lbtn_dblclk: { listeners: [], bRegistered: false },
+	on_mouse_lbtn_tplclk: { listeners: [], bRegistered: false, timer: { id: null, count: 0, ms: null, x: -1, y: -1, w: 0, h: 0 } }, // Custom
 	on_mouse_lbtn_down: { listeners: [], bRegistered: false },
 	on_mouse_lbtn_up: { listeners: [], bRegistered: false },
 	on_mouse_leave: { listeners: [], bRegistered: false },
@@ -109,8 +112,11 @@ const parentWindow = this; // NOSONAR This is Window in this context without SMP
 parentWindow.eventListener = { event: null, id: null };
 
 /**
- * @typedef {('on_always_on_top_changed'|'on_button_click'|'on_char'|'on_colours_changed'|'on_cursor_follow_playback_changed'|'on_download_file_done'|'on_drag_drop'|'on_drag_enter'|'on_drag_leave'|'on_drag_over'|'on_dsp_preset_changed'|'on_focus'|'on_font_changed'|'on_get_album_art_done'|'on_http_request_done'|'on_item_focus_change'|'on_item_played'|'on_key_down'|'on_key_up'|'on_library_items_added'|'on_library_items_changed'|'on_library_items_removed'|'on_load_image_done'|'on_main_menu'|'on_main_menu_dynamic'|'on_metadb_changed'|'on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_leave'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up'|'on_mouse_wheel'|'on_mouse_wheel_h'|'on_notify_data'|'on_output_device_changed'|'on_paint'|'on_panel_mouse_leave'|'on_panel_mouse_move'|'on_playback_dynamic_info'|'on_playback_dynamic_info_track'|'on_playback_edited'|'on_playback_follow_cursor_changed'|'on_playback_new_track'|'on_playback_order_changed'|'on_playback_pause'|'on_playback_queue_changed'|'on_playback_seek'|'on_playback_starting'|'on_playback_stop'|'on_playback_time'|'on_playlist_item_ensure_visible'|'on_playlist_items_added'|'on_playlist_items_removed'|'on_playlist_items_reordered'|'on_playlist_items_selection_change'|'on_playlist_stop_after_current_changed'|'on_playlist_switch'|'on_playlists_changed'|'on_replaygain_mode_changed'|'on_script_unload'|'on_selection_changed'|'on_size'|'on_volume_change'|'on_locations_added')} smpEvents
- */
+ * @typedef {('on_always_on_top_changed'|'on_button_click'|'on_char'|'on_colours_changed'|'on_cursor_follow_playback_changed'|'on_download_file_done'|'on_drag_drop'|'on_drag_enter'|'on_drag_leave'|'on_drag_over'|'on_dsp_preset_changed'|'on_focus'|'on_font_changed'|'on_get_album_art_done'|'on_http_request_done'|'on_item_focus_change'|'on_item_played'|'on_key_down'|'on_key_up'|'on_library_items_added'|'on_library_items_changed'|'on_library_items_removed'|'on_load_image_done'|'on_main_menu'|'on_main_menu_dynamic'|'on_metadb_changed'|'on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_leave'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up'|'on_mouse_wheel'|'on_mouse_wheel_h'|'on_notify_data'|'on_output_device_changed'|'on_paint'|'on_panel_mouse_leave'|'on_panel_mouse_move'|'on_playback_dynamic_info'|'on_playback_dynamic_info_track'|'on_playback_edited'|'on_playback_follow_cursor_changed'|'on_playback_new_track'|'on_playback_order_changed'|'on_playback_pause'|'on_playback_queue_changed'|'on_playback_seek'|'on_playback_starting'|'on_playback_stop'|'on_playback_time'|'on_playlist_item_ensure_visible'|'on_playlist_items_added'|'on_playlist_items_removed'|'on_playlist_items_reordered'|'on_playlist_items_selection_change'|'on_playlist_stop_after_current_changed'|'on_playlist_switch'|'on_playlists_changed'|'on_replaygain_mode_changed'|'on_script_unload'|'on_selection_changed'|'on_size'|'on_volume_change'|'on_locations_added'|smpCustomEvents)} smpEvents
+*/
+/**
+ * @typedef {('on_mouse_lbtn_tplclk')} smpCustomEvents
+*/
 
 /**
  * Adds a listener to any SMP callback
@@ -145,7 +151,7 @@ parentWindow.eventListener = { event: null, id: null };
  * 												? (index: number) => void
  * 												: smpEvent extends ('on_metadb_changed')
  * 													? (handleList: FbMetadbHandleList, fromHook: boolean) => void
- * 													: smpEvent extends ('on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up')
+ * 													: smpEvent extends ('on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up'|'on_mouse_lbtn_tplclk')
  * 														? (x: number, y: number, mask: number) => void
  * 														: smpEvent extends ('on_mouse_wheel'|'on_mouse_wheel_h')
  * 															? (step: number) => void
@@ -196,8 +202,73 @@ function addEventListener(event, listener, bRegister = true) { // eslint-disable
 	if (!Object.hasOwn(callbacks, event)) { console.log('addEventListener: event does not exist -> ' + event); return false; }
 	const id = UUID();
 	callbacks[event].listeners.push({ id, listener });
+	hookCustomEventListener(event);
 	if (bRegister && !callbacks[event].bRegistered) { registerCallback(event); } // Only add those callbacks needed to the global context
 	return { event, id };
+}
+
+/**
+ * Adds required listeners for a custom SMP callback to work
+ *
+ * @function
+ * @name addCustomEventListener
+ * @kind function
+ * @param {smpCustomEvents} event - Event type
+ * @param {boolean} bRegister? - Add to global context
+ * @returns {Boolean}
+ */
+function hookCustomEventListener(event, bRegister = true) {
+	if (!Object.hasOwn(callbacks, event)) { console.log('addCustomEventListener: event does not exist -> ' + event); return false; }
+	switch (event) { // NOSONAR
+		case 'on_mouse_lbtn_tplclk': {
+			// Retrieve timeout from Windows setting
+			if (callbacks.on_mouse_lbtn_tplclk.timer.ms === null) {
+				const WshShellCallbacks = typeof WshShell === 'undefined' ? new ActiveXObject('WScript.Shell') : WshShell; // eslint-disable-line no-undef
+				try { callbacks.on_mouse_lbtn_tplclk.timer.ms = Number(WshShellCallbacks.RegRead('HKCU\\Control Panel\\Mouse\\DoubleClickSpeed')); }
+				catch (e) { callbacks.on_mouse_lbtn_tplclk.timer.ms = 480; } // eslint-disable-line no-unused-vars
+				callbacks.on_mouse_lbtn_tplclk.timer.w = utils.GetSystemMetrics(36); // SM_CXDOUBLECLK (36), SM_CYDOUBLECLK (37)
+				callbacks.on_mouse_lbtn_tplclk.timer.h = utils.GetSystemMetrics(37);
+			}
+			addEventListener('on_mouse_lbtn_up', (x, y, mask) => {
+				const timer = callbacks[event].timer;
+				if (!timer.id) {
+					timer.x = x;
+					timer.y = y;
+					timer.count = 1;
+					timer.id = setTimeout(() => {
+						clearTimeout(timer.id);
+						timer.id = null;
+						timer.count = 0;
+						timer.x = -1;
+						timer.y = -1;
+					}, timer.ms);
+				} else if (x >= timer.x && x <= timer.x + timer.w && y >= timer.y && y <= timer.y + timer.h) {
+					timer.count++;
+					if (timer.count < 3) {
+						timer.x = x;
+						timer.y = y;
+						clearTimeout(timer.id);
+						timer.id = setTimeout(() => {
+							clearTimeout(timer.id);
+							timer.id = null;
+							timer.count = 0;
+							timer.x = -1;
+							timer.y = -1;
+						}, timer.ms);
+					} else {
+						parentWindow[event](x, y, mask);
+						clearTimeout(timer.id);
+						timer.id = null;
+						timer.count = 0;
+						timer.x = -1;
+						timer.y = -1;
+					}
+				}
+			}, bRegister);
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
