@@ -1,20 +1,30 @@
 'use strict';
-//13/04/26
+//19/04/26
 
-/* exported dynamicColors */
+/* exported dynamicColors, mostContrastColors */
 
 /* global Chroma:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global RGB:readable, blendColors:readable */
 
 function mostContrastColor(refColor, palette = [RGB(255, 255, 255), RGB(0, 0, 0)]) {
-	return palette.reduce((prev, color) => {
-		if (color === -1) { color = 4294967295; } // 32 to 64 bit color
-		const contrast = Chroma.contrast(color, refColor);
-		return prev.contrast <= contrast
-			? { color, contrast }
-			: prev;
-	}, { contrast: 0 });
+	if (Array.isArray(refColor)) {
+		const options = new Map();
+		palette.forEach((c) => options.set(c, 0));
+		refColor.forEach((o) => {
+			const mcc = mostContrastColor(o.col, palette);
+			options.set(mcc.color, options.get(mcc.color) + o.freq * mcc.contrast);
+		});
+		return Object.fromEntries([...options.entries()].sort((a, b) => b[1] - a[1])[0].map((c, i) => [i === 0 ? 'color' : 'contrast', c]));
+	} else {
+		return palette.reduce((prev, color) => {
+			if (color === -1) { color = 4294967295; } // 32 to 64 bit color
+			const contrast = Chroma.contrast(color, refColor);
+			return prev.contrast <= contrast
+				? { color, contrast }
+				: prev;
+		}, { color: null, contrast: 0 });
+	}
 }
 
 function dynamicColors(colorScheme, bgColor, bAdvanced = false) {

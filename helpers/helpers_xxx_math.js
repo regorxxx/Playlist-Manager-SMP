@@ -134,7 +134,7 @@ function robertSequence(n, d = 1) {
 		case 1: g = 1.618033988749894; break;
 		case 2: g = 1.324717957244746; break;
 		default: {
-			g = 2.0;
+			g = 2;
 			for (let i = 0; i < 10; i++) { g = Math.pow(1 + g, 1 / (d + 1)); }
 		}
 	}

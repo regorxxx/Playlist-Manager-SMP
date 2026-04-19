@@ -690,23 +690,25 @@ function emptyOrVal(e) {
 }
 
 // Fisher-Yates algorithm on multiple arrays at the same time
-Array.shuffle = function () {
-	let last = 0;
-	const argsLength = arguments.length;
-	for (let idx = 0; idx < argsLength; idx++) {
-		if (!Array.isArray(arguments[idx])) { throw new TypeError('Argument is not an array.'); }
-		if (idx === 0) { last = arguments[0].length; }
-		if (last !== arguments[idx].length) { throw new RangeError('Array lengths do not match.'); }
-	}
-	let n;
-	while (last > 0) {
-		n = Math.floor(Math.random() * last--);
-		for (let argsIndex = 0; argsIndex < argsLength; argsIndex++) {
-			arguments[argsIndex].swap(last, n);
+if (!Array.prototype.shuffle) {
+	Array.shuffle = function () {
+		let last = 0;
+		const argsLength = arguments.length;
+		for (let idx = 0; idx < argsLength; idx++) {
+			if (!Array.isArray(arguments[idx])) { throw new TypeError('Argument is not an array.'); }
+			if (idx === 0) { last = arguments[0].length; }
+			if (last !== arguments[idx].length) { throw new RangeError('Array lengths do not match.'); }
 		}
-	}
-	return [...arguments];
-};
+		let n;
+		while (last > 0) {
+			n = Math.floor(Math.random() * last--);
+			for (let argsIndex = 0; argsIndex < argsLength; argsIndex++) {
+				arguments[argsIndex].swap(last, n);
+			}
+		}
+		return [...arguments];
+	};
+}
 
 if (!Array.prototype.joinEvery) {
 	// Join array and split lines every n elements joined
@@ -793,6 +795,27 @@ if (!Array.prototype.radixSort || !!Array.prototype.radixSortInt) {
 				: bitmask.sortInt.call(this, this, start, end);
 		};
 	}
+}
+
+if (!Array.prototype.at) {
+	Array.prototype.at = function (index) { // NOSONAR
+		index = Math.trunc(index);
+		return this[index < 0 ? this.length + index : index];
+	};
+}
+
+if (!Array.prototype.findLast) {
+	Array.prototype.findLast = function (callbackFn, thisArg) { // NOSONAR
+		if (typeof callbackFn !== 'function') { throw new TypeError('predicate must be a function'); }
+		let i = this.length - 1;
+		let val;
+		while (i >= 0) {
+			val = this[i];
+			if (callbackFn.apply(thisArg || void (0), [val, i, this])) { return val; }
+			i -= 1;
+		}
+		return void (0);
+	};
 }
 
 function cartesian(...args) {
