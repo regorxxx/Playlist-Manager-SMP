@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/26
+//19/04/26
 
 /* exported _background */
 
@@ -260,7 +260,7 @@ function _background({
 						effect.SetValue(Effects.Vignette.Color, new Float32Array(color));
 						effect.SetValue(Effects.Vignette.TransitionSize, intensity);
 						effect.SetValue(Effects.Vignette.Strength, 0.8);
-						prevEffect = effect;
+						prevEffect = effect; // NOSONAr
 					}
 					if (this.coverModeOptions.histogram !== 0 && Number.isInteger(this.coverModeOptions.histogram)) {
 						intensity = Math.round(Math.max(Math.min(this.coverModeOptions.histogram, 1024), 0));
@@ -355,7 +355,7 @@ function _background({
 					intensity = Math.max(Math.min(this.coverModeOptions.vignette / 100, 1), 0);
 					applyAsMask(
 						this.coverImg.art.image,
-						(img, gr, w, h) => gr.FillSolidRect(0, 0, w, h, 0xFF000000),
+						(img, gr, w, h) => gr.FillSolidRect(0, 0, w, h, RGBA(...toRGB(this.coverModeOptions.vignetteColor || this.getAvgUiColor()))),
 						(mask, gr, w, h) => {
 							const x = intensity * w / 7;
 							const y = intensity * h / 7;

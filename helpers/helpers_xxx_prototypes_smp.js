@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/03/26
+//19/04/26
 
 /* exported extendGR, checkCompatible */
 
@@ -215,6 +215,12 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 		}).bind(window);
 		gr.ExtendedDone.Repaint = true;
 	}
+}
+
+// Patch GDI objects while using D2D to avoid breaking GDI-only code
+if (window.DrawMode === 1) {
+	if (typeof D2DBitmap !== 'undefined') { Object.defineProperty(GdiBitmap, Symbol.hasInstance, { value(instance) { return instance instanceof D2DBitmap; } }); }
+	if (typeof D2DBitmap !== 'D2DFont') { Object.defineProperty(GdiFont, Symbol.hasInstance, { value(instance) { return instance instanceof D2DFont; } }); }
 }
 
 /*
@@ -447,7 +453,7 @@ if (FbProfiler) {
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			return (point ? this.Time - point.last : null);
 		}).bind(that);
-		that.CheckPointPrint = (function CheckPointStep(name, message, { bAverage= false, bPerInterval= false, bOnVisible= false } = {}) {
+		that.CheckPointPrint = (function CheckPointStep(name, message, { bAverage = false, bPerInterval = false, bOnVisible = false } = {}) {
 			if (bOnVisible && !window.IsVisible) { return null; }
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			if (point) {
@@ -458,7 +464,7 @@ if (FbProfiler) {
 					if (bAverage) {
 						const avg = (point.time / point.calls).toFixed(1);
 						const total = point.time.toFixed(1);
-						const max =  point.times.reduce((max, v) => Math.max(max, v), -Infinity).toFixed(1);
+						const max = point.times.reduce((max, v) => Math.max(max, v), -Infinity).toFixed(1);
 						const fps = (1000 / avg).toFixed(1);
 						console.log(
 							'--------------------------------------------------------------\n' +
