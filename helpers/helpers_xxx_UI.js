@@ -1,5 +1,5 @@
-﻿'use strict';
-//20/04/26
+'use strict';
+//23/04/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -434,19 +434,23 @@ function _gdiFont(name, size, style) {
 }
 
 function _textWidth(value, font) {
-	return _gr ? _gr.CalcTextWidth(value, font) : 0;
+	try { return _gr ? _gr.CalcTextWidth(value, font) : 0; }
+	catch (e) { return 0; } // eslint-disable-line no-unused-vars
 }
 
 function _textHeight(value, font) {
-	return _gr ? _gr.CalcTextHeight(value, font) : 0;
+	try { return _gr ? _gr.CalcTextHeight(value, font) : 0; }
+	catch (e) { return 0; } // eslint-disable-line no-unused-vars
 }
 
 function _textLines(value, font, maxWidth) {
-	return _gr ? (_gr.EstimateLineWrap(value, font, maxWidth).length / 2 - 1) || 1 : 1;
+	try { return _gr ? (_gr.EstimateLineWrap(value, font, maxWidth).length / 2 - 1) || 1 : 1; }
+	catch (e) { return 1; } // eslint-disable-line no-unused-vars
 }
 
 function _textLinesWrap(value, font, maxWidth) {
-	return _gr ? _gr.EstimateLineWrap(value, font, maxWidth) : [];
+	try { return _gr ? _gr.EstimateLineWrap(value, font, maxWidth) : []; }
+	catch (e) { return []; } // eslint-disable-line no-unused-vars
 }
 
 /*
