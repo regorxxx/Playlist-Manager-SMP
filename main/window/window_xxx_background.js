@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/04/26
+//23/04/26
 
 /* exported _background */
 
@@ -381,8 +381,9 @@ function _background({
 	 * @param {GdiGraphics} o.gr - From on_paint
 	 * @param {{x?:number, y?:number, w?:number, h?:number, offsetH?:number}} o.limits - Drawing coordinates
 	 * @param {number} o.rotateFlip - Rotation/flip transformation
-	 * @param {(mask, gr, w, h) => boolean} o.fadeMask - Fading mask for reflections. Use something like (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w, h, 0, 0xFFFFFFFF, 0xFF000000). To maintain D2D compatibility, don't use mask rotation without releasing mask gr first (when doing so, return true)
-	 * @param {{opacity:number}|null} o.fill - Used for panel filling instead of internal settings
+	 * @param {(mask, gr, w, h) => boolean|null} o.fadeMask - [=null] Fading mask for reflections. Use something like (mask, gr, w, h) => gr.FillGradRect(w / 2, 0, w, h, 0, 0xFFFFFFFF, 0xFF000000). To maintain D2D compatibility, don't use mask rotation without releasing mask gr first (when doing so, return true)
+	 * @param {{opacity:number}|null} o.fill - [=null] Used for panel filling instead of internal settings
+	 * @param {CoverModeOptions} o.options - Set cover mode options, by default uses panel settings
 	 * @returns {void}
 	 */
 	this.paintImage = ({
@@ -390,11 +391,13 @@ function _background({
 		limits = { x, y, w, h, offsetH },
 		rotateFlip = RotateFlipType.RotateNoneFlipNone,
 		fadeMask = null,
-		fill = null, alpha = this.coverModeOptions.alpha
+		fill = null,
+		options
 	} = {}) => {
-		if (this.coverImg.art.image && alpha > 0) {
+		options = { ... this.coverModeOptions, ...options };
+		if (this.coverImg.art.image && options.alpha > 0) {
 			// No need for fancy interpolation if image will be already blurred in some way
-			const interpolation = this.coverModeOptions.blur !== 0 && Number.isInteger(this.coverModeOptions.blur) || this.coverModeOptions.bloom !== 0 && Number.isInteger(this.coverModeOptions.bloom)
+			const interpolation = options.blur !== 0 && Number.isInteger(options.blur) || options.bloom !== 0 && Number.isInteger(options.bloom)
 				? InterpolationMode.LowQuality
 				: InterpolationMode.HighQualityBicubic;
 			gr.SetInterpolationMode(interpolation);
@@ -410,16 +413,16 @@ function _background({
 				);
 			}
 			if (fill) {
-				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), this.coverModeOptions.angle, fill.opacity);
+				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), options.angle, fill.opacity);
 			} else {
-				const zoomX = this.coverModeOptions.zoom > 0
-					? Math.max(Math.min(this.coverModeOptions.zoom / 100, 0.99), 0) * img.Width / 2
+				const zoomX = options.zoom > 0
+					? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Width / 2
 					: 0;
-				const zoomY = this.coverModeOptions.zoom > 0
-					? Math.max(Math.min(this.coverModeOptions.zoom / 100, 0.99), 0) * img.Height / 2
+				const zoomY = options.zoom > 0
+					? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Height / 2
 					: 0;
-				if (this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
-					const prop = limits.w / (limits.h - limits.offsetH);
+				if (options.bFill && options.bProportions) {
+					const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
 					const imgProp = img.Width / img.Height;
 					if (imgProp > prop) {
 						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
@@ -427,17 +430,17 @@ function _background({
 							zoomY,
 							(img.Width - zoomX * 2) * prop / imgProp,
 							img.Height - zoomY * 2,
-							this.coverModeOptions.angle, alpha
+							options.angle, options.alpha
 						);
 					} else {
-						switch (this.coverModeOptions.fillCrop) {
+						switch (options.fillCrop) {
 							case 'top': {
 								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
 									zoomX,
 									zoomY / prop,
 									img.Width - zoomX * 2,
 									(img.Width - zoomY * 2) / prop,
-									this.coverModeOptions.angle, alpha
+									options.angle, options.alpha
 								);
 								break;
 							}
@@ -447,7 +450,7 @@ function _background({
 									(img.Height - img.Width / prop) + zoomY / prop,
 									img.Width - zoomX * 2,
 									(img.Width - zoomY * 2) / prop,
-									this.coverModeOptions.angle, alpha
+									options.angle, options.alpha
 								);
 								break;
 							}
@@ -458,15 +461,15 @@ function _background({
 									(img.Height - img.Width / prop) / 2 + zoomY / prop,
 									img.Width - zoomX * 2,
 									(img.Width - zoomY * 2) / prop,
-									this.coverModeOptions.angle, alpha
+									options.angle, options.alpha
 								);
 							}
 						}
 					}
 				} else {
 					let w, h;
-					if (this.coverModeOptions.bProportions) {
-						const prop = limits.w / (limits.h - limits.offsetH);
+					if (options.bProportions) {
+						const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
 						const imgProp = img.Width / img.Height;
 						if (imgProp > prop) {
 							w = limits.w;
@@ -481,7 +484,7 @@ function _background({
 						Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
 						w,
 						h,
-						zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, this.coverModeOptions.angle, alpha
+						zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, options.angle, options.alpha
 					);
 				}
 			}
@@ -544,7 +547,7 @@ function _background({
 		mode
 	}) => {
 		if (!!this.coverImg.art.image && this.showCover) {
-			const prop = this.w / (this.h - this.offsetH);
+			const prop = this.w / ((this.h - this.offsetH) || 1);
 			const imgProp = this.coverImg.art.image.Width / this.coverImg.art.image.Height;
 			switch (mode) {
 				case 'asymmetric': {
@@ -562,7 +565,7 @@ function _background({
 						limits: { x: Math.floor(x + w - offsetX + (prop > 2 * imgProp ? offsetX / 4 : 0)), y: this.y, w: Math.ceil(w), h: this.h, offsetH: this.offsetH },
 						rotateFlip: RotateFlipType.RotateNoneFlipX,
 						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2, h, 0.1, 0xFF000000, 0xFFFFFFFF),
-						alpha: this.coverModeOptions.alpha * 0.4
+						options: { alpha: this.coverModeOptions.alpha * 0.4 }
 					});
 					break;
 				}
@@ -586,14 +589,14 @@ function _background({
 						limits: { x, y: this.y, w, h: this.h, offsetH: this.offsetH },
 						rotateFlip: RotateFlipType.RotateNoneFlipX,
 						fadeMask: (mask, gr, w, h) => gr.FillGradRect(w / 4, 0, w / 2, h, 0.1, 0xFFFFFFFF, 0xFF000000),
-						alpha: this.coverModeOptions.alpha * 0.75
+						options: { alpha: this.coverModeOptions.alpha * 0.75 }
 					});
 					this.paintImage({
 						gr,
 						limits: { x: this.w - x - w, y: this.y, w, h: this.h, offsetH: this.offsetH },
 						rotateFlip: RotateFlipType.RotateNoneFlipX,
 						fadeMask: (mask, gr, w, h) => gr.FillGradRect(0, 0, w / 2 + w / 4, h, 0.1, 0xFF000000, 0xFFFFFFFF),
-						alpha: this.coverModeOptions.alpha * 0.75
+						options: { alpha: this.coverModeOptions.alpha * 0.75 }
 					});
 					this.paintImage({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
 				}
@@ -688,8 +691,8 @@ function _background({
 			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			const offset = 90 - intensity;
 			// To mimic Biography blend, coords must be translated to img source before interpolation
-			const destOffsetW = offset / ((limits.w - limits.x + offset * 2) / img.Width);
-			const destOffsetH = offset / ((limits.h - limits.y + offset * 2) / img.Height);
+			const destOffsetW = offset / ((limits.w - limits.x + offset * 2) / img.Width || 1);
+			const destOffsetH = offset / ((limits.h - limits.y + offset * 2) / img.Height || 1);
 			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, destOffsetW, destOffsetH, img.Width - 2 * destOffsetW, img.Height - 2 * destOffsetH, this.coverModeOptions.angle, alpha);
 			gr.SetInterpolationMode();
 			return true;
@@ -1239,10 +1242,12 @@ function _background({
 	 */
 	this.getAvgColor = (colorScheme) => {
 		if (!colorScheme) { return null; }
+		const len = colorScheme.length;
+		if (!len) { return null; }
 		let rgb = [0, 0, 0];
 		let total = 0;
 		colorScheme.map((c) => {
-			return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : 1 / colorScheme.length };
+			return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : 1 / len };
 		}).forEach((c) => {
 			toRGB(c.col).forEach((v, i) => rgb[i] += v ** 2 * c.freq);
 			total += c.freq;
@@ -1297,16 +1302,19 @@ function _background({
 			{ col: this.getAvgDrawColor(), freq: this.useCover && this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (this.useColors ? 1 : 0) },
 			{ col: this.getAvgUiColor(), freq: this.useCover && !this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (!this.useCover && !this.useColors ? 1 : 0) }
 		].filter((c) => c.col !== null);
-		if (extraColors && extraColors.length) {
-			const extraFreq = extraColors.reduce((prev, curr) => prev + Object.hasOwn(curr, 'freq') ? curr.freq : 0, 0);
-			if (extraFreq === 0) {
-				const freqLeft = Math.max(1 - bgColors.reduce((prev, curr) => prev + curr.freq, 0), 0);
-				extraColors.map((c) => {
-					return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : freqLeft / extraColors.length };
-				}).forEach((c) => bgColors.push(c));
-			} else {
-				const freqLeft = Math.max(1 - extraFreq, 0);
-				bgColors.forEach((c) => c.freq = freqLeft / c.freq);
+		if (extraColors) {
+			const len = extraColors.length;
+			if (len) {
+				const extraFreq = extraColors.reduce((prev, curr) => prev + Object.hasOwn(curr, 'freq') ? curr.freq : 0, 0);
+				if (extraFreq === 0) {
+					const freqLeft = Math.max(1 - bgColors.reduce((prev, curr) => prev + curr.freq, 0), 0);
+					extraColors.map((c) => {
+						return { col: Object.hasOwn(c, 'col') ? c.col : c, freq: Object.hasOwn(c, 'freq') ? c.freq : freqLeft / len };
+					}).forEach((c) => bgColors.push(c));
+				} else {
+					const freqLeft = Math.max(1 - extraFreq, 0);
+					bgColors.forEach((c) => c.freq = c.freq ? freqLeft / c.freq : 0);
+				}
 			}
 		}
 		return this.getAvgColor(bgColors.filter((c) => c.col !== null));
