@@ -192,8 +192,8 @@ function createSelMenu(forcedIndex = -1) {
 						let bDone = false;
 						let input = Input.string('string', pls.sort, 'Enter sort pattern\n(optional)\n\nMust start with \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\'.', window.FullPanelName + ': ' + pls.name, 'SORT BY %GENRE%', [(s) => !s.length || s.match(/SORT.*$/)], false);
 						if (input === null) {
-							if (!Input.isLastEqual) { return; }
-							else { input = Input.lastInput; }
+							if (Input.isLastEqual) { input = Input.lastInput; }
+							else { return; }
 						}
 						if (input.length && !checkSort(input)) { fb.ShowPopupMessage('Sort pattern not valid:\n' + input + '\n\n\nSort patterns must start with \'SORT BY\', \'SORT ASCENDING BY\' or \'SORT DESCENDING BY\' plus a valid TF expression (not empty) For ex.:\nSORT BY ' + globTags.rating + '.', window.FullPanelName); return null; }
 						if (!Input.isLastEqual) {
@@ -312,7 +312,7 @@ function createSelMenu(forcedIndex = -1) {
 				} else {
 					// Updates playlist file with any new changes on the playlist bound within foobar2000
 					menu.newEntry({
-						entryText: !bIsLockPls ? 'Update playlist file' : 'Force playlist file update', func: () => {
+						entryText: bIsLockPls ? 'Force playlist file update' : 'Update playlist file', func: () => {
 							if (_isFile(pls.path)) {
 								const oldNameId = pls.nameId;
 								const oldName = pls.name;
@@ -331,18 +331,18 @@ function createSelMenu(forcedIndex = -1) {
 					});
 					// Updates active playlist name to the name set on the playlist file so they get bound and saves playlist content to the file.
 					menu.newEntry({
-						entryText: !bIsPlsActive ? 'Bind active playlist to this file' : 'Already bound to active playlist', func: () => {
+						entryText: bIsPlsActive ? 'Already bound to active playlist' : 'Bind active playlist to this file', func: () => {
 							if (_isFile(pls.path)) {
 								const oldNameId = plman.GetPlaylistName(plman.ActivePlaylist);
 								const newNameId = pls.nameId;
 								const newName = pls.name;
 								const duplicated = plman.FindPlaylist(newNameId);
-								if (duplicated !== -1) {
-									fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.FullPanelName);
-								} else {
+								if (duplicated === -1) {
 									list.updatePlman(newNameId, oldNameId);
 									const bDone = list.updatePlaylist({ playlistIndex: z });
 									if (!bDone) { list.updatePlman(oldNameId, newNameId); } // Reset change
+								} else {
+									fb.ShowPopupMessage('You already have a playlist loaded on foobar2000 bound to the selected file: ' + newName + '\n' + 'Please delete that playlist first within foobar2000 if you want to bind the file to a new one.' + '\n' + 'If you try to re-bind the file to its already bound playlist this error will appear too. Use \'Update playlist file\' instead.', window.FullPanelName);
 								}
 							} else { fb.ShowPopupMessage('Playlist file does not exist: ' + pls.name + '\nPath: ' + pls.path, window.FullPanelName); }
 						}, flags: !bIsPlsActive && !bIsLockPls && bWritableFormat ? MF_STRING : MF_GRAYED
@@ -359,7 +359,7 @@ function createSelMenu(forcedIndex = -1) {
 					const menuName = menu.newMenu('Set category', void (0), !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 					menu.newEntry({
 						menuName, entryText: 'New category...', func: () => {
-							const input = Input.string('string', pls.category !== null ? pls.category : '', 'Category name (only 1):', window.FullPanelName + ': ' + pls.name, 'My category');
+							const input = Input.string('string', pls.category === null ? '' : pls.category, 'Category name (only 1):', window.FullPanelName + ': ' + pls.name, 'My category');
 							if (input === null) { return; }
 							setCategory(input, list, z);
 						}
@@ -473,7 +473,7 @@ function createSelMenu(forcedIndex = -1) {
 						entryText: 'Export as json file...' + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => {
 							const path = list.exportJson({ idx: z, bAllExt: true });
 							if (_isFile(path)) { _explorer(path); }
-						}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED
+						}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING
 					});
 					if (pls.extension === '.xsp') {
 						// Copy
@@ -484,7 +484,13 @@ function createSelMenu(forcedIndex = -1) {
 						});
 					}
 				}
-			} else if (!list.bLiteMode) {	// Export and Rel. Paths handling
+			} else if (list.bLiteMode) {
+				menu.newEntry({
+					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
+						clonePlaylistFile(list, z, '.ui');
+					}
+				});
+			} else { // Export and Rel. Paths handling
 				if (showMenus['Relative paths handling']) {
 					// Rel Paths
 					menu.newEntry({
@@ -525,12 +531,6 @@ function createSelMenu(forcedIndex = -1) {
 						}, flags: bWritableFormat ? MF_STRING : MF_GRAYED
 					});
 				}
-			} else { // Lite mode
-				menu.newEntry({
-					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
-						clonePlaylistFile(list, z, '.ui');
-					}
-				});
 			}
 			if (list.bLiteMode || showMenus['Export and copy']) {
 				{
@@ -565,7 +565,7 @@ function createSelMenu(forcedIndex = -1) {
 								? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
 								: '(Folder)';
 						const dsp = preset.dsp;
-						let dspName = (dsp !== '...' ? dsp : '(DSP)');
+						let dspName = (dsp === '...' ? '(DSP)' : dsp);
 						const tf = preset.tf;
 						let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 						const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
@@ -634,8 +634,8 @@ function createSelMenu(forcedIndex = -1) {
 					});
 					menu.newEntry({
 						menuName: subMenuName, entryText: 'Import from ListenBrainz' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-							if (!pls.playlist_mbid.length) { return Promise.resolve(false); }
-							if (!await checkLBToken()) { return Promise.resolve(false); }
+							if (!pls.playlist_mbid.length) { return false; }
+							if (!await checkLBToken()) { return false; }
 							let bDone = false;
 							if (_isFile(pls.path)) {
 								const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
@@ -648,7 +648,83 @@ function createSelMenu(forcedIndex = -1) {
 											const notFound = data.notFound;
 											const bXSPF = pls.extension === '.xspf';
 											const backPath = pls.path + '.back';
-											if (!bXSPF) {
+											if (bXSPF) {
+												const playlist = jspf.playlist;
+												const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
+												let totalDuration = 0;
+												playlist.creator = author + ' - Playlist-Manager-SMP';
+												playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
+												playlist.location = playlist.identifier;
+												playlist.meta = [
+													{ uuid: pls.id },
+													{ locked: pls.isLocked },
+													{ category: pls.category },
+													{ tags: (isArrayStrings(pls.tags) ? pls.tags.join(';') : '') },
+													{ trackTags: (isArrayStrings(pls.trackTags) ? pls.tags.join(';') : '') },
+													{ playlistSize: playlist.track.length },
+													{ duration: totalDuration },
+													{ playlist_mbid: pls.playlist_mbid }
+												];
+												// Tracks text
+												handleArr.forEach((handle, i) => {
+													if (!handle) { return; }
+													const relPath = '';
+													const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', 'PATH', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+													const title = tags[0][0][0];
+													const creator = tags[1][0].join(', ');
+													const album = tags[2][0][0];
+													const trackNum = Number(tags[3][0][0]);
+													const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
+													totalDuration += Math.round(Number(tags[4][0][0])); // In s
+													let trackPath = tags[5][0][0].replace(fileRegex, '');
+													const bLink = _isLink(trackPath);
+													trackPath = relPath.length && !_isLink(trackPath)
+														? getRelPath(trackPath, relPathSplit)
+														: trackPath;
+													const location = [(bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/'))];
+													const subSong = Number(tags[6][0][0]);
+													const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
+													const identifier = [tags[7][0][0]];
+													playlist.track[i] = {
+														location,
+														annotation: void (0),
+														title,
+														creator,
+														info: void (0),
+														image: void (0),
+														album,
+														duration,
+														trackNum,
+														identifier,
+														extension: {},
+														link: [],
+														meta
+													};
+												});
+												// Fix JSPF identifiers as array
+												playlist.track.forEach((track) => {
+													if (!Array.isArray(track.identifier)) { track.identifier = [track.identifier]; }
+												});
+												// Update total duration of playlist
+												playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
+												let xspf = XSPF.toXSPF(jspf);
+												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+												xspf = xspf.join('\r\n');
+												if (_isFile(pls.path)) { _renameFile(pls.path, backPath); }
+												bDone = _save(pls.path, xspf, list.bBOM);
+												// Check
+												if (_isFile(pls.path) && bDone) { bDone = (_open(pls.path, utf8) === xspf); }
+												// Restore backup in case something goes wrong
+												if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
+												else if (_isFile(backPath)) { _deleteFile(backPath); }
+												if (bDone && plman.FindPlaylist(pls.nameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter(Boolean)), pls.nameId); }
+												if (bDone) {
+													list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+													list.filter();
+												}
+												clearInterval(delay);
+												return bDone;
+											} else {
 												let bYouTube = false;
 												if (notFound.length && isYouTube) {
 													const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.FullPanelName, popup.question + popup.yes_no);
@@ -725,82 +801,6 @@ function createSelMenu(forcedIndex = -1) {
 													}
 													clearInterval(delay);
 												}
-											} else {
-												const playlist = jspf.playlist;
-												const author = playlist.extension['https://musicbrainz.org/doc/jspf#playlist'].creator;
-												let totalDuration = 0;
-												playlist.creator = author + ' - Playlist-Manager-SMP';
-												playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
-												playlist.location = playlist.identifier;
-												playlist.meta = [
-													{ uuid: pls.id },
-													{ locked: pls.isLocked },
-													{ category: pls.category },
-													{ tags: (isArrayStrings(pls.tags) ? pls.tags.join(';') : '') },
-													{ trackTags: (isArrayStrings(pls.trackTags) ? pls.tags.join(';') : '') },
-													{ playlistSize: playlist.track.length },
-													{ duration: totalDuration },
-													{ playlist_mbid: pls.playlist_mbid }
-												];
-												// Tracks text
-												handleArr.forEach((handle, i) => {
-													if (!handle) { return; }
-													const relPath = '';
-													const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', 'PATH', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
-													const title = tags[0][0][0];
-													const creator = tags[1][0].join(', ');
-													const album = tags[2][0][0];
-													const trackNum = Number(tags[3][0][0]);
-													const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
-													totalDuration += Math.round(Number(tags[4][0][0])); // In s
-													let trackPath = tags[5][0][0].replace(fileRegex, '');
-													const bLink = _isLink(trackPath);
-													trackPath = relPath.length && !_isLink(trackPath)
-														? getRelPath(trackPath, relPathSplit)
-														: trackPath;
-													const location = [(bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/'))];
-													const subSong = Number(tags[6][0][0]);
-													const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
-													const identifier = [tags[7][0][0]];
-													playlist.track[i] = {
-														location,
-														annotation: void (0),
-														title,
-														creator,
-														info: void (0),
-														image: void (0),
-														album,
-														duration,
-														trackNum,
-														identifier,
-														extension: {},
-														link: [],
-														meta
-													};
-												});
-												// Fix JSPF identifiers as array
-												playlist.track.forEach((track) => {
-													if (!Array.isArray(track.identifier)) { track.identifier = [track.identifier]; }
-												});
-												// Update total duration of playlist
-												playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
-												let xspf = XSPF.toXSPF(jspf);
-												const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-												xspf = xspf.join('\r\n');
-												if (_isFile(pls.path)) { _renameFile(pls.path, backPath); }
-												bDone = _save(pls.path, xspf, list.bBOM);
-												// Check
-												if (_isFile(pls.path) && bDone) { bDone = (_open(pls.path, utf8) === xspf); }
-												// Restore backup in case something goes wrong
-												if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + pls.path); _deleteFile(pls.path); _renameFile(backPath, pls.path); }
-												else if (_isFile(backPath)) { _deleteFile(backPath); }
-												if (bDone && plman.FindPlaylist(pls.nameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), pls.nameId); }
-												if (bDone) {
-													list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
-													list.filter();
-												}
-												clearInterval(delay);
-												return bDone;
 											}
 										} else { return bDone; }
 									})
@@ -810,7 +810,7 @@ function createSelMenu(forcedIndex = -1) {
 									});
 							} else {
 								console.log('Playlist Manager: Playlist file not found\n\t ' + pls.path);
-								return Promise.resolve(bDone);
+								return bDone;
 							}
 						}, flags: pls.playlist_mbid.length && bWritableFormat ? (bListenBrainz ? MF_STRING : MF_GRAYED) : MF_GRAYED
 					});
@@ -835,7 +835,7 @@ function createSelMenu(forcedIndex = -1) {
 			if (showMenus['File locks']) {
 				if (!bIsPlsUI) {
 					menu.newEntry({
-						entryText: (!bIsLockPls ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)') + list.getGlobalShortcut('lock file'), func: () => {
+						entryText: (bIsLockPls ? 'Unlock Playlist (writable)' : 'Lock Playlist (read only)') + list.getGlobalShortcut('lock file'), func: () => {
 							switchLock(list, z);
 						}, flags: bIsPlsLockable ? MF_STRING : MF_GRAYED
 					});
@@ -861,7 +861,7 @@ function createSelMenu(forcedIndex = -1) {
 					const bSMPLock = lockName === window.Parent || !lockName;
 					const flags = bSMPLock ? MF_STRING : MF_GRAYED;
 					const subMenuName = menu.newMenu('Edit UI Playlist lock');
-					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED });
+					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (bSMPLock ? '' : '\t' + _p(lockName)), flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
 					lockTypes.forEach((lock) => {
 						menu.newEntry({
@@ -979,7 +979,7 @@ function createSelMenu(forcedIndex = -1) {
 					entryText: 'Open file on explorer', func: () => {
 						if (pls.isAutoPlaylist) { _explorer(list.filename); } // Open AutoPlaylist json file
 						else { _explorer(_isFile(pls.path) ? pls.path : list.playlistsPath); } // Open playlist path
-					}, flags: !bIsPlsUI ? MF_STRING : MF_GRAYED
+					}, flags: bIsPlsUI ? MF_GRAYED : MF_STRING
 				});
 			} else if (bIsPlsUI || list.bLiteMode) {
 				menu.newSeparator();
@@ -1038,7 +1038,7 @@ function createFolderSubMenu(menu, folder, z) {
 		menu.newSeparator(subMenuName);
 		menu.newEntry({ menuName: subMenuName, entryText: 'Folder...', func: () => { list.addFolder(void (0), folder); } });
 		menu.newSeparator(subMenuName);
-		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder }); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
+		!list.bLiteMode && menu.newEntry({ menuName: subMenuName, entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false, toFolder: folder }); }, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING });
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
 			menu.newEntry({
 				menuName: subMenuName,
@@ -1046,7 +1046,7 @@ function createFolderSubMenu(menu, folder, z) {
 					const pls = { name: plman.GetPlaylistName(plman.ActivePlaylist) };
 					plman.ShowAutoPlaylistUI(plman.ActivePlaylist); // Workaround to not being able to access AutoPlaylist data... user must copy/paste
 					list.addAutoPlaylist(pls, true, folder);
-				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+				}, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING
 			});
 		}
 		menu.newEntry({
@@ -1069,7 +1069,7 @@ function createFolderSubMenu(menu, folder, z) {
 					plman.ActivePlaylist = newIdx;
 					list.showCurrPls();
 				}
-			}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+			}, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING
 		});
 	}
 	menu.newSeparator();
@@ -1273,7 +1273,7 @@ function createMulSelMenu(forcedIndexes = []) {
 	const playlists = [];
 	for (let z of indexes) {
 		playlists.push(list.data[z]);
-		if (!playlists.slice(-1)[0]) {
+		if (!playlists.at(-1)) {
 			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.FullPanelName);
 			return menu;
 		}
@@ -1407,7 +1407,7 @@ function createMulSelMenu(forcedIndexes = []) {
 			menu.newEntry({
 				menuName, entryText: 'New category...', func: () => {
 					let category = '';
-					try { category = utils.InputBox(window.ID, 'Category name (only 1):', window.FullPanelName, playlists[0].category !== null ? playlists[0].category : '', true); }
+					try { category = utils.InputBox(window.ID, 'Category name (only 1):', window.FullPanelName, playlists[0].category === null ? '' : playlists[0].category, true); }
 					catch (e) { return; } // eslint-disable-line no-unused-vars
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
@@ -1559,7 +1559,7 @@ function createMulSelMenu(forcedIndexes = []) {
 						? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
 						: '(Folder)';
 				const dsp = preset.dsp;
-				let dspName = (dsp !== '...' ? dsp : '(DSP)');
+				let dspName = (dsp === '...' ? '(DSP)' : dsp);
 				const tf = preset.tf;
 				let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 				const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
@@ -1633,7 +1633,7 @@ function createMulSelMenu(forcedIndexes = []) {
 		// Locks playlist file
 		if (showMenus['File locks']) {
 			menu.newEntry({
-				entryText: !bIsLockPlsEvery ? 'Lock Playlist (read only)' : 'Unlock Playlist (writable)' + list.getGlobalShortcut('lock file'), func: () => {
+				entryText: bIsLockPlsEvery ? 'Unlock Playlist (writable)' + list.getGlobalShortcut('lock file') : 'Lock Playlist (read only)', func: () => {
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
 						if (!isPlsUI(pls) && !isFolder(pls) && isLockPls(pls) === bIsLockPlsEvery) { switchLock(list, z); }
@@ -1665,7 +1665,7 @@ function createMulSelMenu(forcedIndexes = []) {
 				lockName = [...lockName][0] + (lockName.size > 1 ? ' & ...' : '');
 				const flags = bSMPLock ? MF_STRING : MF_GRAYED;
 				const subMenuName = menu.newMenu('Edit UI Playlist lock');
-				menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (!bSMPLock ? '\t' + _p(lockName) : ''), flags: MF_GRAYED });
+				menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (bSMPLock ? '' : '\t' + _p(lockName)), flags: MF_GRAYED });
 				menu.newSeparator(subMenuName);
 				lockTypes.forEach((lock) => {
 					menu.newEntry({
@@ -2037,17 +2037,16 @@ function createListMenu() {
 				let name = opt.plsName || opt.name;
 				if (opt.menu === 'From selection' && opt.query) {
 					const sel = fb.GetFocusItem(true) || fb.GetSelection();
-					if (!sel) { flags = MF_GRAYED; }
-					else {
+					if (sel) {
 						opt.query = queryReplaceWithCurrent(opt.query, sel, void (0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true });
 						name = fb.TitleFormat(name).EvalWithMetadb(sel).cut(50);
-					}
+					} else { flags = MF_GRAYED; }
 					delete opt.expansionBy;
 				}
 				delete opt.menu;
 				menu.newEntry({
 					menuName: subMenuNameTwo,
-					entryText: opt.name, func: !opt.query ? null : () => {
+					entryText: opt.name, func: opt.query ? () => {
 						const rule = list.folderRules.others;
 						const toFolder = rule.length
 							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
@@ -2059,7 +2058,7 @@ function createListMenu() {
 						}
 						const pls = list.addAutoPlaylist({ sort: '', ...opt, name }, false, toFolder);
 						if (pls) { list.loadPlaylistOrShow(list.getPlaylistsIdxByObj([pls]), true); }
-					}, flags
+					} : null, flags
 				});
 			});
 		}
@@ -2084,14 +2083,14 @@ function createListMenu() {
 			menu.newEntry({ entryText: 'New Folder...' + list.getGlobalShortcut('new folder'), func: () => { list.addFolder(); } });
 		}
 		menu.newSeparator();
-		!list.bLiteMode && menu.newEntry({ entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false }); }, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED });
+		!list.bLiteMode && menu.newEntry({ entryText: 'New playlist from active...', func: () => { list.add({ bEmpty: false }); }, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING });
 		if (plman.ActivePlaylist !== -1 && plman.IsAutoPlaylist(plman.ActivePlaylist)) {
 			menu.newEntry({
 				entryText: 'New AutoPlaylist from active ...', func: () => {
 					const pls = { name: plman.GetPlaylistName(plman.ActivePlaylist) };
 					plman.ShowAutoPlaylistUI(plman.ActivePlaylist); // Workaround to not being able to access AutoPlaylist data... user must copy/paste
 					list.addAutoPlaylist(pls, true);
-				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+				}, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING
 			});
 		}
 		menu.newEntry({
@@ -2156,7 +2155,7 @@ function createListMenu() {
 			menu.newEntry({
 				menuName: subMenuName,
 				entryText: 'Import from ListenBrainz...' + (bListenBrainz ? '' : '\t(token not set)'), func: async () => {
-					if (!await checkLBToken()) { return Promise.resolve(false); }
+					if (!await checkLBToken()) { return false; }
 					let bDone = false;
 					let playlist_mbid = Input.string('string', menu.cache.playlist_mbid || '', 'Enter Playlist MBID:', window.FullPanelName, '866b5a46-c474-4fae-8782-0f46240a9507', [(mbid) => isUUID(mbid.replace(lb.regEx, ''))]);
 					if (playlist_mbid === null) { playlist_mbid = Input.isLastEqual ? Input.lastInput : ''; }
@@ -2164,16 +2163,17 @@ function createListMenu() {
 						playlist_mbid = playlist_mbid.replace(lb.regEx, ''); // Allow web link too
 						menu.cache.playlist_mbid = playlist_mbid;
 						const token = bListenBrainz ? lb.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }) : null;
-						if (!token) { return Promise.resolve(false); }
+						if (!token) { return false; }
 						pop.enable(true, 'Importing...', 'Importing tracks from ListenBrainz...\nPanel will be disabled during the process.');
 						lb.importPlaylist({ playlist_mbid }, token)
 							.then((jspf) => {
 								if (jspf) {
 									let bXSPF = false;
-									if (list.playlistsExtension !== '.xspf') {
+									if (list.playlistsExtension === '.xspf') { bXSPF = true; }
+									else {
 										const answer = WshShell.Popup('Save as .xspf format?\n(Items not found on library will be kept)', 0, window.FullPanelName, popup.question + popup.yes_no);
 										if (answer === popup.yes) { bXSPF = true; }
-									} else { bXSPF = true; }
+									}
 									const data = lb.contentResolver(jspf);
 									const handleArr = data.handleArr;
 									const notFound = data.notFound;
@@ -2188,7 +2188,83 @@ function createListMenu() {
 									if (list.bAutoLockTag) { tags.push('bAutoLock'); }
 									if (list.bMultMenuTag) { tags.push('bMultMenu'); }
 									if (list.bAutoCustomTag) { list.autoCustomTag.forEach((tag) => { if (!new Set(tags).has(tag)) { tags.push(tag); } }); }
-									if (!bXSPF) {
+									if (bXSPF) {
+										let totalDuration = 0;
+										playlist.creator = author + ' - Playlist-Manager-SMP';
+										playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
+										playlist.location = playlist.identifier;
+										playlist.meta = [
+											{ uuid: (useUUID ? nextId(useUUID) : '') },
+											{ locked: true },
+											{ category },
+											{ tags: (isArrayStrings(tags) ? tags.join(';') : '') },
+											{ trackTags: '' },
+											{ playlistSize: playlist.track.length },
+											{ duration: totalDuration },
+											{ playlist_mbid }
+										];
+										// Tracks text
+										handleArr.forEach((handle, i) => {
+											if (!handle) { return; }
+											const relPath = '';
+											const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
+											const title = tags[0][0][0];
+											const creator = tags[1][0].join(', ');
+											const album = tags[2][0][0];
+											const trackNum = Number(tags[3][0][0]);
+											const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
+											totalDuration += Math.round(Number(tags[4][0][0])); // In s
+											let trackPath = resolveTrackRelativePath(tags[5][0][0].replace(fileRegex, ''));
+											const bLink = _isLink(trackPath);
+											trackPath = relPath.length && !_isLink(trackPath)
+												? getRelPath(trackPath, relPathSplit)
+												: trackPath;
+											const location = [(bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/'))];
+											const subSong = Number(tags[6][0][0]);
+											const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
+											const identifier = [tags[7][0][0]];
+											playlist.track[i] = {
+												location,
+												annotation: void (0),
+												title,
+												creator,
+												info: void (0),
+												image: void (0),
+												album,
+												duration,
+												trackNum,
+												identifier,
+												extension: {},
+												link: [],
+												meta
+											};
+										});
+										// Fix JSPF identifiers as array
+										playlist.track.forEach((track) => {
+											if (!Array.isArray(track.identifier)) { track.identifier = [track.identifier]; }
+										});
+										// Update total duration of playlist
+										playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
+										const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
+										const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
+										let xspf = XSPF.toXSPF(jspf);
+										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
+										xspf = xspf.join('\r\n');
+										bDone = _save(playlistPath, xspf, list.bBOM);
+										// Check
+										if (_isFile(playlistPath) && bDone) { bDone = (_open(playlistPath, utf8) === xspf); }
+										// Restore backup in case something goes wrong
+										const backPath = playlistPath + '.back';
+										if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
+										else if (_isFile(backPath)) { _deleteFile(backPath); }
+										if (bDone && plman.FindPlaylist(playlistNameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter(Boolean)), playlistNameId); }
+										if (bDone) {
+											list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
+											list.filter();
+										}
+										clearInterval(delay);
+										return bDone;
+									} else {
 										let bYouTube = false;
 										if (notFound.length && isYouTube) {
 											const answer = WshShell.Popup('Some imported tracks have not been found on library (see console).\nDo you want to replace them with YouTube links?\n(Pressing \'No\' will omit not found items)?', 0, window.FullPanelName, popup.question + popup.yes_no);
@@ -2270,82 +2346,6 @@ function createListMenu() {
 											list.enableAutosaveForPls(playlistNameId);
 											return bDone;
 										}
-									} else {
-										let totalDuration = 0;
-										playlist.creator = author + ' - Playlist-Manager-SMP';
-										playlist.info = 'https://listenbrainz.org/user/' + author + '/playlists/';
-										playlist.location = playlist.identifier;
-										playlist.meta = [
-											{ uuid: (useUUID ? nextId(useUUID) : '') },
-											{ locked: true },
-											{ category },
-											{ tags: (isArrayStrings(tags) ? tags.join(';') : '') },
-											{ trackTags: '' },
-											{ playlistSize: playlist.track.length },
-											{ duration: totalDuration },
-											{ playlist_mbid }
-										];
-										// Tracks text
-										handleArr.forEach((handle, i) => {
-											if (!handle) { return; }
-											const relPath = '';
-											const tags = getHandleListTagsV2(new FbMetadbHandleList(handle), ['TITLE', 'ARTIST', 'ALBUM', 'TRACK', 'LENGTH_SECONDS_FP', '_PATH_RAW', 'SUBSONG', 'MUSICBRAINZ_TRACKID']);
-											const title = tags[0][0][0];
-											const creator = tags[1][0].join(', ');
-											const album = tags[2][0][0];
-											const trackNum = Number(tags[3][0][0]);
-											const duration = Math.round(Number(tags[4][0][0] * 1000)); // In ms
-											totalDuration += Math.round(Number(tags[4][0][0])); // In s
-											let trackPath = resolveTrackRelativePath(tags[5][0][0].replace(fileRegex, ''));
-											const bLink = _isLink(trackPath);
-											trackPath = relPath.length && !_isLink(trackPath)
-												? getRelPath(trackPath, relPathSplit)
-												: trackPath;
-											const location = [(bLink ? '' : 'file:///') + encodeURIComponent(trackPath.replace(/\\/g, '/'))];
-											const subSong = Number(tags[6][0][0]);
-											const meta = isSubsongPath(location[0] + ',' + subSong) ? [{ subSong }] : [];
-											const identifier = [tags[7][0][0]];
-											playlist.track[i] = {
-												location,
-												annotation: void (0),
-												title,
-												creator,
-												info: void (0),
-												image: void (0),
-												album,
-												duration,
-												trackNum,
-												identifier,
-												extension: {},
-												link: [],
-												meta
-											};
-										});
-										// Fix JSPF identifiers as array
-										playlist.track.forEach((track) => {
-											if (!Array.isArray(track.identifier)) { track.identifier = [track.identifier]; }
-										});
-										// Update total duration of playlist
-										playlist.meta.find((obj) => { return Object.hasOwn(obj, 'duration'); }).duration = totalDuration;
-										const playlistPath = list.playlistsPath + sanitize(playlist.title) + '.xspf';
-										const playlistNameId = playlist.title + (list.bUseUUID ? nextId(useUUID, false) : '');
-										let xspf = XSPF.toXSPF(jspf);
-										const delay = setInterval(delayAutoUpdate, list.autoUpdateDelayTimer);
-										xspf = xspf.join('\r\n');
-										bDone = _save(playlistPath, xspf, list.bBOM);
-										// Check
-										if (_isFile(playlistPath) && bDone) { bDone = (_open(playlistPath, utf8) === xspf); }
-										// Restore backup in case something goes wrong
-										const backPath = playlistPath + '.back';
-										if (!bDone) { console.log('Playlist Manager: Failed saving playlist\n\t ' + playlistPath); _deleteFile(playlistPath); _renameFile(backPath, playlistPath); }
-										else if (_isFile(backPath)) { _deleteFile(backPath); }
-										if (bDone && plman.FindPlaylist(playlistNameId) !== -1) { sendToPlaylist(new FbMetadbHandleList(handleArr.filter((n) => n)), playlistNameId); }
-										if (bDone) {
-											list.update({ bReuseData: false, bNotPaint: true, currentItemIndex: list.lastIndex });
-											list.filter();
-										}
-										clearInterval(delay);
-										return bDone;
 									}
 								} else { return bDone; }
 							})
@@ -2354,7 +2354,7 @@ function createListMenu() {
 								if (pop.isEnabled()) { pop.disable(true); }
 								return bDone;
 							});
-					} else { return Promise.resolve(true); }
+					} else { return true; }
 				}, flags: bListenBrainz ? MF_STRING : MF_GRAYED
 			});
 			menu.newSeparator(subMenuName);
@@ -2719,7 +2719,7 @@ function createListMenu() {
 		{	// Restore
 			const bBin = _hasRecycleBin(list.playlistsPath.match(/^(.+?:)/g)[0]);
 			const bItems = (list.deletedItems.length + plman.PlaylistRecycler.Count) > 0;
-			const subMenuName = menu.newMenu('Restore' + (!bBin ? ' [missing recycle bin]' : ''), void (0), bItems ? MF_STRING : MF_GRAYED);
+			const subMenuName = menu.newMenu('Restore' + (bBin ? '' : ' [missing recycle bin]'), void (0), bItems ? MF_STRING : MF_GRAYED);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Restore UI-only playlists or files:', flags: MF_GRAYED });
 			if (list.deletedItems.length > 0 && bBin) {
 				menu.newSeparator(subMenuName);
@@ -2801,7 +2801,7 @@ function createListMenu() {
  */
 function createSettingsMenu(parent, parentBackground) {
 	// Constants
-	const z = (parent.index !== -1) ? parent.index : parent.getCurrentItemIndex();
+	const z = (parent.index === -1) ? parent.getCurrentItemIndex() : parent.index;
 	const menu = menuRbtnTop;
 	menu.clear(true); // Reset one every call
 	const bListenBrainz = parent.properties.lBrainzToken[1].length > 0;
@@ -2826,8 +2826,8 @@ function createSettingsMenu(parent, parentBackground) {
 				// Update property to save between reloads
 				parent.properties['playlistsPath'][1] = input;
 				parent.playlistsPath = _resolvePath(input);
-				parent.playlistsPathDirName = parent.playlistsPath.split('\\').filter(Boolean).pop();
-				parent.playlistsPathDisk = parent.playlistsPath.split('\\').filter(Boolean)[0].replace(':', '').toUpperCase();
+				parent.playlistsPathDirName = parent.playlistsPath.split('\\').findLast(Boolean);
+				parent.playlistsPathDisk = parent.playlistsPath.split('\\').find(Boolean).replace(':', '').toUpperCase();
 				// Tracking network drive?
 				if (mappedDrives.includes(parent.playlistsPath.match(/^(.+?:)/g)[0])) {
 					if (!parent.infoPopups.networkDrive) { parent.setInfoPopup('networkDrive'); }
@@ -3717,7 +3717,7 @@ function createSettingsMenu(parent, parentBackground) {
 							? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
 							: '(Folder)';
 					const dsp = preset.dsp;
-					let dspName = (dsp !== '...' ? dsp : '(DSP)');
+					let dspName = (dsp === '...' ? '(DSP)' : dsp);
 					let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 					const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
 					const extensionName = extension.length ? '[' + extension + ']' : '';
@@ -4005,13 +4005,13 @@ function createSettingsMenu(parent, parentBackground) {
 					if (menu.isSeparator(item)) { return menu.newSeparator(subMenuName); }
 					menu.newEntry({
 						menuName: subMenuName, entryText: item, func: () => {
-							if (index !== optionsLength - 1) {
-								if (panel.fonts.size === item) { return; }
-								panel.fonts.size = item;
-							} else {
+							if (index === optionsLength - 1) {
 								const input = Input.number('int positive', panel.fonts.size, 'Input a number:\n(integer number ≥6)', 'Font size', 13, [(n) => n > 0]);
 								if (!input) { return; }
 								panel.fonts.size = input;
+							} else {
+								if (panel.fonts.size === item) { return; }
+								panel.fonts.size = item;
 							}
 							panel.properties['fontSize'][1] = panel.fonts.size;
 							overwriteProperties(panel.properties);
@@ -4024,7 +4024,7 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 				menu.newCheckMenuLast((o, len) => {
 					let idx = o.indexOf(panel.fonts.size);
-					return idx !== -1 ? idx : (len - 1);
+					return idx === -1 ? (len - 1) : idx;
 				}, options);
 				menu.newSeparator(subMenuName);
 				menu.newEntry({
@@ -4057,13 +4057,13 @@ function createSettingsMenu(parent, parentBackground) {
 						if (menu.isSeparator(item)) { return menu.newSeparator(subMenuNameTwo); }
 						menu.newEntry({
 							menuName: subMenuNameTwo, entryText: item, func: () => {
-								if (index !== optionsLength - 1) {
-									if (panel.fonts.size === item) { return; }
-									panel.fonts.scale[entry.key] = item;
-								} else {
+								if (index === optionsLength - 1) {
 									const input = Input.number('real positive', panel.fonts.scale[entry.key], 'Input a number:\n(> 0)\n\nSetting it to 1 will adjust fonts based only on reported DPI.', 'Font scaling', 1, [(n) => n > 0]);
 									if (!input) { return; }
 									panel.fonts.scale[entry.key] = input;
+								} else {
+									if (panel.fonts.size === item) { return; }
+									panel.fonts.scale[entry.key] = item;
 								}
 								panel.properties['fontScale'][1] = JSON.stringify(panel.fonts.scale);
 								overwriteProperties(panel.properties);
@@ -4076,7 +4076,7 @@ function createSettingsMenu(parent, parentBackground) {
 					});
 					menu.newCheckMenuLast((o, len) => {
 						let idx = o.indexOf(panel.fonts.scale[entry.key]);
-						return idx !== -1 ? idx : (len - 1);
+						return idx === -1 ? (len - 1) : idx;
 					}, options);
 				}
 			});
@@ -4085,7 +4085,7 @@ function createSettingsMenu(parent, parentBackground) {
 			const subMenuName = menu.newMenu('Custom colors', menuName);
 			{
 				const subMenuNameTwo = menu.newMenu('List items', subMenuName);
-				const options = ['Standard playlists...', 'AutoPlaylists...', !parent.bLiteMode ? 'Smart playlists...' : null, parent.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
+				const options = ['Standard playlists...', 'AutoPlaylists...', parent.bLiteMode ? null : 'Smart playlists...', parent.bAllPls ? 'UI-only playlists...' : null, 'Locked Playlists...', 'Selection rectangle...', showMenus['Folders'] ? 'Folders...' : null];
 				options.forEach((item, i) => {
 					if (!item) { return; }
 					let key;
@@ -4154,7 +4154,7 @@ function createSettingsMenu(parent, parentBackground) {
 				const optionsLength = options.length;
 				options.forEach((item, i) => {
 					menu.newEntry({
-						menuName: subMenuSecondName, entryText: item + (panel.properties.headerButtonsColor[1] !== -1 ? '\t' + _b(getColorName(panel.colors.headerButtons)) : ''), func: () => {
+						menuName: subMenuSecondName, entryText: item + (panel.properties.headerButtonsColor[1] === -1 ? '' : '\t' + _b(getColorName(panel.colors.headerButtons))), func: () => {
 							panel.colors.headerButtons = i
 								? utils.ColourPicker(window.ID, panel.colors.headerButtons)
 								: -1;
@@ -4352,9 +4352,9 @@ function createSettingsMenu(parent, parentBackground) {
 							// Ensure it's applied with compatible settings
 							parentBackground.changeConfig({
 								bRepaint: false, callbackArgs: { bSaveProperties: true },
-								config: !parentBackground.useCover
-									? { coverMode: parentBackground.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } }
-									: { coverModeOptions: { bProcessColors: true } },
+								config: parentBackground.useCover
+									? { coverModeOptions: { bProcessColors: true } }
+									: { coverMode: parentBackground.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } },
 							});
 							parentBackground.updateImageBg(true);
 							panel.colorsChanged();
@@ -4406,9 +4406,9 @@ function createSettingsMenu(parent, parentBackground) {
 							else if (!parentBackground.useCoverColors) {
 								parentBackground.changeConfig({
 									bRepaint: false, callbackArgs: { bSaveProperties: true },
-									config: !parentBackground.useCover
-										? { coverMode: parentBackground.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } }
-										: { coverModeOptions: { bProcessColors: true } },
+									config: parentBackground.useCover
+										? { coverModeOptions: { bProcessColors: true } }
+										: { coverMode: parentBackground.getDefaultCoverMode(), coverModeOptions: { alpha: 0, bProcessColors: true } },
 								});
 							}
 						}
@@ -4486,7 +4486,7 @@ function createSettingsMenu(parent, parentBackground) {
 			menu.newSeparator(subMenuName);
 			Object.keys(parent.tooltipSettings.show).forEach((key) => {
 				const entryText = 'Show ' + capitalizeAll(key.split('')
-					.reduce((prev, s) => prev + (s !== s.toLowerCase() ? ' ' : '') + s, ''))
+					.reduce((prev, s) => prev + (s === s.toLowerCase() ? '' : ' ') + s, ''))
 					.replace('Mbid', 'MBID');
 				menu.newEntry({
 					menuName: subMenuName, entryText, func: () => {
@@ -4599,7 +4599,7 @@ function createSettingsMenu(parent, parentBackground) {
 							}
 						});
 					});
-					menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.font[i]); return (idx !== -1 ? idx : 0); }, options.length);
+					menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.font[i]); return (idx === -1 ? 0 : idx); }, options.length);
 				}
 				{	// Align
 					const options = ['right', 'left', 'center'];
@@ -4616,7 +4616,7 @@ function createSettingsMenu(parent, parentBackground) {
 							}
 						});
 					});
-					menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.align[i]); return (idx !== -1 ? idx : 0); }, options.length);
+					menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.align[i]); return (idx === -1 ? 0 : idx); }, options.length);
 				}
 				{	// Color
 					const options = ['playlistColor', 'textColor', 'custom'];
@@ -4636,7 +4636,7 @@ function createSettingsMenu(parent, parentBackground) {
 							}
 						});
 					});
-					menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.color[i]); return (idx !== -1 ? idx : (options.length - 1)); }, options.length);
+					menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.color[i]); return (idx === -1 ? (options.length - 1) : idx); }, options.length);
 				}
 				// Width
 				menu.newEntry({
@@ -4704,7 +4704,7 @@ function createSettingsMenu(parent, parentBackground) {
 						}
 					});
 				});
-				menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.line); return idx !== -1 ? idx : 0; }, options.length);
+				menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.line); return idx === -1 ? 0 : idx; }, options.length);
 			}
 			{	// Auto-Width
 				const subMenuNameTwo = menu.newMenu('Auto-Width', subMenuName);
@@ -4721,7 +4721,7 @@ function createSettingsMenu(parent, parentBackground) {
 						}
 					});
 				});
-				menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.autoWidth); return idx !== -1 ? idx : 0; }, options.length);
+				menu.newCheckMenuLast(() => { const idx = options.indexOf(parent.columns.autoWidth); return idx === -1 ? 0 : idx; }, options.length);
 			}
 			{	// Size unis
 				const subMenuNameTwo = menu.newMenu('Size units', subMenuName);
@@ -4970,7 +4970,7 @@ function createSettingsMenu(parent, parentBackground) {
 			});
 			menu.newCheckMenuLast(() => {
 				const idx = options.findIndex((option) => Object.keys(option.settings).every((key) => parent.folders[key] === option.settings[key]));
-				return idx !== -1 ? idx : 2;
+				return idx === -1 ? 2 : idx;
 			}, optionsLength);
 		}
 		{	// Icons
@@ -5005,7 +5005,7 @@ function createSettingsMenu(parent, parentBackground) {
 			});
 			menu.newCheckMenuLast(() => {
 				const idx = options.findIndex((option) => isArrayEqual(Object.values(option.icons), Object.values(parent.folders.icons)));
-				return idx !== -1 ? idx : 3;
+				return idx === -1 ? 3 : idx;
 			}, optionsLength);
 		}
 		{	// Colors
@@ -5046,7 +5046,7 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(parent.lShortcuts[modifier]);
-					return (idx !== -1 ? idx : 0);
+					return (idx === -1 ? 0 : idx);
 				}, actions.length);
 			});
 			menu.newSeparator(subMenuNameL);
@@ -5069,7 +5069,7 @@ function createSettingsMenu(parent, parentBackground) {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameR);
 				actions.forEach((action) => {
-					const flags = !parent.isValidAction(action) ? MF_GRAYED : MF_STRING;
+					const flags = parent.isValidAction(action) ? MF_STRING : MF_GRAYED;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							parent.rShortcuts[modifier] = action;
@@ -5083,7 +5083,7 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(parent.rShortcuts[modifier]);
-					return (idx !== -1 ? idx : 0);
+					return (idx === -1 ? 0 : idx);
 				}, actions.length);
 			});
 			menu.newSeparator(subMenuNameR);
@@ -5105,7 +5105,7 @@ function createSettingsMenu(parent, parentBackground) {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameM);
 				actions.forEach((action) => {
-					const flags = !parent.isValidAction(action) ? MF_GRAYED : MF_STRING;
+					const flags = parent.isValidAction(action) ? MF_STRING : MF_GRAYED;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							parent.mShortcuts[modifier] = action;
@@ -5119,7 +5119,7 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(parent.mShortcuts[modifier]);
-					return (idx !== -1 ? idx : 0);
+					return (idx === -1 ? 0 : idx);
 				}, actions.length);
 			});
 			menu.newSeparator(subMenuNameM);
@@ -5159,7 +5159,7 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(parent.lShortcutsHeader[modifier]);
-					return (idx !== -1 ? idx : 0);
+					return (idx === -1 ? 0 : idx);
 				}, actions.length);
 			});
 			menu.newSeparator(subMenuNameL);
@@ -5182,7 +5182,7 @@ function createSettingsMenu(parent, parentBackground) {
 			modifiers.forEach((modifier) => {
 				const subMenuOption = menu.newMenu(modifier, subMenuNameM);
 				actions.forEach((action) => {
-					const flags = !parent.isValidAction(action) ? MF_GRAYED : MF_STRING;
+					const flags = parent.isValidAction(action) ? MF_STRING : MF_GRAYED;
 					menu.newEntry({
 						menuName: subMenuOption, entryText: action, func: () => {
 							parent.mShortcutsHeader[modifier] = action;
@@ -5196,7 +5196,7 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 				menu.newCheckMenuLast(() => {
 					const idx = actions.indexOf(parent.mShortcutsHeader[modifier]);
-					return (idx !== -1 ? idx : 0);
+					return (idx === -1 ? 0 : idx);
 				}, actions.length);
 			});
 			menu.newSeparator(subMenuNameM);
@@ -5375,7 +5375,7 @@ function createSettingsMenu(parent, parentBackground) {
 		{	// Startup active playlist
 			const nameUI = plman.GetPlaylistName(plman.ActivePlaylist);
 			const idx = parent.dataAll.findIndex((pls) => { return pls.nameId === nameUI; });
-			const name = idx !== -1 ? parent.dataAll[idx].name : nameUI;
+			const name = idx === -1 ? nameUI : parent.dataAll[idx].name;
 
 			const subMenuName = menu.newMenu('Startup active playlist', menuName);
 			menu.newEntry({ menuName: subMenuName, entryText: 'Set active playlist at startup:', flags: MF_GRAYED });
@@ -5386,7 +5386,7 @@ function createSettingsMenu(parent, parentBackground) {
 					parent.properties.activePlsStartup[1] = parent.activePlsStartup;
 					overwriteProperties(parent.properties);
 					window.NotifyOthers(window.ScriptInfo.Name + ': change startup playlist', parent.activePlsStartup);
-				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+				}, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING
 			});
 			menu.newCheckMenuLast(() => (parent.activePlsStartup === name));
 			menu.newSeparator(subMenuName);
@@ -5398,7 +5398,7 @@ function createSettingsMenu(parent, parentBackground) {
 					parent.properties.activePlsStartup[1] = parent.activePlsStartup;
 					overwriteProperties(parent.properties);
 					window.NotifyOthers(window.ScriptInfo.Name + ': change startup playlist', parent.activePlsStartup);
-				}, flags: plman.ActivePlaylist !== -1 ? MF_STRING : MF_GRAYED
+				}, flags: plman.ActivePlaylist === -1 ? MF_GRAYED : MF_STRING
 			});
 			menu.newCheckMenuLast(() => (parent.activePlsStartup.length !== 0 && parent.activePlsStartup !== name));
 		}
@@ -5554,7 +5554,7 @@ function createSettingsMenu(parent, parentBackground) {
 					switch (d.type) { // NOSONAR
 						case 'pls': {
 							for (const pls of d.from) {
-								if (!d.to.find((oldPls) => parent.comparePls(oldPls, pls))) {
+								if (!d.to.some((oldPls) => parent.comparePls(oldPls, pls))) {
 									d.to.push(pls);
 									bDone = true;
 								}
@@ -5786,7 +5786,7 @@ function createSearchMenu() {
 			menu.newSeparator(subMenuTwo);
 			list.searchMethod.dragDropPriority.forEach((method, i) => {
 				menu.newEntry({
-					menuName: subMenuTwo, entryText: (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')) + (!list.searchMethod[method] ? '\t(disabled)' : ''), func: () => {
+					menuName: subMenuTwo, entryText: (i + 1) + '. ' + capitalize(method.replace(/^b/, '').replace(/MetaTracks/, 'track tags')) + (list.searchMethod[method] ? '' : '\t(disabled)'), func: () => {
 						let input = Input.number('int positive', (i + 1), 'Enter position: (between 1 and ' + max + ')', window.FullPanelName, 1, [(n) => n >= 1 && n <= max]);
 						if (input === null) { return; }
 						else { input -= 1; }
@@ -6468,7 +6468,7 @@ function createMenuExport(forcedIndexes = []) {
 	const playlists = [];
 	for (let z of indexes) {
 		playlists.push(list.data[z]);
-		if (!playlists.slice(-1)[0]) {
+		if (!playlists.at(-1)) {
 			fb.ShowPopupMessage('Selected playlist was null when it shouldn\'t.\nPlease report bug with the steps you followed before this popup.\n\nInfo:\nIndexes:' + indexes + '\nPlaylists:' + playlists, window.FullPanelName);
 			return menu;
 		}
@@ -6501,7 +6501,7 @@ function createMenuExport(forcedIndexes = []) {
 				? '(' + path.split('\\')[0] + '\\) ' + path.split('\\').slice(-2, -1)
 				: '(Folder)';
 		const dsp = preset.dsp;
-		let dspName = (dsp !== '...' ? dsp : '(DSP)');
+		let dspName = (dsp === '...' ? '(DSP)' : dsp);
 		const tf = preset.tf;
 		let tfName = Object.hasOwn(preset, 'name') && preset.name.length ? preset.name : preset.tf;
 		const extension = Object.hasOwn(preset, 'extension') && preset.extension.length ? preset.extension : '';
