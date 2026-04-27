@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/04/26
+//27/04/26
 
 /* exported _list */
 
@@ -9,7 +9,7 @@
 /* global background:readable, stats:readable, pop:readable, bottomToolbar:readable scrollBar:readable */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, IDC_HELP:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable, TTDT_AUTOMATIC:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -1803,7 +1803,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			for (let key in this.headerButtons) {
 				const button = this.headerButtons[key];
 				if (this.traceHeaderButton(x, y, button)) {
-					if (!bDragDrop && bMoved) { window.SetCursor(IDC_HAND); }
+					if (!bDragDrop && bMoved) { window.SetCursor(button === this.headerButtons.help ? IDC_HELP : IDC_HAND); }
 					this.tooltip.SetValue(isFunction(button.text) ? button.text(x, y, mask, button) : button.text, true);
 					button.inFocus = true;
 					bButtonTrace = true;
@@ -7724,7 +7724,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			Fuse = require('..\\helpers-external\\fuse\\fuse');
 		}
 		// Set tooltip timer values
-		this.tooltip.SetDelayTime(0, this.properties['iTooltipTimer'][1]); // TTDT_AUTOMATIC
+		this.tooltip.SetDelayTime(TTDT_AUTOMATIC, this.properties['iTooltipTimer'][1]);
 		if (bDone) { overwriteProperties(this.properties); }
 	};
 

@@ -75,6 +75,7 @@
 - UI: ported all background art effect settings to D2D effects. Note bloom will render in a similar way to GDI+ but mute and edge are noticeably different. There is a new setting while using D2D draw mode (see above) to force the GDI+ effect looks, in case D2D draw mode is preferred but also the previous effect looks. In the future, if the list of D2D effects is expanded, enabling that setting will make these new effects unavailable (since they will not have a GDI+ counterpart).
 - UI: added multiple new background art effects and image histogram while using D2D draw mode. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1079362.html#msg1079362).
 - UI: added new art mode 'By priority' which lets you set different art types by priority order to use if one is not available for current track. The submenu will show the list of art types set and the parent menu the actual one used. This feature also allows to specify between default, stub or embedded art (contrary to the other modes). Works like 'Album art' script bundled with JSP3 panel, see [here](https://hydrogenaudio.org/index.php/topic,116509.msg1079405.html#msg1079405).
+- UI: added multiple mouse cursor effects.
 - Help: added custom user shortcuts to quickhelp.
 - Help: added multiple selection actions (if any) to list view shortcuts.
 ### Changed
