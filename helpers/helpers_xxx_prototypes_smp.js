@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/04/26
+//24/04/26
 
 /* exported extendGR, checkCompatible */
 
@@ -15,9 +15,7 @@ if (!Object.hasOwn) {
 		configurable: false,
 		writable: false,
 		value: function (object, property) {
-			if (object === null) {
-				throw new TypeError('Cannot convert undefined or null to object');
-			}
+			if (object === null) { throw new TypeError('Cannot convert undefined or null to object'); }
 			return Object.prototype.hasOwnProperty.call(Object(object), property); // NOSONAR
 		}
 	});

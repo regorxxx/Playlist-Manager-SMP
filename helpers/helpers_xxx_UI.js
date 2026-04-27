@@ -4,7 +4,7 @@
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
-/* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable */
+/* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable, TTDT_INITIAL:readable */
 include('helpers_xxx.js');
 /* global globFonts:readable, globSettings:readable, doOnce:readable, globSettings:readable */
 /* global _isFile:readable */
@@ -295,7 +295,7 @@ function _tt(value, font = globFonts.tooltip.name, fontSize = _scale(globFonts.t
 		if (!globSettings.bTooltip) { return true; }
 		if (utils.CheckFont(this.font.name)) { this.SetFont(this.font.name, this.font.size); } // Workaround for missing fonts
 		this.SetMaxWidth(this.width);
-		this.oldDelay = this.tooltip.GetDelayTime(3); //TTDT_INITIAL
+		this.oldDelay = this.tooltip.GetDelayTime(TTDT_INITIAL);
 		this.tooltip.Text = this.text;
 		if (timerId) { clearTimeout(timerId); }
 		timerId = null;

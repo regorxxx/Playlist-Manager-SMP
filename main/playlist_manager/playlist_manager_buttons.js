@@ -1,10 +1,10 @@
 ﻿'use strict';
-//16/03/26
+//27/04/26
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
 
-/* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable, panel:readable, WshShell:readable, popup:readable, overwriteProperties:readable, FontStyle:readable, SmoothingMode:readable */
+/* global globFonts:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, globSettings:readable, panel:readable, WshShell:readable, popup:readable, overwriteProperties:readable, FontStyle:readable, SmoothingMode:readable, TTDT_INITIAL:readable */
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isFunction:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -329,8 +329,8 @@ function _listButtons(bSetup = false) {
 			// This forces redraw even if buttons have the same text! Updates position but tooltip becomes slower since it sets delay time to initial...
 			else if (old !== this.curBtn && old.description === this.curBtn.description) {
 				this.tooltipButton.Deactivate();
-				this.tooltipButton.SetDelayTime(3, 0); //TTDT_INITIAL
-			} else { this.tooltipButton.SetDelayTime(3, this.tooltipButton.oldDelay); }
+				this.tooltipButton.SetDelayTime(TTDT_INITIAL, 0);
+			} else { this.tooltipButton.SetDelayTime(TTDT_INITIAL, this.tooltipButton.oldDelay); }
 		}
 		old && old.changeState(buttonStates.normal);
 		this.curBtn && this.curBtn.changeState(buttonStates.hover);

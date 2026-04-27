@@ -1,12 +1,12 @@
 ﻿'use strict';
-//02/03/26
+//27/04/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable, scrollBar:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable */
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable, TTDT_AUTOMATIC:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers\\callbacks_xxx.js');
@@ -5228,7 +5228,7 @@ function createSettingsMenu(parent, parentBackground) {
 				parent.iDoubleClickTimer = parent.properties.iDoubleClickTimer[1] = input;
 				if (WshShell.Popup('Update tooltip timer?\n(Dbl. Click timer x2)', 0, window.FullPanelName, popup.question + popup.yes_no) === popup.yes) {
 					parent.properties.iTooltipTimer[1] = input * 2;
-					parent.tooltip.SetDelayTime(0, parent.properties.iTooltipTimer[1]); // TTDT_AUTOMATIC
+					parent.tooltip.SetDelayTime(TTDT_AUTOMATIC, parent.properties.iTooltipTimer[1]);
 				}
 				overwriteProperties(parent.properties);
 			}
