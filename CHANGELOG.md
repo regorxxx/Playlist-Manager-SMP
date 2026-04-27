@@ -91,6 +91,7 @@
 - Shortcuts: some changes to shortcuts display, previously set shortcuts may need to be reassigned in some cases (or defaults restored).
 - Settings: internal changes at properties for future releases. Upgrading from [1.0.0-beta.8](#100-beta8---2026-01-12) will work seamlessly, but previous versions are not supported (settings will be reset).
 - Helpers: support for long paths (>260 chars) in multiple internal file handling functions.
+- Readmes: readmes submenus are now renamed to 'Help' in all instances.
 ### Removed
 - UI: removed multiple old settings related to background colors and art, which are no longer available and replaced by new features. Note old and new UI will not necessarily match after update.
 ### Fixed

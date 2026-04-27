@@ -418,7 +418,7 @@ function createSelMenu(forcedIndex = -1) {
 					[list.tags(0), ...autoTags].forEach((tag, i) => menuTag(tag, i, subMenuName, true));
 					menu.newSeparator(subMenuName);
 					menu.newEntry({
-						menuName: subMenuName, entryText: 'Open readme...', func: () => {
+						menuName: subMenuName, entryText: 'Open help...', func: () => {
 							fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
 						}
 					});
@@ -1490,7 +1490,7 @@ function createMulSelMenu(forcedIndexes = []) {
 			[list.tags(0), ...autoTags].forEach((tag, i) => menuTag(tag, i, subMenuName, true));
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
-				menuName: subMenuName, entryText: 'Open readme...', func: () => {
+				menuName: subMenuName, entryText: 'Open help...', func: () => {
 					fb.ShowPopupMessage(list.autoTagsHelp(), window.PanelName + ': AutoTags');
 				}
 			});
