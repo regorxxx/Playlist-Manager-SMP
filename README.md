@@ -40,22 +40,11 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
 * **Playlist Tags and actions**: automatically applies some actions whenever a playlist is loaded on the panel according to the tags present on it. 
 * **Track Auto-tagging:** add tag values automatically to any track added on playlist.
 * **Tooltips show different playlist info:** Name plus UUID, size (tracks), Category / Tag(s), Track Tag(s), ...
-* **Filters:**
-  * Show All | Only Autoplaylists & Smart Playlists | Only standard Playlists
-  * Show All | Not locked | Only locked
-  * Upladed | Not uploaded to ListenBrainz
-  * By extension
-  * By tag
-  * By category
+* **Filters:** By extension, tag, category, playlist type, etc.
 * **Sorting:**
   * Manually
   * Pinned Playlists (to be used with the other sorting modes)
-  * Name: Az | Za
-  * Size: Ascd. | Desc.
-  * Category: Az | Za
-  * Tags (first one): Az | Za
-  * Creation Date: Ascd. | Desc.
-  * Last Modified Date: Az | Za
+  * By name, size, category, tags, creation date or last modified date.
 * UUIDs: added to the name, so they are separated from non tracked playlist by name when loaded in foobar. Some also allow some level of names duplication.
 * **Category filters:** playlist may be filtered by category (like virtual folders), multiple selection allowed in a menu.
 * **Additional tools for playlists:** check dead items, duplicates, format errors, etc.
