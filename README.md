@@ -6,7 +6,7 @@
 A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monkey Panel](https://theqwertiest.github.io/foo_spider_monkey_panel)/[JSplitter](https://foobar2000.ru/forum/viewtopic.php?t=6378) to save and load (auto)playlists on demand, synchronizing, ... along many more utilities. 
 
 <p align="center">
-<img src="https://github.com/regorxxx/Playlist-Manager-SMP/assets/83307074/cc22416b-734f-4751-b6df-6e10ecc83573">
+<img width="910" height="327" alt="{4D462805-096D-437B-B0D7-39780FA7C317}" src="https://github.com/user-attachments/assets/cc23f718-9d80-43ab-8c25-d75acf93f64f" />
 </p>
 
 ## Features
@@ -127,6 +127,7 @@ A playlist manager for [foobar2000](https://www.foobar2000.org) and [Spider Monk
   * Uses timestamps to uniquely identify files: no collisions with other files within the RecycleBin.
 * A backup of the previous playlist json file is created every time the panel is loaded. Old backups are sent to recycle bin.
 * Properties descriptions change according to things set on the panel, not just the values. i.e. if you change the sort method, then the description reflects the associated states dynamically.
+* D2D support (requires JSplitter).
 * **UI:**
   * UI resizable on the fly.
   * UI elements can be selectivel enabled or disabled.
