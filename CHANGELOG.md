@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.9](#100-beta9---2026-04-28)
 - [1.0.0-beta.8](#100-beta8---2026-01-12)
 - [1.0.0-beta.7](#100-beta7---2025-12-23)
 - [1.0.0-beta.6](#100-beta6---2025-12-12)
@@ -69,6 +70,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.9] - 2026-04-28
 ### Added
 - UI: added background framework found in all my other scripts, which can be tweaked at the background submenu within the toolbar menu (R. Click). By default is set to to not display any color or art, looking like previous releases. Note any setting at 'Colors' submenu is applied on top of the background, so the toolbar color, transparency or panel pseudo-transparency settings may also override background drawing. As a bonus, all features related to dynamic colors and color servers are also included, so it will work in conjunction with all other scripts making use of this feature.
 - UI: added support for D2D draw mode if JS Host supports it (currently only JSplitter 3.7.8+ or 4.1.0+). It must be set per instance, at the properties panel ('Draw mode: GDI (0), D2D (1)'). If JS Host doesn't support it, it will fallback to GDI. Note D2D mode may produce UI artifacts under Wine or not be fully equivalent to GDI, use at your own consideration and only report problems to JS host component devs.
@@ -1589,7 +1596,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.8...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.9...HEAD
+[1.0.0-beta.9]: ../../compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: ../../compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: ../../compare/v1.0.0-beta.6...v1.0.0-beta.7
 [1.0.0-beta.6]: ../../compare/v1.0.0-beta.5...v1.0.0-beta.6
