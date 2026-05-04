@@ -1,7 +1,7 @@
 ﻿'use strict';
-//26/01/26
+//05/05/26
 
-/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator, dateFormatter */
+/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator, dateFormatter, tryActiveX */
 
 // https://github.com/angus-c/just
 /*
@@ -15,13 +15,13 @@ function clone(obj) {
 		result = new Set();
 		for (const value of obj) {
 			// include prototype properties
-			const type = {}.toString.call(value).slice(8, -1);
+			const type = Object.prototype.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result.add(clone(value));
 			} else if (type === 'Date') {
-				result.add(new Date(value.getTime()));
+				result.add(new Date(value));
 			} else if (type === 'RegExp') {
-				result.add(RegExp(value.source, value.flags));
+				result.add(new RegExp(value.source, value.flags));
 			} else {
 				result.add(value);
 			}
@@ -31,13 +31,13 @@ function clone(obj) {
 		result = new Map();
 		for (let [key, value] of obj) {
 			// include prototype properties
-			const type = {}.toString.call(value).slice(8, -1);
+			const type = Object.prototype.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result.set(key, clone(value));
 			} else if (type === 'Date') {
-				result.set(key, new Date(value.getTime()));
+				result.set(key, new Date(value));
 			} else if (type === 'RegExp') {
-				result.set(key, RegExp(value.source, value.flags));
+				result.set(key, new RegExp(value.source, value.flags));
 			} else {
 				result.set(key, value);
 			}
@@ -48,13 +48,13 @@ function clone(obj) {
 		for (const key in obj) {
 			// include prototype properties
 			const value = obj[key];
-			const type = {}.toString.call(value).slice(8, -1);
+			const type = Object.prototype.toString.call(value).slice(8, -1);
 			if (type === 'Array' || type === 'Object') {
 				result[key] = clone(value);
 			} else if (type === 'Date') {
-				result[key] = new Date(value.getTime());
+				result[key] = new Date(value);
 			} else if (type === 'RegExp') {
-				result[key] = RegExp(value.source, value.flags);
+				result[key] = new RegExp(value.source, value.flags);
 			} else {
 				result[key] = value;
 			}
@@ -87,17 +87,18 @@ function addNested(obj, value, ...args) {
 }
 
 /**
- * The `forEachNested` function is a utility function that iterates over all nested properties of an object and executes a callback function on each property.
+ * Iterates over all nested properties of an object and executes a callback function on each property.
  *
  * @function
  * @name forEachNested
  * @kind function
  * @param {object} obj - Object to iterate
  * @param {Function} func - Callback function with args (value, key, obj)
- * @param {{ bIterateAll: boolean }} options - Wether to  also iterate Arrays|Maps|... or apply func on them
+ * @param {object} options
+ * @param {boolean} options.bIterateAll - Wether to  also iterate Arrays|Maps|... or apply func on them
  * @returns {object}
  */
-function forEachNested(obj, func, options = { bIterateAll: false }) {
+function forEachNested(obj, func, { bIterateAll = false } = {}) {
 	const stack = [obj];
 	let value;
 	while (stack.length > 0) {
@@ -105,7 +106,7 @@ function forEachNested(obj, func, options = { bIterateAll: false }) {
 		Object.keys(currentObj).forEach((key) => {
 			value = currentObj[key];
 			if (typeof value === 'object' && value !== null) {
-				const bIterate = options.bIterateAll ? true : {}.toString.call(value).slice(8, -1) === 'Object';
+				const bIterate = bIterateAll ? true : Object.prototype.toString.call(value).slice(8, -1) === 'Object';
 				if (bIterate) { stack.push(value); return; }
 			}
 			func(value, key, currentObj);
@@ -134,14 +135,13 @@ function escapeRegExp(s) {
 }
 
 const reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
-const reHasRegExpChar = RegExp(reRegExpChar.source);
+const reHasRegExpChar = new RegExp(reRegExpChar.source);
 function escapeRegExpV2(s) { // https://github.com/lodash/lodash/blob/4.1.2-npm-packages/lodash.escaperegexp/index.js
 	s = toString(s);
 	return (s && reHasRegExpChar.test(s) ? s.replace(reRegExpChar, '\\$&') : s);
 }
 
-function randomString(len, charSet) {
-	charSet = charSet || 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+function randomString(len, charSet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789') {
 	let randomString = '';
 	for (let i = 0; i < len; i++) {
 		const randomPoz = Math.floor(Math.random() * charSet.length);
@@ -237,6 +237,10 @@ function memoize(fn, parent) {
 	};
 }
 
+function tryActiveX(type) {
+	try { return new ActiveXObject(type); } catch (e) { return null; } // eslint-disable-line no-unused-vars
+}
+
 /*
 	Array and objects manipulation
 */
@@ -306,7 +310,7 @@ function MapReplacer(key, value) {
 }
 
 const strNumCollator = new Intl.Collator(void (0), { sensitivity: 'base', numeric: true });
-const dateFormatter = new Intl.DateTimeFormat('en-gb' , { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
+const dateFormatter = new Intl.DateTimeFormat('en-gb', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: false });
 
 /*
 	Script including
@@ -319,11 +323,11 @@ function require(script) { // Must be path relative to this file, not the parent
 	let newScript = script;
 	['helpers-external', 'main', 'examples', 'buttons'].forEach((folder) => { newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), '..\\' + folder + '\\'); });
 	['helpers'].forEach((folder) => { newScript = newScript.replace(new RegExp('^\\.\\\\' + folder + '\\\\', 'i'), ''); });
-	if (!module.imports[newScript]) {
+	if (module.imports[newScript]) {
+		module.exports = module.imports[newScript];
+	} else {
 		include(newScript + '.js');
 		module.imports[newScript] = module.exports;
-	} else {
-		module.exports = module.imports[newScript];
 	}
 	return module.exports;
 }

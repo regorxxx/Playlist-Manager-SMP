@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/26
+//30/04/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -896,7 +896,6 @@ function createSelMenu(forcedIndex = -1) {
 						{ name: 'sep' },
 						{ name: 'Send to top', idx: 0 },
 						{ name: 'Send to bottom', idx: Infinity },
-
 					];
 					options.forEach((opt) => {
 						if (menu.isSeparator(opt)) { menu.newSeparator(subMenuName); return; }

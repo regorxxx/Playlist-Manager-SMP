@@ -1,24 +1,24 @@
 ﻿'use strict';
-//02/03/26
+//05/05/26
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
 include('helpers_xxx.js');
 /* global soFeatFile:readable, folders:readable, globProfiler:readable */
+/* global tryActiveX:readable */
 
 /*
 	Global tags, queries, RegExp
 */
 
 function getSoFeatures() {
-	const soFeat = { gecko: true, popup: true, clipboard: true, dpi: true, recycle: true, gdiPlus: true, segoe: true, bio: true, x64: true };
-	const WshShell = new ActiveXObject('WScript.Shell');
-	const app = new ActiveXObject('Shell.Application');
-	let doc;
+	const soFeat = { gecko: true, popup: true, clipboard: true, ie: true, dpi: true, recycle: true, gdiPlus: true, segoe: true, bio: true, x64: true };
+	const WshShell = tryActiveX('WScript.Shell');
+	const app = tryActiveX('Shell.Application');
 	globProfiler.Print('getSoFeatures.vars');
 	// Internals
-	try { doc = new ActiveXObject('htmlfile'); } catch (e) { soFeat.gecko = false; } // eslint-disable-line no-unused-vars
-	if (typeof doc !== 'undefined' && doc && soFeat.gecko) {
+	const doc = tryActiveX('htmlfile');
+	if (doc) {
 		let clText = 'test', cache = null;
 		try { cache = doc.parentWindow.clipboardData.getData('Text'); } catch (e) { /* continue */ } // eslint-disable-line no-unused-vars
 		try {
@@ -28,11 +28,15 @@ function getSoFeatures() {
 		// Just in case previous clipboard data is needed
 		if (cache) { try { doc.parentWindow.clipboardData.setData('Text', cache); } catch (e) { /* continue */ } } // eslint-disable-line no-unused-vars
 		if (clText !== 'test') { soFeat.clipboard = false; }
-	} else { soFeat.clipboard = false; }
-	if (!soFeat.gecko || !soFeat.clipboard) { soFeat.popup = false; }
+	} else { soFeat.gecko = false; soFeat.clipboard = false; }
+	const paths = ['Program Files\\Internet Explorer\\ieinstal.exe', 'Program Files (x86)\\Internet Explorer\\ieinstal.exe'];
+	soFeat.ie = Array.from({ length: 26 }, (e, i) => String.fromCodePoint(i + 65) + ':\\').some((d) => {
+		try { return utils.IsDirectory(d) ? paths.some(p => utils.IsFile(d + p)) : false; } catch (e) { return false; } // eslint-disable-line no-unused-vars
+	});
+	if ((!soFeat.gecko || !soFeat.clipboard) && !soFeat.ie) { soFeat.popup = false; }
 	globProfiler.Print('getSoFeatures.internals');
 	// File system
-	if (typeof app !== 'undefined') {
+	if (app) {
 		try { app.NameSpace(10).MoveHere(null); } catch (e) { // eslint-disable-line no-unused-vars
 			try { app.NameSpace(0).ParseName(null).InvokeVerb('delete'); } catch (e) { soFeat.recycle = false; } // eslint-disable-line no-unused-vars
 		}
@@ -40,16 +44,12 @@ function getSoFeatures() {
 	globProfiler.Print('getSoFeatures.fileSystem');
 	// Scripting
 	if (utils.IsFile && utils.IsFile(fb.ProfilePath + 'yttm\\foo_lastfm_img.vbs')) {
-		try {
-			new ActiveXObject('Scripting.FileSystemObject');
-			new ActiveXObject('MSXML2.XMLHTTP');
-			new ActiveXObject('ADODB.Stream');
-		} catch (e) { soFeat.bio = false; } // eslint-disable-line no-unused-vars
+		if (!tryActiveX('Scripting.FileSystemObject') || !tryActiveX('MSXML2.XMLHTTP') || !tryActiveX('ADODB.Stream')) { soFeat.bio = false; }
 	}
 	globProfiler.Print('getSoFeatures.scripting');
 	// UI
 	if (typeof window.DPI !== 'number') {
-		if (typeof WshShell !== 'undefined') {
+		if (WshShell) {
 			try { Number(WshShell.RegRead('HKCU\\Control Panel\\Desktop\\WindowMetrics\\AppliedDPI')); }
 			catch (e) { // eslint-disable-line no-unused-vars
 				try { Number(WshShell.RegRead('HKCU\\Control Panel\\Desktop\\LogPixels')); }
@@ -144,13 +144,13 @@ function initCheckFeatures(soFeat, bPopup = true) {
 	if (!bPrevFile || !data) {
 		bCheck = true;
 	} else {
-		if (!Object.keys(soFeat).length) {
-			for (const key in data) {
-				soFeat[key] = data[key];
-			}
-		} else {
+		if (Object.keys(soFeat).length) {
 			for (const key in soFeat) {
 				if (!data.hasOwnProperty(key) || data[key] !== soFeat[key]) { bCheck = true; break; } // eslint-disable-line no-prototype-builtins
+			}
+		} else {
+			for (const key in data) {
+				soFeat[key] = data[key];
 			}
 		}
 	}

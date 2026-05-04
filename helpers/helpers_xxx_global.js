@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/04/26
+//04/05/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -20,12 +20,12 @@ function loadUserDefFile(def) {
 		const data = _jsonParseFileCheck(def._file, 'User definition', window.FullPanelName, utf8, '', '\n\nFile will be recreated and a backup of the corrupted file will be placed at same folder. Note any personalized setting will be lost.');
 		if (data) {
 			const handleList = new FbMetadbHandleList();
-			const skipCheckKeys = ['_description', '_usage'];
+			const skipCheckKeys = new Set(['_description', '_usage']);
 			if (def._type === 'TF' || def._type === 'Query' || def._type === 'Font' || def._type === 'Setting' || def._type === 'Set' || def._type === 'Array') {
 				for (const key in data) {
 					if (Object.hasOwn(def, key)) {
 						def[key] = data[key];
-						if (!skipCheckKeys.includes(key)) {
+						if (!skipCheckKeys.has(key)) {
 							if (def._type === 'Query' || def._type === 'TF') {
 								if (!def[key] || !def[key].length) {
 									fb.ShowPopupMessage(

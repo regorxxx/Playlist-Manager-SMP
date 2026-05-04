@@ -1,18 +1,19 @@
 ﻿'use strict';
-//06/04/26
+//05/05/26
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
 include('helpers_xxx_basic_js.js');
-/* global tryMethod:readable, dateFormatter:readable */
+/* global tryMethod:readable, dateFormatter:readable, tryActiveX:readable */
 include('helpers_xxx_prototypes.js');
 /* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */ /* window.FullPanelName:readable */
 
 /*
 	Global Variables
 */
+const doc = utils.GetClipboardText && utils.SetClipboardText ? null : tryActiveX('htmlfile');
 const fso = new ActiveXObject('Scripting.FileSystemObject');
 const WshShell = new ActiveXObject('WScript.Shell');
 const app = new ActiveXObject('Shell.Application');
@@ -967,6 +968,14 @@ function UUID() {
 		const v = c === 'x' ? rnd : (rnd & 0x3 | 0x8);
 		return v.toString(16);
 	});
+}
+
+function _getClipboardData() {
+	return (doc ? doc.parentWindow.clipboardData.getData('Text') : utils.GetClipboardText()) || '';
+}
+
+function _setClipboardData(value) {
+	return (doc ? doc.parentWindow.clipboardData.setData('Text', value.toString()) : utils.SetClipboardText(value.toString())) || '';
 }
 
 function lastModified(file, bParse = false) {
