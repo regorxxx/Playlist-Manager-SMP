@@ -1547,7 +1547,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							new Promise((resolve, reject) => {
 								smoothScroll.steps.reduce((prev) => {
 									return prev.then(() => {
-										if (smoothScroll.timer !== timer) { reject(); }
+										if (smoothScroll.timer !== timer) { reject(); } // NOSONAR
 										return Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: 1 })).then(() => Promise.wait(30));
 									});
 								}, Promise.resolve([])).then(() => resolve()).catch(() => void (0));
@@ -1563,7 +1563,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							new Promise((resolve, reject) => {
 								smoothScroll.steps.reduce((prev, curr) => {
 									return prev.then(() => {
-										if (smoothScroll.timer !== timer) { reject(); }
+										if (smoothScroll.timer !== timer) { reject(); } // NOSONAR
 										return Promise.resolve(this.wheel({ s: dir, bPaint, bForce, scrollDelta: curr, bSmooth: false })).then(() => Promise.wait(45));
 									});
 								}, Promise.resolve([])).then(() => resolve()).catch(() => void (0));

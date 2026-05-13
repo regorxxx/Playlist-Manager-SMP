@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/04/26
+//07/05/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3 */
 
@@ -53,7 +53,7 @@ if (bLoadTags) {
 	}
 }
 
-const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
+const logicDic = new Set(['AND', 'OR', 'AND NOT', 'OR NOT']);
 
 /*
 	Query and tag manipulation
@@ -148,10 +148,9 @@ function fallbackTagsQuery(tag, value, logic = 'IS') {
  * @param {{ expansionBy: ('AND'|'OR'|'AND NOT'|'OR NOT'), bToLowerCase: boolean, bDebug: boolean }} options - bToLowerCase: value from #strTF# will use lowercase
  * @returns {?string}
  */
-function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansionBy: 'AND', bToLowerCase: false, bDebug: false }) {
-	options = { expansionBy: 'AND', bToLowerCase: false, bDebug: false, ...options };
+function queryReplaceWithCurrent(query, handle, tags = {}, { expansionBy = 'AND', bToLowerCase = false, bDebug = false } = {}) {
 	const oriQuery = query;
-	if (options.bDebug) { console.log('Initial query:', oriQuery); }
+	if (bDebug) { console.log('Initial query:', oriQuery); }
 	if (!query.length) { console.log('queryReplaceWithCurrent(): query is empty'); return ''; }
 	if (handle && handle instanceof FbMetadbHandleList) {
 		const queryArr = [...new Set(
@@ -160,12 +159,12 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 		return queryArr.length ? queryJoin(queryArr, 'OR') : '';
 	}
 	// global queries without handle required
-	query = queryReplaceWithStatic(query, options);
+	query = queryReplaceWithStatic(query, { bDebug });
 	const bStatic = query !== oriQuery;
 	// With handle
 	if (!handle) {
 		if ((query.match(/#/g) || []).length >= 2) {
-			if (options.bDebug) { console.log(tags); }
+			if (bDebug) { console.log(tags); }
 			if (!tags) { console.log('queryReplaceWithCurrent(): handle is null'); return null; }
 		} else { return query; }
 	}
@@ -175,7 +174,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 			query = query
 				.replaceAll('%ALBUM ARTIST% IS #ALBUM ARTIST#', '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST IS #ALBUM ARTIST#)) OR (ALBUM ARTIST MISSING AND (ARTIST IS #ARTIST#))')
 				.replaceAll('%ALBUM ARTIST% HAS #ALBUM ARTIST#', '(ALBUM ARTIST PRESENT AND (ALBUM ARTIST HAS #ALBUM ARTIST#)) OR (ALBUM ARTIST MISSING AND (ARTIST HAS #ARTIST#))');
-			if (options.bDebug) { console.log('ALBUM ARTISt expansion:', query); }
+			if (bDebug) { console.log('ALBUM ARTISt expansion:', query); }
 		}
 		let idx = [query.indexOf('#')];
 		let curr = idx[idx.length - 1];
@@ -188,13 +187,13 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 		}
 		let count = idx.length;
 		const startIdx = query.lastIndexOf('(', idx[0]);
-		const startQuery = startIdx !== -1
-			? query.slice(0, startIdx + 1)
-			: '';
+		const startQuery = startIdx === -1
+			? ''
+			: query.slice(0, startIdx + 1);
 		const endQuery = query.length > idx[count - 1]
 			? query.slice(idx[count - 1] + 1, query.length)
 			: '';
-		if (options.bDebug) { console.log('startQuery - endQuery:', startQuery, '-', endQuery); }
+		if (bDebug) { console.log('startQuery - endQuery:', startQuery, '-', endQuery); }
 		if (count % 2 === 0) { // Must be on pairs of 2
 			let tempQuery = '';
 			let /** @type {FbTitleFormat|string} */ tfo = '', tfoVal = '';
@@ -202,21 +201,21 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 				tfo = query.slice(idx[i] + 1, idx[i + 1]);
 				const bIsWildcard = tfo.endsWith('*');
 				tfo = tfo.replace(/\*$/, '');
-				if (options.bDebug) { console.log('tfo:', tfo, bIsWildcard); }
+				if (bDebug) { console.log('tfo:', tfo, bIsWildcard); }
 				const tagKey = tfo;
 				const bIsFunc = tfo.includes('$');
 				const prevChar = query[idx[i] - 1];
 				const nextChar = query[idx[i + 1] + 1];
 				const bIsWithinFunc = (prevChar === '(' || prevChar === ',') && (nextChar === ')' || nextChar === ',');
 				const sep = '|‎|';
-				tfo = !bIsFunc
-					? '[$meta_sep(' + tfo + ',\'' + sep + '\')]'
-					: '[' + tfo + ']'; // Split multi-value tags if possible!
+				tfo = bIsFunc
+					? '[' + tfo + ']'
+					: '[$meta_sep(' + tfo + ',\'' + sep + '\')]'; // Split multi-value tags if possible!
 				// Workaround for album artist
-				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
-					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
-					.replace(/\$meta\(ALBUM ARTIST\)/g, '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
-				if (options.bDebug) { console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey); }
+				tfo = tfo.replace(/\$meta_sep\(ALBUM ARTIST,(.*)\)/g, () => '$if2($meta_sep(ALBUM ARTIST,$1), $meta_sep(ARTIST,$1))')
+					.replace(/\$meta\(ALBUM ARTIST,(\d*)\)/g, () => '$if2($meta(ALBUM ARTIST,$1), $meta(ARTIST,$1))')
+					.replace(/\$meta\(ALBUM ARTIST\)/g, () => '$if2($meta(ALBUM ARTIST), $meta(ARTIST))');
+				if (bDebug) { console.log(tfo, ':', bIsFunc, prevChar, nextChar, bIsWithinFunc, tagKey); }
 				tfo = handle || bStatic ? fb.TitleFormat(tfo) : null;
 				tfoVal = bIsFunc || bIsWithinFunc
 					? sanitizeTagTfo(handle
@@ -225,7 +224,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 					: handle
 						? tfo.EvalWithMetadb(handle)
 						: (tags[tagKey.toLowerCase()] || []).join(sep);
-				if (options.bToLowerCase && tfoVal && tfoVal.length) {
+				if (bToLowerCase && tfoVal && tfoVal.length) {
 					tfoVal = tfoVal.toLowerCase();
 				}
 				// If no value is returned but using a static variable with no tags, retry without []
@@ -233,41 +232,41 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
 					tfo = fb.TitleFormat(tfo.Expression.slice(1, -1));
 					tfoVal = sanitizeTagTfo(handle ? tfo.EvalWithMetadb(handle) : tfo.Eval(true));
 				}
-				if (options.bDebug) { console.log('tfoVal:', tfoVal); }
-				if (options.bDebug) { console.log('multi-tag:', tfoVal.includes(sep)); }
+				if (bDebug) { console.log('tfoVal:', tfoVal); }
+				if (bDebug) { console.log('multi-tag:', tfoVal.includes(sep)); }
 				if (tfoVal.includes(sep)) { // Split multi-value tags if possible!
 					const interText = query.slice((i > 0 ? idx[i - 1] + 1 : (startQuery.length ? startQuery.length : 0)), idx[i]);
 					const interQueryStart = interText.startsWith(')')
 						? interText.slice(0, interText.split('').findIndex((s) => s !== ')'))
 						: '';
 					const breakPoint = interText.lastIndexOf(' (');
-					const interQueryEnd = breakPoint !== -1
-						? interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => s !== '('))
-						: '';
+					const interQueryEnd = breakPoint === -1
+						? ''
+						: interText.slice(interQueryStart.length, breakPoint + 2 + interText.slice(breakPoint + 2).split('').findIndex((s) => s !== '('));
 					const interQuery = interQueryStart + interQueryEnd;
-					if (options.bDebug) { console.log('interQuery:', interQueryStart, interQueryEnd); }
+					if (bDebug) { console.log('interQuery:', interQueryStart, interQueryEnd); }
 					const multiQuery = tfoVal.split(sep).map((val) => {
 						return query.slice(
 							(i > 0
 								? idx[i - 1] + interQuery.length + 1
 								: (startQuery.length ? startQuery.length : 0)
 							), idx[i]
-						) + (!bIsWithinFunc ? sanitizeQueryVal(val) : val).trim() + (bIsWildcard ? '*' : '');
+						) + (bIsWithinFunc ? val : sanitizeQueryVal(val)).trim() + (bIsWildcard ? '*' : '');
 					});
-					if (options.bDebug) { console.log('multiQuery:', multiQuery); }
-					tempQuery += interQuery + queryJoin(multiQuery, options.expansionBy);
+					if (bDebug) { console.log('multiQuery:', multiQuery); }
+					tempQuery += interQuery + queryJoin(multiQuery, expansionBy);
 				} else {
-					if (options.bDebug) { console.log(i > 0, startQuery.length, idx[i]); }
+					if (bDebug) { console.log(i > 0, startQuery.length, idx[i]); }
 					tempQuery += query.slice(
 						(i > 0
 							? idx[i - 1] + 1
 							: (startQuery.length ? startQuery.length : 0)
 						), idx[i]
-					) + (!bIsWithinFunc ? sanitizeQueryVal(tfoVal) : tfoVal).trim() + (bIsWildcard ? '*' : '');
+					) + (bIsWithinFunc ? tfoVal : sanitizeQueryVal(tfoVal)).trim() + (bIsWildcard ? '*' : '');
 				}
 			}
 			query = startQuery + tempQuery + endQuery;
-			if (options.bDebug) { console.log(startQuery, '-', tempQuery, '-', endQuery); }
+			if (bDebug) { console.log(startQuery, '-', tempQuery, '-', endQuery); }
 		}
 	}
 	return query;
@@ -284,9 +283,8 @@ function queryReplaceWithCurrent(query, handle, tags = {}, options = { expansion
  * @param {{ bDebug: boolean }} options
  * @returns {?string}
  */
-function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce: true }) {
-	options = { bDebug: false, ...options };
-	if (options.bDebug) { console.log('Initial query:', query); }
+function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } = {}) {
+	if (bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
 	// Dates
 	if (/#((PREV)?(DECADE|YEAR|(M)?MONTH|(D)?DAY|(D)?WEEK)|NOW(_TS)?|TODAY(_TS)?|(YESTER|PREV)DAY(_TS)?)#/i.test(query)) {
@@ -320,18 +318,18 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 	if (/#(VOLUME(DB)?|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
 		query = query.replace(/#VOLUME#/gi, Math.round(100 + fb.Volume));
 		query = query.replace(/#VOLUMEDB#/gi, fb.Volume.toFixed(2) + ' dB');
-		query = query.replace(/#VERSION#/gi, fb.Version);
-		query = query.replace(/#ISPLAYING#/gi, fb.IsPlaying ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
-		query = query.replace(/#ISPAUSED#/gi, fb.IsPaused ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#VERSION#/gi, () => fb.Version);
+		query = query.replace(/#ISPLAYING#/gi, () => fb.IsPlaying ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#ISPAUSED#/gi, () => fb.IsPaused ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLAYSTATE#/gi, fb.IsPlaying ? (fb.IsPaused ? 'Paused' : 'Playing') : 'Stopped');
-		query = query.replace(/#SAC#/gi, fb.StopAfterCurrent ? '1' + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#SAC#/gi, () => fb.StopAfterCurrent ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLSCOUNT#/gi, plman.PlaylistCount);
 	}
 	if (/#(DEVICE(ID)?)#/i.test(query)) {
 		let device;
 		try { device = JSON.parse(fb.GetOutputDevices()).find((d) => d.active); } catch { } // eslint-disable-line no-empty
-		query = query.replace(/#DEVICE#/gi, device ? device.name : '?');
-		query = query.replace(/#DEVICEID#/gi, device ? device.device_id : '?');
+		query = query.replace(/#DEVICE#/gi, () => device ? device.name : '?');
+		query = query.replace(/#DEVICEID#/gi, () => device ? device.device_id : '?');
 	}
 	if (/#(RGMODE)#/i.test(query)) {
 		const rgModes = [
@@ -372,7 +370,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 			'keyboard shortcut list',
 			'media library viewer'
 		];
-		query = query.replace(/#SELTYPE#/gi, selTypes[fb.GetSelectionType()]);
+		query = query.replace(/#SELTYPE#/gi, () => selTypes[fb.GetSelectionType()]);
 	}
 	// Selection (focus)
 	if (/#(SEL(PLAYING|INLIBRARY))#/i.test(query)) {
@@ -381,38 +379,38 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
 			const np = fb.GetNowPlaying();
 			const compare = (a, b) => a.SubSong === b.SubSong && a.RawPath === b.RawPath;
 			return np && compare(sel, np)
-				? '1' + (options.bBooleanForce ? '$not(0)' : '')
+				? '1' + (bBooleanForce ? '$not(0)' : '')
 				: '';
 		})() : '');
-		query = query.replace(/#SELINLIBRARY#/gi, sel ? fb.IsMetadbInMediaLibrary(sel) + (options.bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#SELINLIBRARY#/gi, () => sel ? fb.IsMetadbInMediaLibrary(sel) + (bBooleanForce ? '$not(0)' : '') : '');
 	}
 	// Playlist
 	if (/#(PLS(IDX|NAME|TRACKS|ISAUTOPLS|ISLOCKED|LOCKS|LOCKNAME))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
-		query = query.replace(/#PLSIDX#/gi, pls !== -1 ? pls : '?');
-		query = query.replace(/#PLSNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
-		query = query.replace(/#PLSTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
-		query = query.replace(/#PLSISAUTOPLS#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
-		query = query.replace(/#PLSISLOCKED#/gi, pls !== -1 ? (plman.IsAutoPlaylist(pls) ? 1 + (options.bBooleanForce ? '$not(0)' : '') : '') : '');
-		query = query.replace(/#PLSLOCKS#/gi, pls !== -1 ? plman.GetPlaylistLockedActions(pls).sort(strNumCollator.compare).join(', ') : '');
-		query = query.replace(/#PLSLOCKNAME#/gi, pls !== -1 ? plman.GetPlaylistLockName(pls) || '' : '');
+		query = query.replace(/#PLSIDX#/gi, pls === -1 ? '?' : pls);
+		query = query.replace(/#PLSNAME#/gi, pls === -1 ? '?' : plman.GetPlaylistName(pls));
+		query = query.replace(/#PLSTRACKS#/gi, pls === -1 ? '0' : plman.PlaylistItemCount(pls));
+		query = query.replace(/#PLSISAUTOPLS#/gi, pls === -1 ? '' : (plman.IsAutoPlaylist(pls) ? 1 + (bBooleanForce ? '$not(0)' : '') : ''));
+		query = query.replace(/#PLSISLOCKED#/gi, pls === -1 ? '' : (plman.IsAutoPlaylist(pls) ? 1 + (bBooleanForce ? '$not(0)' : '') : ''));
+		query = query.replace(/#PLSLOCKS#/gi, pls === -1 ? '' : plman.GetPlaylistLockedActions(pls).sort(strNumCollator.compare).join(', '));
+		query = query.replace(/#PLSLOCKNAME#/gi, pls === -1 ? '' : plman.GetPlaylistLockName(pls) || '');
 	}
 	if (/#(PLSPLAY(IDX|NAME|TRACKS))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
-		query = query.replace(/#PLSPLAYIDX#/gi, pls !== -1 ? pls : '?');
-		query = query.replace(/#PLSPLAYNAME#/gi, pls !== -1 ? plman.GetPlaylistName(pls) : '?');
-		query = query.replace(/#PLSPLAYTRACKS#/gi, pls !== -1 ? plman.PlaylistItemCount(pls) : '0');
+		query = query.replace(/#PLSPLAYIDX#/gi, pls === -1 ? '?' : pls);
+		query = query.replace(/#PLSPLAYNAME#/gi, pls === -1 ? '?' : plman.GetPlaylistName(pls));
+		query = query.replace(/#PLSPLAYTRACKS#/gi, pls === -1 ? '0' : plman.PlaylistItemCount(pls));
 	}
 	// Playlist items
 	if (/#(PLS(DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
-		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
+		const plsItems = pls === -1 ? null : plman.GetPlaylistItems(pls);
 		query = query.replace(/#PLSDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#PLSSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
 	if (/#(PLSPLAY(DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
-		const plsItems = pls !== -1 ? plman.GetPlaylistItems(pls) : null;
+		const plsItems = pls === -1 ? null : plman.GetPlaylistItems(pls);
 		query = query.replace(/#PLSPLAYDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#PLSPLAYSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
@@ -437,7 +435,7 @@ function queryReplaceWithStatic(query, options = { bDebug: false, bBooleanForce:
  */
 function queryJoin(queryArray, setLogic = 'AND') {
 	setLogic = (setLogic || '').toUpperCase();
-	if (!logicDic.includes(setLogic)) {
+	if (!logicDic.has(setLogic)) {
 		console.log('queryJoin(): setLogic is wrong.\n\t', setLogic);
 		return;
 	}
@@ -511,22 +509,8 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 	let tagsArrayLength = tagsArray.length;
 	/** @type {string|string[]} */
 	let query = '';
-	if (!Array.isArray(tagsArray[0])) { //no subTagsArrays
-		if (!logicDic.includes(tagsArrayLogic)) {
-			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
-			return;
-		}
-		let i = 0;
-		while (i < tagsArrayLength) {
-			if (i === 0) {
-				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[0]));
-			} else {
-				query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[i]));
-			}
-			i++;
-		}
-	} else {
-		if (!logicDic.includes(tagsArrayLogic) || !logicDic.includes(subTagsArrayLogic)) {
+	if (Array.isArray(tagsArray[0])) {
+		if (!logicDic.has(tagsArrayLogic) || !logicDic.has(subTagsArrayLogic)) {
 			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') or subTagsArrayLogic (' + subTagsArrayLogic + ') are wrong');
 			return;
 		}
@@ -546,6 +530,20 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 				j++;
 			}
 			query += (k > 1 ? ')' : '');
+			i++;
+		}
+	} else { //no subTagsArrays
+		if (!logicDic.has(tagsArrayLogic)) {
+			console.log('queryCombinations(): tagsArrayLogic (' + tagsArrayLogic + ') is wrong');
+			return;
+		}
+		let i = 0;
+		while (i < tagsArrayLength) {
+			if (i === 0) {
+				query += queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[0]));
+			} else {
+				query += ' ' + tagsArrayLogic + ' ' + queryKey + ' ' + match + ' ' + sanitizeQueryVal(/** @type {string} */(tagsArray[i]));
+			}
 			i++;
 		}
 	}
@@ -615,7 +613,7 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 			catch (e) { bPass = false; } // eslint-disable-line no-unused-vars
 		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
 	}
-	if (!bAllowPlaylist && queryNoSort && RegExp(/.*#(PLAYLIST|playlist)# IS.*/).exec(queryNoSort)) { bPass = false; }
+	if (!bAllowPlaylist && queryNoSort && new RegExp(/.*#(PLAYLIST|playlist)# IS.*/).exec(queryNoSort)) { bPass = false; }
 	return bPass;
 }
 
@@ -646,10 +644,10 @@ function checkSort(queryOrSort) {
  */
 function stripSort(query) {
 	let queryNoSort = query;
-	if (RegExp(/ *SORT .*$/).exec(query)) {
-		if (RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
-		else if (RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
-		else if (RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
+	if (new RegExp(/ *SORT .*$/).exec(query)) {
+		if (new RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
+		else if (new RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
+		else if (new RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
 		else { queryNoSort = ''; }
 	}
 	return queryNoSort;
@@ -672,9 +670,9 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	if (sort.length) {
 		sortObj = {};
 		[sortObj.direction, sortObj.tag] = sort.split(/(?: BY )(.*$)/i);
-		if (!sortObj.tag || !sortObj.tag.length || !RegExp(/\w+$/).exec(sortObj.tag) && !RegExp(/"*\$.+\(.*\)"*$|%.+%$/).exec(sortObj.tag)) { sortObj = null; }
-		else if (RegExp(/SORT$|SORT ASCENDING$/).exec(sortObj.direction)) { sortObj.direction = 1; }
-		else if (RegExp(/SORT DESCENDING$/).exec(sortObj.direction)) { sortObj.direction = -1; }
+		if (!sortObj.tag || !sortObj.tag.length || !new RegExp(/\w+$/).exec(sortObj.tag) && !new RegExp(/"*\$.+\(.*\)"*$|%.+%$/).exec(sortObj.tag)) { sortObj = null; }
+		else if (new RegExp(/SORT$|SORT ASCENDING$/).exec(sortObj.direction)) { sortObj.direction = 1; }
+		else if (new RegExp(/SORT DESCENDING$/).exec(sortObj.direction)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
 	}
 	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
@@ -726,14 +724,13 @@ function isQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist 
  * @param {{ bMerged: boolean, bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: false }) {
+function getHandleTags(handle, tagsArray, { bMerged = false, bCached = false } = {}) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handle) { return null; }
-	options = { bMerged: false, bCached: false, ...(options || {}) };
 	const tagArrayLen = tagsArray.length;
 	const toCache = new Set(tagsArray);
 	let outputArray = new Array(tagArrayLen);
-	if (options.bCached) {
+	if (bCached) {
 		const values = tagsVolatileCache.get(handle, tagsArray) || {};
 		for (const key in values) { outputArray[tagsArray.indexOf(key)] = values[key]; toCache.delete(key); }
 	}
@@ -743,7 +740,7 @@ function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: f
 		while (i < tagArrayLen) {
 			let tagValues = [];
 			const tagIdx = handleInfo.MetaFind(tagsArray[i]);
-			const tagNumber = (tagIdx !== -1) ? handleInfo.MetaValueCount(tagIdx) : 0;
+			const tagNumber = (tagIdx === -1) ? 0 : handleInfo.MetaValueCount(tagIdx);
 			if (tagNumber !== 0) {
 				let j = 0;
 				while (j < tagNumber) {
@@ -764,7 +761,7 @@ function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: f
 			);
 		}
 	}
-	if (options.bMerged) { outputArray = outputArray.flat(); }
+	if (bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 
@@ -777,13 +774,12 @@ function getHandleTags(handle, tagsArray, options = { bMerged: false, bCached: f
  * @kind function
  * @param {FbMetadbHandleList} handleList
  * @param {string[]} tagsArray
- * @param {{ bMerged: boolean, bCached: boolean }} options
+ * @param {{ bMerged: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bCached: false }) {
+function getHandleListTags(handleList, tagsArray, { bMerged = false } = {}) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handleList) { return null; }
-	options = { bMerged: false, bCached: false, ...(options || {}) };
 	const tagArray_length = tagsArray.length;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
@@ -792,18 +788,18 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
 	const outputArray_length = handleList.Count;
 	const sep = '|‎|'; // Contains U+200E invisible char
 	while (i < tagArray_length) {
-		const tagStr = !tagsArray[i].includes('$')
-			? !tagsArray[i].includes('%')
-				? '%' + tagsArray[i] + '%'
-				: tagsArray[i]
-			: tagsArray[i];
-		if (options.bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
+		const tagStr = tagsArray[i].includes('$')
+			? tagsArray[i]
+			: tagsArray[i].includes('%')
+				? tagsArray[i]
+				: '%' + tagsArray[i] + '%';
+		if (bMerged) { tagString += _b((i === 0 ? '' : ', ') + tagStr); } // We have all values separated by comma
 		else { tagString += (i === 0 ? '' : sep) + _b(tagStr); } // We have tag values separated by comma and different tags by 'sep'
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
 	outputArray = tfo.EvalWithMetadbs(handleList);
-	if (options.bMerged) { // Just an array of values per track: n x 1
+	if (bMerged) { // Just an array of values per track: n x 1
 		for (let i = 0; i < outputArray_length; i++) {
 			outputArray[i] = outputArray[i].split(', ');
 		}
@@ -830,14 +826,13 @@ function getHandleListTags(handleList, tagsArray, options = { bMerged: false, bC
  * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, splitExclude: set?, iLimit: number, bCached: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', splitExclude: null, iLimit: -1, bCached: false }) {
+function getHandleListTagsV2(handleList, tagsArray, { bMerged = false, bEmptyVal = false, splitBy = ', ', splitExclude = null, iLimit = -1 } = {}) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handleList) { return null; }
-	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
-	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
+	if (iLimit === Infinity) { iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
-	const bSplit = options.splitBy && options.splitBy.length;
-	const bSplitExclude = options.splitExclude && options.splitExclude instanceof Set && options.splitExclude.size;
+	const bSplit = splitBy && splitBy.length;
+	const bSplitExclude = splitExclude && splitExclude instanceof Set && splitExclude.size;
 	let outputTagArrayLength = handleList.Count;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
@@ -849,20 +844,20 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 			continue;
 		}
 		// Tagname or TF expression, with or without empty values
-		let tagString = !tagsArray[i].includes('$')
-			? !tagsArray[i].includes('%')
-				? '%' + tagsArray[i] + '%'
-				: tagsArray[i]
-			: tagsArray[i];
-		tagString = options.bEmptyVal
+		let tagString = tagsArray[i].includes('$')
+			? tagsArray[i]
+			: tagsArray[i].includes('%')
+				? tagsArray[i]
+				: '%' + tagsArray[i] + '%';
+		tagString = bEmptyVal
 			? tagString
 			: '[' + tagString + ']';
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handleList);
 		if (bSplit) {
 			for (let j = 0; j < outputTagArrayLength; j++) {
-				if (!bSplitExclude || !options.splitExclude.has(outputArray[i][j])) {
-					outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
+				if (!bSplitExclude || !splitExclude.has(outputArray[i][j])) {
+					outputArray[i][j] = outputArray[i][j].split(splitBy, iLimit);
 				} else {
 					outputArray[i][j] = [outputArray[i][j]];
 				}
@@ -874,7 +869,7 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
 		}
 		i++;
 	}
-	if (options.bMerged) { outputArray = outputArray.flat(); }
+	if (bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 
@@ -890,10 +885,9 @@ function getHandleListTagsV2(handleList, tagsArray, options = { bMerged: false, 
  * @param {{ bMerged: boolean }} options
  * @returns {string[][]|string[]}
  */
-function getHandleListTagsV3(handleList, tagsArray, options = { bMerged: false }) {
+function getHandleListTagsV3(handleList, tagsArray, { bMerged = false } = {}) {
 	if (!isArrayStrings(tagsArray)) { return null; }
 	if (!handleList) { return null; }
-	options = { bMerged: false, ...(options || {}) };
 	const tagArray_length = tagsArray.length;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
@@ -904,22 +898,22 @@ function getHandleListTagsV3(handleList, tagsArray, options = { bMerged: false }
 	const sepVal = '|‎|'; // Contains U+200E invisible char
 	const sepTag = '|‏|'; // Contains U+200F invisible char
 	while (i < tagArray_length) {
-		const tagStr = !tagsArray[i].includes('$')
-			? !tagsArray[i].includes('%')
-				? '$if2($meta_sep(' + tagsArray[i] + ',\'' + sepVal + '\'),\'' + nullVal + '\')'
-				: tagsArray[i].toUpperCase() === '%ALBUM ARTIST%'
+		const tagStr = tagsArray[i].includes('$')
+			? '$if2(' + tagsArray[i] + ',\'' + nullVal + '\')'
+			: tagsArray[i].includes('%')
+				? tagsArray[i].toUpperCase() === '%ALBUM ARTIST%'
 					? '$if3($meta_sep(ALBUM ARTIST,\'' + sepVal + '\'),$meta_sep(ARTIST,\'' + sepVal + '\'),\'' + nullVal + '\')'
 					: tagsArray[i].toUpperCase() === '%ARTIST%'
 						? '$if3($meta_sep(ARTIST,\'' + sepVal + '\'),$meta_sep(ALBUM ARTIST,\'' + sepVal + '\'),\'' + nullVal + '\')'
 						: '$if3($meta_sep(' + tagsArray[i].replaceAll('%', '') + ',\'' + sepVal + '\'),\'' + nullVal + '\')'
-			: '$if2(' + tagsArray[i] + ',\'' + nullVal + '\')';
-		if (options.bMerged) { tagString += (i === 0 ? '' : sepVal) + tagStr; } // We have all values separated sepVal
+				: '$if2($meta_sep(' + tagsArray[i] + ',\'' + sepVal + '\'),\'' + nullVal + '\')';
+		if (bMerged) { tagString += (i === 0 ? '' : sepVal) + tagStr; } // We have all values separated sepVal
 		else { tagString += (i === 0 ? '' : sepTag) + tagStr; } // We have tag values separated by sepVal and different tags by sepTag
 		i++;
 	}
 	let tfo = fb.TitleFormat(tagString);
 	outputArray = tfo.EvalWithMetadbs(handleList);
-	if (options.bMerged) { // Just an array of values per track: n x 1
+	if (bMerged) { // Just an array of values per track: n x 1
 		for (let i = 0; i < outputArray_length; i++) {
 			outputArray[i] = outputArray[i].split(sepVal).filter((v) => v !== nullVal);
 		}
@@ -944,17 +938,16 @@ function getHandleListTagsV3(handleList, tagsArray, options = { bMerged: false }
  * @kind function
  * @param {FbMetadbHandleList} handleList
  * @param {{name: string, type: string}[]} tagsArray - Type: number|string
- * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, splitExclude: set?, iLimit: number, bCached: boolean }} options
+ * @param {{ bMerged: boolean, bEmptyVal: boolean, splitBy: string, splitExclude: set?, iLimit: number }} options
  * @returns {string[][]|string[]|number[][]|number[]}
  */
-function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: false, bEmptyVal: false, splitBy: ', ', splitExclude: null, iLimit: -1, bCached: false }) {
+function getHandleListTagsTyped(handleList, tagsArray, { bMerged = false, bEmptyVal = false, splitBy = ', ', splitExclude = null, iLimit = -1 } = {}) {
 	if (!isArray(tagsArray)) { return null; }
 	if (!handleList) { return null; }
-	options = { bMerged: false, bEmptyVal: false, splitBy: ', ', iLimit: -1, bCached: false, ...(options || {}) };
-	if (options.iLimit === Infinity) { options.iLimit = -1; } // .split() doesn't behave as expected with Infinity...
+	if (iLimit === Infinity) { iLimit = -1; } // .split() doesn't behave as expected with Infinity...
 	const tagArray_length = tagsArray.length;
-	const bSplit = options.splitBy && options.splitBy.length;
-	const bSplitExclude = options.splitExclude && options.splitExclude instanceof Set && options.splitExclude.size;
+	const bSplit = splitBy && splitBy.length;
+	const bSplitExclude = splitExclude && splitExclude instanceof Set && splitExclude.size;
 	let outputTagArrayLength = handleList.Count;
 	/** @type {any[]|any[][]} */
 	let outputArray = [];
@@ -967,15 +960,15 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 			i++;
 			continue;
 		}
-		let tagString = !tagName.includes('$') // Tagname or TF expression, with or without empty values
-			? (options.bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]')
-			: (options.bEmptyVal ? tagName : '[' + tagName + ']');
+		let tagString = tagName.includes('$') // Tagname or TF expression, with or without empty values
+			? (bEmptyVal ? tagName : '[' + tagName + ']')
+			: (bEmptyVal ? '%' + tagName + '%' : '[%' + tagName + '%]');
 		let tfo = fb.TitleFormat(tagString);
 		outputArray[i] = tfo.EvalWithMetadbs(handleList);
 		if (bSplit) {
 			for (let j = 0; j < outputTagArrayLength; j++) {
-				if (!bSplitExclude || !options.splitExclude.has(outputArray[i][j])) {
-					outputArray[i][j] = outputArray[i][j].split(options.splitBy, options.iLimit);
+				if (!bSplitExclude || !splitExclude.has(outputArray[i][j])) {
+					outputArray[i][j] = outputArray[i][j].split(splitBy, iLimit);
 				} else {
 					outputArray[i][j] = [outputArray[i][j]];
 				}
@@ -1002,7 +995,7 @@ function getHandleListTagsTyped(handleList, tagsArray, options = { bMerged: fals
 		}
 		i++;
 	}
-	if (options.bMerged) { outputArray = outputArray.flat(); }
+	if (bMerged) { outputArray = outputArray.flat(); }
 	return outputArray;
 }
 

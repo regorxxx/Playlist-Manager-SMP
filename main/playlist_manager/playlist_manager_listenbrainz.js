@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/26
+//07/05/26
 
 /* exported ListenBrainz */
 
@@ -97,9 +97,9 @@ ListenBrainz.listensCache = {
 	 */
 	getValidate: function (user) {
 		const data = _jsonParseFileCheck(folders.data + 'listenbrainz_listens.json', 'ListenBrainz listens', 'ListenBrainz', utf8);
-		return typeof user !== 'undefined'
-			? data[this.sanitizeUser(user)]
-			: data;
+		return typeof user === 'undefined'
+			? data
+			: data[this.sanitizeUser(user)];
 	},
 	sanitizeUser: function (user) {
 		return sanitize(user.toLowerCase());
@@ -269,8 +269,8 @@ ListenBrainz.lookupArtistMBIDsByName = function lookupArtistMBIDsByName(names, b
 				return null;
 			},
 			(reject) => {
-				if (!bRetry) { console.log('lookupArtistMBIDsByName: ' + reject.status + ' ' + reject.responseText); }
-				else { console.log('lookupArtistMBIDsByName: Retrying request for ' + name + ' to server on ' + retryMs + ' ms...'); }
+				if (bRetry) { console.log('lookupArtistMBIDsByName: Retrying request for ' + name + ' to server on ' + retryMs + ' ms...'); }
+				else { console.log('lookupArtistMBIDsByName: ' + reject.status + ' ' + reject.responseText); }
 				return bRetry ? Promise.wait(retryMs).then(() => this.lookupArtistMBIDsByName([name], false)) : null;
 			}
 		)
@@ -381,7 +381,7 @@ ListenBrainz.joinArtistMBIDs = function joinArtistMBIDs(artists, MBIDs, token, b
 						const result = results.find((m) => m.mbid === found.artist_mbid);
 						for (let i = 0; i < artistCount; i++) {
 							const artist = artists[i];
-							if (similarity(artist, found.artist_name) >= 0.90) {
+							if (similarity(artist, found.artist_name) >= 0.9) {
 								result.artists.push(artist);
 							}
 						}
@@ -441,13 +441,13 @@ ListenBrainz.consoleError = function consoleError(message = 'Token can not be va
  * @returns {Promise.<string>} Playlist MBID on success
  */
 ListenBrainz.exportPlaylist = async function exportPlaylist(pls, root = '', token = '', bLookupMBIDs = true) { // NOSONAR
-	if (!pls.path && !pls.extension || pls.extension && !pls.nameId || !pls.name) { console.log('exportPlaylist: no valid pls provided'); return Promise.resolve(''); }
+	if (!pls.path && !pls.extension || pls.extension && !pls.nameId || !pls.name) { console.log('exportPlaylist: no valid pls provided'); return ''; }
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
-	const handleList = !bUI
-		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true })
-		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
-	if (!handleList) { console.log('exportPlaylist: no valid pls provided'); return Promise.resolve(''); }
+	const handleList = bUI
+		? getHandlesFromUIPlaylists([pls.nameId], false)
+		: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true }); // Omit not found
+	if (!handleList) { console.log('exportPlaylist: no valid pls provided'); return ''; }
 	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
 	const missingCount = handleList.Count - mbid.length;
 	if (missingCount) { console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks on exporting'); }
@@ -508,9 +508,9 @@ ListenBrainz.syncPlaylist = function syncPlaylist(pls, root = '', token = '', bL
 	};
 	const bUI = pls.extension === '.ui';
 	// Create new playlist and check paths
-	const handleList = !bUI
-		? getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true })
-		: getHandlesFromUIPlaylists([pls.nameId], false); // Omit not found
+	const handleList = bUI
+		? getHandlesFromUIPlaylists([pls.nameId], false)
+		: getHandlesFromPlaylist({ playlistPath: pls.path, relPath: root, bOmitNotFound: true }); // Omit not found
 	return send({
 		method: 'POST',
 		URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/item/delete',
@@ -526,12 +526,12 @@ ListenBrainz.syncPlaylist = function syncPlaylist(pls, root = '', token = '', bL
 						return this.addPlaylist(pls, handleList, void (0), token, bLookupMBIDs);
 					} else {
 						console.log('Playlist URL: ' + this.getPlaylistURL(pls));
-						return Promise.resolve(pls.playlist_mbid);
+						return pls.playlist_mbid;
 					}
 				}
-				return Promise.resolve('');
+				return '';
 			}
-			return Promise.resolve('');
+			return '';
 		},
 		async (reject) => { // If the online playlist was already empty, let's simply add the new tracks
 			console.log('syncPlaylist: ' + reject.status + ' ' + reject.responseText);
@@ -552,7 +552,7 @@ ListenBrainz.syncPlaylist = function syncPlaylist(pls, root = '', token = '', bL
 				}
 				return '';
 			}
-			return Promise.resolve('');
+			return '';
 		}
 	);
 };
@@ -569,8 +569,8 @@ ListenBrainz.syncPlaylist = function syncPlaylist(pls, root = '', token = '', bL
  * @returns {Promise.<string>} Playlist MBID on success
  */
 ListenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, token, bLookupMBIDs = true) {
-	if (!pls.playlist_mbid || !pls.playlist_mbid.length) { console.log('addPlaylist: no playlist_mbid provided'); return Promise.resolve(''); }
-	if (!handleList || !handleList.Count) { console.log('addPlaylist: empty pls provided'); return Promise.resolve(pls.playlist_mbid); }
+	if (!pls.playlist_mbid || !pls.playlist_mbid.length) { console.log('addPlaylist: no playlist_mbid provided'); return ''; }
+	if (!handleList || !handleList.Count) { console.log('addPlaylist: empty pls provided'); return pls.playlist_mbid; }
 	const mbid = (await this.getMBIDs(handleList, token, bLookupMBIDs)).filter(Boolean);
 	const missingCount = handleList.Count - mbid.length;
 	if (missingCount) { console.log('Warning: some tracks don\'t have MUSICBRAINZ_TRACKID tag. Omitted ' + missingCount + ' tracks on exporting'); }
@@ -589,7 +589,7 @@ ListenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, t
 		};
 		return send({
 			method: 'POST',
-			URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/item/add' + (typeof offset !== 'undefined' ? '/' + offset : ''),
+			URL: 'https://api.listenbrainz.org/1/playlist/' + pls.playlist_mbid + '/item/add' + (typeof offset === 'undefined' ? '' : '/' + offset),
 			requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
 			body: JSON.stringify(data)
 		}).then(
@@ -617,7 +617,7 @@ ListenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, t
 		const num = track.length;
 		const max = this.MAX_RECORDINGS_PER_ADD;
 		for (let i = 0; i < num; i += max) { // Adds X tracks per call, server doesn't allow more
-			console.log('addPlaylist: tracks ' + (i + 1) + ' to ' + ((i + max + 1) > num ? num : i + max + 1));
+			console.log('addPlaylist: tracks ' + (i + 1) + ' to ' + (Math.min(i + max + 1, num)));
 			result = await new Promise((res) => {
 				setTimeout(async () => { // Limit rate to 30 ms per call
 					res(await addPlaylistSlice(
@@ -625,9 +625,9 @@ ListenBrainz.addPlaylist = async function addPlaylist(pls, handleList, offset, t
 						track.slice(i, i + max),
 						i === 0
 							? offset
-							: typeof offset !== 'undefined'
-								? offset + i
-								: i
+							: typeof offset === 'undefined'
+								? i
+								: offset + i
 					));
 				}, 30);
 			});
@@ -684,7 +684,7 @@ ListenBrainz.importPlaylist = function importPlaylist(pls, token) { // NOSONAR
  * @returns {Promise.<boolean>}
  */
 ListenBrainz.importUserPlaylists = async function importUserPlaylists(user) {
-	if (!await checkLBToken()) { return Promise.resolve(false); }
+	if (!await checkLBToken()) { return false; }
 	let bDone = false;
 	const jsfpArr = await this.retrieveUserPlaylists(user, this.decryptToken({ lBrainzToken: list.properties.lBrainzToken[1], bEncrypted: list.properties.lBrainzEncrypt[1] }));
 	if (jsfpArr.length) {
@@ -807,8 +807,8 @@ ListenBrainz.sendFeedback = async function sendFeedback(handleList, feedback = '
 				return false;
 			},
 			(reject) => {
-				if (!bRetry) { console.log('ListenBrainz send feedback: ' + reject.status + ' ' + reject.responseText); }
-				else { console.log('ListenBrainz send feedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...'); }
+				if (bRetry) { console.log('ListenBrainz send feedback: Retrying request for ' + recording_mbid + ' to server on ' + retryMs + ' ms...'); }
+				else { console.log('ListenBrainz send feedback: ' + reject.status + ' ' + reject.responseText); }
 				return bRetry ? Promise.wait(retryMs).then(() => this.sendFeedback([recording_mbid], feedback, token, bLookupMBIDs, false)) : false;
 			}
 		)
@@ -877,7 +877,7 @@ ListenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 				if (Object.hasOwn(response, 'feedback')) {
 					// Add null data to holes, so response respects input length
 					const feedback = mbid.map((m) => {
-						return { ...noData, ...{ recording_mbid: m || null } };
+						return { ...noData,  recording_mbid: m || null  };
 					});
 					// And insert data, since it doesn't respect original sorting
 					response.feedback.forEach((responseData) => {
@@ -1686,7 +1686,7 @@ ListenBrainz.contentResolver = function contentResolver(jspf, filter = '', sort 
 	if (notFound.length) { console.log('Some tracks have not been found on library:\n\t ' + notFound.map((row) => row.creator + ' - ' + row.title + ': ' + row.identifier).join('\n\t ')); }
 	fb.queryCache.clear();
 	if (this.bProfile) { profiler.Print(''); }
-	return { handleList: new FbMetadbHandleList(handleArr.filter((n) => n)), handleArr, notFound };
+	return { handleList: new FbMetadbHandleList(handleArr.filter(Boolean)), handleArr, notFound };
 };
 /**
  * Helper to sanitize values for query usage within foobar2000.
@@ -1745,8 +1745,8 @@ ListenBrainz.retrieveUserPlaylistsNames = function retrieveUserPlaylistsNames(us
 						if (!Object.hasOwn(pls, 'extension')) { pls.extension = { [this.jspfExt]: {} }; }
 						else if (!Object.hasOwn(pls.extension, this.jspfExt)) { pls.extension[this.jspfExt] = {}; }
 						const ext = pls.extension[this.jspfExt];
-						if (!ext.last_modified_at) { ext.last_modified_at = new Date(pls.date); }
-						else { ext.last_modified_at = new Date(ext.last_modified_at); }
+						if (ext.last_modified_at) { ext.last_modified_at = new Date(ext.last_modified_at); }
+						else { ext.last_modified_at = new Date(pls.date); }
 					});
 				}
 				return [];
@@ -1966,12 +1966,12 @@ ListenBrainz.isFollowing = function isFollowing(toUser, token) {
  * @returns {Promise.<{listened_at:number, track_metadata: {additional_info: {release_mbid?:string, artist_mbids?:string[],recording_mbid?:string, tags?:string[]}, artist_name:string, track_name:string, release_name?:string}}>}
  */
 ListenBrainz.retrieveListens = async function retrieveListens(user, params = { max_ts: Math.round(Date.now() / 1000) }, token = '', bPaginated = true, bForce = false) {
-	if (!bForce && (!user || !user.length || !token || !token.length)) { console.log('retrieveListens: no user/token provided'); return Promise.resolve(null); }
-	if (bForce && (!user || !user.length)) { console.log('retrieveListens: no user provided'); return Promise.resolve(null); }
+	if (!bForce && (!user || !user.length || !token || !token.length)) { console.log('retrieveListens: no user/token provided'); return null; }
+	if (bForce && (!user || !user.length)) { console.log('retrieveListens: no user provided'); return null; }
 	if (!Object.hasOwn(params, 'count')) { params.count = this.MAX_ITEMS_PER_GET; }
 	params.min_ts = Math.max(params.min_ts || this.LISTEN_MINIMUM_TS, this.LISTEN_MINIMUM_TS);
 	const cache = await this.listensCache.get(user, token, params.max_ts, params.min_ts, bForce);
-	if (cache) { return Promise.resolve(cache); }
+	if (cache) { return cache; }
 	console.log('ListenBrainz: retrieving listening history from ' + new Date(params.max_ts * 1000).toDateString() + ' to ' + new Date(params.min_ts * 1000).toDateString());
 	if (bPaginated) {
 		return paginatedFetch({

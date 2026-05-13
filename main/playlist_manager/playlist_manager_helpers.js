@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/05/26
+//07/05/26
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -1118,10 +1118,10 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	if (!newPath.length) { return { bDone, handleList: null }; }
 	newPath = sanitizePath(
 		newPath
-			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
-			.replace(/#PLAYLIST#/gi, playlistName)
-			.replace(/#EXT#/gi, extension.length ? extension : playlistExt)
-			.replace(/#PLAYLISTEXT#/gi, playlistNameExt)
+			.replace(/#EXPORT#/gi, () => defPath.length ? defPath : list.playlistsPath + 'Export\\')
+			.replace(/#PLAYLIST#/gi, () => playlistName)
+			.replace(/#EXT#/gi, () => extension.length ? extension : playlistExt)
+			.replace(/#PLAYLISTEXT#/gi, () => playlistNameExt)
 	);
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return { bDone, handleList: null }; }
 	// Get tracks
@@ -1233,10 +1233,10 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 	if (!newPath.length) { return { bDone, handleList: null }; }
 	newPath = sanitizePath(
 		newPath
-			.replace(/#EXPORT#/gi, defPath.length ? defPath : list.playlistsPath + 'Export\\')
-			.replace(/#PLAYLIST#/gi, playlistName)
-			.replace(/#EXT#/gi, extension)
-			.replace(/#PLAYLISTEXT#/gi, playlistNameExt)
+			.replace(/#EXPORT#/gi, () => defPath.length ? defPath : list.playlistsPath + 'Export\\')
+			.replace(/#PLAYLIST#/gi, () => playlistName)
+			.replace(/#EXT#/gi, () => extension)
+			.replace(/#PLAYLISTEXT#/gi, () => playlistNameExt)
 	);
 	// Get tracks
 	// For query playlists, use the UI copy if possible
