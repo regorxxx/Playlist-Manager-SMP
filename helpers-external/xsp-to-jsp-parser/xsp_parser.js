@@ -1,5 +1,5 @@
 ﻿'use strict';
-// 07/08/25
+// 07/05/26
 // Copyright Regorxxx 2024
 // Based on works by J. Chris Anderson 2007
 // https://github.com/jchris/xspf-to-jspf-parser
@@ -32,8 +32,10 @@ const XSP = {
 		const playlist = jsp.playlist;
 		let code = [];
 		// XML Header
-		code.push('<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>');
-		code.push('<smartplaylist type="' + jsp.playlist.type + '">');
+		code.push(
+			'<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>',
+			'<smartplaylist type="' + jsp.playlist.type + '">'
+		);
 		// Playlist Header [required]
 		const headerKeys = ['name', 'match'];
 		headerKeys.forEach((key) => {
@@ -109,7 +111,7 @@ const XSP = {
 		for (let y = 0; y < length; y++) {
 			const attr = node.childNodes[y];
 			if (attr.tagName) {
-				if (!filter || (filter && (filter.indexOf(attr.tagName) != -1))) {
+				if (!filter || (filter && (filter.includes(attr.tagName)))) {
 					result[attr.tagName] = this.nodeText(attr);
 				}
 			}
@@ -123,15 +125,15 @@ const XSP = {
 			let value = {};
 			const attr = node.childNodes[y];
 			if (attr.tagName) {
-				if (!filter) {
-					value[attr.tagName] = this.nodeText(attr);
-					result.push(nowrap ? this.nodeText(attr) : value);
-				} else {
+				if (filter) {
 					const pos = filter.indexOf(attr.tagName);
 					if (pos !== -1) {
 						value[attr.tagName] = this.nodeText(attr);
 						result[pos].push(nowrap ? this.nodeText(attr) : value);
 					}
+				} else {
+					value[attr.tagName] = this.nodeText(attr);
+					result.push(nowrap ? this.nodeText(attr) : value);
 				}
 			}
 		}
@@ -187,7 +189,7 @@ const XSP = {
 	getContents: function (xml_node, tag, val = Infinity) {
 		const xml_contents = xml_node.childNodes;
 		const xml_contentsLength = xml_contents.length;
-		const length = xml_contentsLength >= val ? val : xml_contentsLength;
+		const length = Math.min(xml_contentsLength, val);
 		let contents = Array.from({ length: tag.length }, () => new Array(val));
 		let j = Array.from({ length: tag.length }, () => 0);
 		for (let i = 0; i < xml_contentsLength; i++) {
