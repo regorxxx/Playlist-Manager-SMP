@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.04/05/2026
+REM Create packages (zip file) from js files v.07/05/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -567,7 +567,7 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Volume-Seekbar-SMP
 SET id=82303AA1-3DA0-4817-BE47-85A4AE09D5CD
-SET description=https://github.com/regorxxx/Volume-Slider-SMP\r\n\r\nA volume slider\\seekbar for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume (volume bar) or time (seekbar).\r\n• Double L. Click on button to mute\\set full volume (volume bar).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout, buttons, actions and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
+SET description=https://github.com/regorxxx/Volume-Seekbar-SMP\r\n\r\nA volume slider\\seekbar for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume (volume bar) or time (seekbar).\r\n• Double L. Click on button to mute\\set full volume (volume bar).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout, buttons, actions and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" volume_seekbar.js`) DO (SET version=%%F)
 IF "%version%"=="" (
