@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/04/26
+//13/05/26
 
 /* exported extendGR, checkCompatible */
 
@@ -28,7 +28,7 @@ if (!Object.hasOwn) {
 // Add unofficial method for JSsplitter
 // https://reference.codeproject.com/javascript/Reference/Global_Objects/Regexp/toSource
 if (!RegExp.prototype.toSource) {
-	Object.defineProperty(RegExp.prototype, 'toSource', {
+	Object.defineProperty(RegExp.prototype, 'toSource', { // NOSONAR
 		enumerable: false,
 		configurable: false,
 		writable: false,
@@ -533,7 +533,7 @@ if (FbProfiler) {
 if (fb.AddLocationsAsync) {
 	fb.AddLocationsAsyncV2 = function AddLocationsAsyncV2(locations) {
 		return new Promise((resolve) => {
-			const id = fb.AddLocationsAsync([locations]);
+			const id = fb.AddLocationsAsync(locations);
 			if (typeof addEventListener !== 'undefined' && typeof removeEventListenerSelf !== 'undefined') {
 				/* global removeEventListenerSelf:readable */
 				const listener = addEventListener('on_locations_added', (taskId, handleList) => {
@@ -544,7 +544,7 @@ if (fb.AddLocationsAsync) {
 				});
 				setTimeout(() => removeEventListener(listener.event, void (0), listener.id), 60000);
 			} else {
-				throw new TypeError('callbacks_xxx.js is missing');
+				throw new Error('callbacks_xxx.js is missing'); // NOSONAR
 			}
 		});
 	};
@@ -595,6 +595,11 @@ window.Bugs.SetPlaylistLockedActions = ![
 window.Bugs.GetPlaybackQueueContents = ![
 	{ version: '1.7.26.1.11', target: 'smp' },
 	{ version: '3.7.6', target: 'jsplitter' }
+].some((host) => isCompatible(host.version, host.target));
+
+window.Bugs.DoDragDrop = ![
+	{ version: '1.7.26.1.26', target: 'smp' },
+	{ version: '3.7.16', target: 'jsplitter' }
 ].some((host) => isCompatible(host.version, host.target));
 
 /* Helpers */
