@@ -72,6 +72,7 @@
 ## [Unreleased][]
 ### Added
 ### Changed
+- UI: playlist contextual menu now shows a check (at lock submenu) whenever a loaded playlist is locked.
 ### Removed
 ### Fixed
 

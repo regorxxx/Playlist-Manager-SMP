@@ -1,12 +1,12 @@
 ﻿'use strict';
-//30/04/26
+//13/05/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
 /* global list:readable, popup:readable, delayAutoUpdate:readable, bottomToolbar:readable, autoUpdateRepeat:writable, debouncedAutoUpdate:readable, autoBackRepeat:writable, instances:readable, pop:readable, panel:readable, Chroma:readable, stats:readable, cachePlaylist:readable, scrollBar:readable */
 /* global debouncedUpdate:writable */ // eslint-disable-line no-unused-vars
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable, TTDT_AUTOMATIC:readable */
+/* global MF_STRING:readable, MF_GRAYED:readable, MF_MENUBARBREAK:readable, debounce:readable, VK_SHIFT:readable, folders:readable, checkUpdate:readable, globSettings:readable, globRegExp:readable, convertObjectToString:readable, repeatFn:readable, globTags:readable, globQuery:readable, clone:readable, TTDT_AUTOMATIC:readable, MF_CHECKED:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
 /* global exportComponents:readable */
 include('..\\..\\helpers\\callbacks_xxx.js');
@@ -860,7 +860,7 @@ function createSelMenu(forcedIndex = -1) {
 					const lockName = plman.GetPlaylistLockName(index);
 					const bSMPLock = lockName === window.Parent || !lockName;
 					const flags = bSMPLock ? MF_STRING : MF_GRAYED;
-					const subMenuName = menu.newMenu('Edit UI Playlist lock');
+					const subMenuName = menu.newMenu('Edit UI Playlist lock', void(0), currentLocks.size ? MF_CHECKED : MF_STRING);
 					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (bSMPLock ? '' : '\t' + _p(lockName)), flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
 					lockTypes.forEach((lock) => {
