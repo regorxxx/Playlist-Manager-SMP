@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/01/25
+//07/05/26
 
 // https://wiki.xiph.org/XSPF_v1_Notes_and_Errata
 // https://wiki.xiph.org/XSPF_Examples_in_the_wild
@@ -18,8 +18,10 @@ XSPF.toXSPF = function (jspf) {
 	let code = [];
 	// XML Header
 	// Name-spaces are added at the end after retrieving them on all objects
-	code.push('<?xml version=\"1.0\" encoding=\"UTF-8\"?>'); // eslint-disable-line no-useless-escape
-	code.push('<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">'); // eslint-disable-line no-useless-escape
+	code.push(
+		'<?xml version=\"1.0\" encoding=\"UTF-8\"?>', // eslint-disable-line no-useless-escape
+		'<playlist version=\"1\" xmlns=\"http://xspf.org/ns/0/\">' // eslint-disable-line no-useless-escape
+	);
 	// Playlist Header
 	const headerKeys = ['title', 'creator', 'annotation', 'info', 'location', 'identifier', 'image', 'date', 'license', /* Arrays*/ 'link', 'meta', 'extension'];
 	headerKeys.forEach((key) => {
@@ -117,8 +119,10 @@ XSPF.toXSPF = function (jspf) {
 			code.push('		</track>');
 		}
 	}
-	code.push('	</trackList>');
-	code.push('</playlist>');
+	code.push(
+		'	</trackList>',
+		'</playlist>'
+	);
 	// Add found name-spaces
 	if (nameSpacesHeader.size) {
 		let spaceStr = '';

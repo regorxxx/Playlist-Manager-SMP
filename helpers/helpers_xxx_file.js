@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/05/26
+//07/05/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData */
 
@@ -249,7 +249,7 @@ function _resolvePath(path) {
 	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
 	else if (path.startsWith(folders.xxxRootName)) { path = path.replace(folders.xxxRootName, folders.xxx); }
 	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
-	else { path = path.replace(/%fb2k_component_path%\\?/gi, fb.ComponentPath).replace(/%(fb2k_profile_path|profile)%\\?/gi, fb.ProfilePath).replace(/%fb2k_path%\\?/gi, fb.FoobarPath); }
+	else { path = path.replace(/%fb2k_component_path%\\?/gi, () => fb.ComponentPath).replace(/%(fb2k_profile_path|profile)%\\?/gi, () => fb.ProfilePath).replace(/%fb2k_path%\\?/gi, () => fb.FoobarPath); }
 	return path;
 }
 

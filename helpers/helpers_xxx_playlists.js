@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/02/26
+//13/05/26
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS, focusOnItem */
 
@@ -176,8 +176,8 @@ function getLocks(plsNameOrIdx) {
 	const index = typeof plsNameOrIdx === 'string'
 		? plman.FindPlaylist(plsNameOrIdx)
 		: plsNameOrIdx;
-	const types = index !== -1 ? [...new Set(plman.GetPlaylistLockedActions(index))] : [];
-	const name = index !== -1 ? plman.GetPlaylistLockName(index) : '';
+	const types = index === -1 ? [] : [...new Set(plman.GetPlaylistLockedActions(index))];
+	const name = index === -1 ? '' : plman.GetPlaylistLockName(index);
 	const isSMPLock = name === window.Parent || !name;
 	const isLocked = !!types.length;
 	return { isLocked, isSMPLock, name, types, index };
@@ -260,9 +260,9 @@ function getSource(type, arg) {
 		case 'playingPlaylist': return plman.PlayingPlaylist !== -1 && fb.IsPlaying
 			? plman.GetPlaylistItems(plman.PlayingPlaylist)
 			: getSource('activePlaylist');
-		case 'activePlaylist': return plman.ActivePlaylist !== -1
-			? plman.GetPlaylistItems(plman.ActivePlaylist)
-			: new FbMetadbHandleList();
+		case 'activePlaylist': return plman.ActivePlaylist === -1
+			? new FbMetadbHandleList()
+			: plman.GetPlaylistItems(plman.ActivePlaylist);
 		case 'panel':
 		case 'handleList': return arg;
 		case 'library':

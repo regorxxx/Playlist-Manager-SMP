@@ -185,7 +185,7 @@ function roughSizeOfObject(object) {
 		} else if (type === 'object' && value instanceof Promise) { // NOSONAR
 			if (!objectList.has(value)) {
 				objectList.add(value);
-				bytes += value.toString().length * 2; // Obviously no way to check resolve size
+				bytes += value.toString().length * 2; // NOSONAR Obviously no way to check resolve size
 			}
 		} else if (type === 'object' && value.forEachNode && value.forEachLink) {
 			value.forEachNode((node) => {

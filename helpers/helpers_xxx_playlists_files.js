@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/01/26
+//07/05/26
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2, _isTrack */
 
@@ -103,20 +103,24 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 		if (extension === '.m3u8' || extension === '.m3u') {
 			if (bExtendedM3U) {
 				// Header text
-				playlistText.push('#EXTM3U');
-				playlistText.push('#EXTENC:UTF-8');
-				playlistText.push('#PLAYLIST:' + playlistName);
+				playlistText.push(
+					'#EXTM3U',
+					'#EXTENC:UTF-8',
+					'#PLAYLIST:' + playlistName
+				);
 				if (!UUID) { UUID = useUUID ? nextId(useUUID) : ''; } // May be visible or invisible chars!
-				playlistText.push('#UUID:' + UUID);
-				playlistText.push('#LOCKED:' + bLocked);
-				playlistText.push('#CATEGORY:' + category);
-				playlistText.push('#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''));
-				playlistText.push('#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''));
-				playlistText.push('#PLAYLISTSIZE:');
-				playlistText.push('#DURATION:');
-				playlistText.push('#PLAYLIST_MBID:' + playlist_mbid);
-				playlistText.push('#AUTHOR:' + (bHasAuthor ? author + ' - ' : '') + window.ScriptInfo.Name);
-				playlistText.push('#DESCRIPTION:' + description);
+				playlistText.push(
+					'#UUID:' + UUID,
+					'#LOCKED:' + bLocked,
+					'#CATEGORY:' + category,
+					'#TAGS:' + (isArrayStrings(tags) ? tags.join(';') : ''),
+					'#TRACKTAGS:' + (isArray(trackTags) ? JSON.stringify(trackTags) : ''),
+					'#PLAYLISTSIZE:',
+					'#DURATION:',
+					'#PLAYLIST_MBID:' + playlist_mbid,
+					'#AUTHOR:' + (bHasAuthor ? author + ' - ' : '') + window.ScriptInfo.Name,
+					'#DESCRIPTION:' + description
+				);
 			}
 			// Tracks text
 			if (playlistIndex !== -1) { // Tracks from playlist
@@ -153,7 +157,9 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 			// Header text
 			playlistText.push('[playlist]');
 			// Tracks text
-			if (playlistIndex !== -1) { // Tracks from playlist
+			if (playlistIndex === -1) { //  Else empty playlist footer
+				playlistText.push('NumberOfEntries=0');
+			} else { // Tracks from playlist
 				let trackText = [];
 				const trackInfoPre = 'File#placeholder#=';
 				const tfo = fb.TitleFormat((relPath.length ? '' : trackInfoPre) + '%PATH%' + '$crlf()Title#placeholder#=%TITLE%' + '$crlf()Length#placeholder#=%_LENGTH_SECONDS%');
@@ -175,8 +181,6 @@ function savePlaylist({ playlistIndex, handleList, playlistPath, ext = '.m3u8', 
 				}
 				playlistText = playlistText.concat(trackText);
 				playlistText.push('NumberOfEntries=' + itemsCount); // Add number of tracks to size footer
-			} else { //  Else empty playlist footer
-				playlistText.push('NumberOfEntries=0');
 			}
 			// End of Footer
 			playlistText.push('Version=2');
@@ -356,8 +360,10 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 						// End of Footer
 						size = Number(originalText[lines - 2].split('=')[1]);
 						const newSize = size + addSize;
-						trackText.push('NumberOfEntries=' + newSize);
-						trackText.push('Version=2');
+						trackText.push(
+							'NumberOfEntries=' + newSize,
+							'Version=2'
+						);
 						while (!originalText[originalText.length - 1].trim().length) { originalText.pop(); } // Remove blank lines at end
 						originalText.pop(); //Removes old NumberOfEntries=..
 						originalText.pop(); //Removes old Version=..
@@ -373,8 +379,10 @@ function addHandleToPlaylist(handleList, playlistPath, relPath = '', bBOM = fals
 					while (!originalText[originalText.length - 1].trim().length) { originalText.pop(); } // Remove blank lines at end
 					originalText.pop(); //Removes </trackList>
 					originalText.pop(); //Removes </playlist>
-					trackText.push('	</trackList>');
-					trackText.push('</playlist>');
+					trackText.push(
+						'	</trackList>',
+						'</playlist>'
+					);
 				}
 			}
 			if (!bFound) { return false; } // Safety check
@@ -563,8 +571,7 @@ function addHandleToPlaylistV2(handleList, playlistPath, relPath = '', bBOM = fa
 	return false;
 }
 
-function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }) {
-	options = { bResolveXSPF: true, ...(options || {}) };
+function getFilePathsFromPlaylist(playlistPath, { bResolveXSPF= true } = {}) {
 	let paths = [];
 	if (!playlistPath || !playlistPath.length) {
 		console.log('getFilePathsFromPlaylist(): no playlist path was provided');
@@ -635,7 +642,7 @@ function getFilePathsFromPlaylist(playlistPath, options = { bResolveXSPF: true }
 							}
 							rowPaths.push(path);
 						}
-						if (options.bResolveXSPF) {
+						if (bResolveXSPF) {
 							let bFound = false;
 							for (const path of rowPaths) {
 								if (!_isLink(path) && _isFile(path)) {
@@ -907,12 +914,12 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 			if (bHasQueryPls) { // Uses playlists as sources
 				const queryPlaylists = XSP.getQueryPlaylists(jsp, bLog);
 				// From playlist manager or loaded playlists
-				const toIncludeHandle = typeof list !== 'undefined'
-					? list.getHandleFromPlaylists(queryPlaylists.is, void (0), bLog) // eslint-disable-line no-undef
-					: getHandlesFromUIPlaylists(queryPlaylists.is);
-				const toExcludeHandle = typeof list !== 'undefined'
-					? list.getHandleFromPlaylists(queryPlaylists.isnot, void (0), bLog) // eslint-disable-line no-undef
-					: getHandlesFromUIPlaylists(queryPlaylists.isnot);
+				const toIncludeHandle = typeof list === 'undefined'
+					? getHandlesFromUIPlaylists(queryPlaylists.is)
+					: list.getHandleFromPlaylists(queryPlaylists.is, void (0), bLog); // eslint-disable-line no-undef
+				const toExcludeHandle = typeof list === 'undefined'
+					? getHandlesFromUIPlaylists(queryPlaylists.isnot)
+					: list.getHandleFromPlaylists(queryPlaylists.isnot, void (0), bLog); // eslint-disable-line no-undef
 				// Difference
 				toIncludeHandle.Sort();
 				toExcludeHandle.Sort();
@@ -930,7 +937,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				}
 				if (sortObj) { handlePlaylist.OrderByFormat(sortObj.tf, sortObj.direction); }
 				const limit = XSP.getLimit(jsp);
-				if (isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count - 1); }
+				if (Number.isFinite(limit)) { handlePlaylist.RemoveRange(limit, handlePlaylist.Count - 1); }
 				if (bLog) { console.log('Loaded successfully XSP Playlist: ' + (bHasQueryPls ? XSP.getQuery(jsp) : query) + ' ' + sort); }
 			}
 		} else {
@@ -941,7 +948,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 		const filePaths = filePathsNoFormat.map((path) => { return path.toLowerCase(); });
 		if (!filePaths.some((path) => { return !/[A-Z]*:\\/.test(path); })) { relPath = ''; } // No need to check rel paths if they are all absolute
 		const playlistLength = filePaths.length;
-		handlePlaylist = [...Array(playlistLength)];
+		handlePlaylist = new Array(playlistLength);
 		const poolItemsCount = poolItems.Count;
 		const newLibItemsAbsPaths = libItemsAbsPaths.length === poolItems.Count
 			? libItemsAbsPaths
@@ -1022,9 +1029,9 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 				const rowsLength = rows.length;
 				const lookupKeys = [{ xspfKey: 'title', queryKey: 'TITLE' }, { xspfKey: 'creator', queryKey: 'ARTIST' }, { xspfKey: 'album', queryKey: 'ALBUM' }, { xspfKey: 'trackNum', queryKey: 'TRACK' }, { xspfKey: 'identifier', queryKey: 'MUSICBRAINZ_TRACKID' }, { xspfKey: 'meta', xspfSubKey: 'md5', queryKey: '%__MD5%' }];
 				const conditions = [['TITLE', 'ARTIST', 'ALBUM', 'TRACK'], ['TITLE', 'ARTIST', 'ALBUM'], ['TRACK', 'ARTIST', 'ALBUM'], ['TITLE', 'ALBUM'], ['TITLE', 'ARTIST'], ['%__MD5%'], ['MUSICBRAINZ_TRACKID']];
-				const regExListenBrainz = typeof listenBrainz !== 'undefined'
-					? listenBrainz.regEx // eslint-disable-line no-undef
-					: /(^https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g;
+				const regExListenBrainz = typeof listenBrainz === 'undefined'
+					? /(^https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|\//g
+					: listenBrainz.regEx; // eslint-disable-line no-undef
 				const sort = globQuery.remDuplBias;
 				const sortTF = sort.length ? fb.TitleFormat(sort) : null;
 				for (let i = 0; i < rowsLength; i++) {
@@ -1118,7 +1125,7 @@ function getHandlesFromPlaylist({ playlistPath, relPath = '', bOmitNotFound = fa
 						}
 					}
 				}
-				handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter((n) => n)); // Must filter since there are holes
+				handlePlaylist = new FbMetadbHandleList(handlePlaylist.filter(Boolean)); // Must filter since there are holes
 			} else {
 				if (bLog) { console.log(playlistPath.split('\\').pop() + ': some items were not found on library (' + (playlistLength - count) + ').' + '\n\t ' + pathsNotFound.join('\n\t ')); } // DEBUG
 				handlePlaylist = null;
@@ -1232,7 +1239,7 @@ function resolveTrackRelativePath(relPath) {
 			}
 			relPath = relPathArr.join('\\');
 		} else {
-			relPath = relPathArr.map((folder) => { return (folder !== '..' ? folder : ''); }).filter(Boolean);
+			relPath = relPathArr.map((folder) => { return (folder === '..' ? '' : folder); }).filter(Boolean);
 			relPath = absPathArr.slice(0, absPathArr.length - (relPathArr.length - relPath.length)).concat(relPath);
 			relPath = relPath.join('\\');
 		}

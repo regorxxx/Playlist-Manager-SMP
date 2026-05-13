@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/06/25
+//07/05/26
 
 /* exported newInstancesManager*/
 
@@ -66,14 +66,13 @@ function _instancesManager() {
 				}
 			});
 			const self = this.getSelf(key);
-			window.NotifyOthers('sendInstance', { caller: window.ID, key, ...(self || {}) });
+			window.NotifyOthers('sendInstance', { caller: window.ID, key, ...self });
 			return Promise.wait(this._timeout).then(() => {
 				removeEventListener(listener.event, null, listener.id);
-				if (!this._[key]) { this._[key] = []; }
-				else {
+				if (this._[key]) {
 					this._[key].length = 0;
 					if (self) { this._[key].push(self); }
-				}
+				} else { this._[key] = []; }
 				newInstances.forEach((i) => this._[key].push(i));
 				this.sort(key);
 				this.isWorking = false;
@@ -194,13 +193,12 @@ function _instancesManagerV2() {
 	this.init = function () {
 		const now = lastStartup().toString(); // Alternative to checking new startup via SDK?
 		// Create file the first time and ensure the file is up to date (avoids old Ids on file from previously crashed instances)
-		if (!_isFile(file)) { _save(file, JSON.stringify({ date: now }, null, '\t').replace(/\n/g, '\r\n')); }
-		else {
+		if (_isFile(file)) {
 			const newInstances = getInstances();
 			if (!newInstances || !Object.hasOwn(newInstances, 'date') || now !== newInstances.date) {
 				_deleteFile(file);
 				_save(file, JSON.stringify({ date: now }, null, '\t').replace(/\n/g, '\r\n'));
 			}
-		}
+		} else { _save(file, JSON.stringify({ date: now }, null, '\t').replace(/\n/g, '\r\n')); }
 	};
 }

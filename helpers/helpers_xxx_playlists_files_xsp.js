@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/08/25
+//07/05/26
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -192,7 +192,7 @@ XSP.getSort = function (jsp) {
 			}
 			if (sort.length) {
 				let fbTag = this.getFbTag(tag);
-				if (fbTag.length) { sort += ' ' + (!fbTag.match(/[%$]/g) ? '%' + fbTag + '%' : fbTag); }
+				if (fbTag.length) { sort += ' ' + (fbTag.match(/[%$]/g) ? fbTag : '%' + fbTag + '%'); }
 			}
 		}
 	}
@@ -562,9 +562,8 @@ XSP.getRule = function (query) { // NOSONAR
 };
 
 // Joins an array of queries with 'SetLogic' between them: AND (NOT) / OR (NOT)
-XSP.queryJoin = typeof queryJoin !== 'undefined'
-	? queryJoin // eslint-disable-line no-undef
-	: function (queryArray, setLogic = 'AND') {
+XSP.queryJoin = typeof queryJoin === 'undefined'
+	? function (queryArray, setLogic = 'AND') {
 		const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
 		setLogic = (setLogic || '').toUpperCase();
 		if (!logicDic.includes(setLogic)) {
@@ -588,20 +587,21 @@ XSP.queryJoin = typeof queryJoin !== 'undefined'
 			i++;
 		}
 		return query;
-	};
+	}
+	: queryJoin; // eslint-disable-line no-undef
 
-XSP.stripSort = typeof stripSort !== 'undefined'
-	? stripSort // eslint-disable-line no-undef
-	: function (query) { // NOSONAR
+XSP.stripSort = typeof stripSort === 'undefined'
+	? function (query) { // NOSONAR
 		let queryNoSort = query;
-		if (RegExp(/ *SORT .*$/).exec(query)) {
-			if (RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
-			else if (RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
-			else if (RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
+		if (new RegExp(/ *SORT .*$/).exec(query)) {
+			if (new RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
+			else if (new RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
+			else if (new RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
 			else { queryNoSort = ''; }
 		}
 		return queryNoSort;
-	};
+	}
+	: stripSort; // eslint-disable-line no-undef
 
 XSP.recursiveSplit = function recursiveSplit(arr, regExp, split) {
 	let copy;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/05/26
+//07/05/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -153,7 +153,7 @@ function addGlobValues(type) {
 		case 'TF':
 			globTags.title = '$ascii($lower($trim($replace(' + _t(globTags.titleRaw) + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),))))'; // Takes ~1 sec on 80K tracks;
 			globTags.artist = _t(globTags.artistRaw);
-			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
+			globTags.artistFallback = globTags.artistRaw.replace(/\$meta_sep\(ALBUM ARTIST,'#'\)/g, () => '$if2($meta_sep(ALBUM ARTIST,\'#\'), $meta_sep(ARTIST,\'#\'))');
 			globTags.sortPlayCount = '$sub(99999,' + _t(globTags.playCount) + ')';
 			globTags.sortFirstPlayed = '$if3(%FIRST_PLAYED_ENHANCED%,%2003_FIRST_PLAYED%,%FIRST_PLAYED%,99999)';
 			globTags.sortLastPlayed = '$if3(%LAST_PLAYED_ENHANCED%,%2003_LAST_PLAYED%,%LAST_PLAYED%,0)';

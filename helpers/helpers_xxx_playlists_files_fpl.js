@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/06/25
+//07/05/26
 
 /* exported FPL */
 
@@ -27,7 +27,7 @@ const FPL = {
 		let i = file.Size;
 		while (i--) {
 			element.nodeTypedValue = file.Read(1);
-			hexArr.push(String.fromCharCode(parseInt(element.text, 16)));
+			hexArr.push(String.fromCodePoint(Number.parseInt(element.text, 16)));
 		}
 		file.Close();
 		return hexArr;
