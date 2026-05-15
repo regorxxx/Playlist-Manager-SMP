@@ -2448,9 +2448,9 @@ function _list({ x, y, w, h, properties } = {}) {
 									} else if (pls.isAutoPlaylist || pls.query) {
 										if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { return false; }
 										const remDupl = (pls.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-										return clonePlaylistInUI(this, idx, { remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple });
+										return clonePlaylistInUI({ list: this, z: idx, duplOpt: { remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple } });
 									} else {
-										return clonePlaylistInUI(this, idx);
+										return clonePlaylistInUI({ list: this, z: idx });
 									}
 								};
 								if (this.indexes.length) {
@@ -2490,8 +2490,8 @@ function _list({ x, y, w, h, properties } = {}) {
 									const inFolder = this.isInFolder(pls) ? this.getParentFolder(pls) : null;
 									return !!this.addFolder(name, inFolder);
 								} else if (pls.isAutoPlaylist) {
-									return cloneAsAutoPls(this, z, pls.extension === '.ui' ? plman.FindPlaylist(pls.nameId) : -1);
-								} else if (pls.extension === '.xsp') { return cloneAsSmartPls(this, z); }
+									return cloneAsAutoPls({ list: this, z, uiIdx: pls.extension === '.ui' ? plman.FindPlaylist(pls.nameId) : -1 });
+								} else if (pls.extension === '.xsp') { return cloneAsSmartPls({ list: this, z }); }
 								else { return clonePlaylistFile(this, z, pls.extension); }
 							}
 							return false;
@@ -2711,7 +2711,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			: '');
 	};
 
-	this.getGlobalShortcut = (action = '', { bTab=true, bParen=false, bForce= false } = {}) => {
+	this.getGlobalShortcut = (action = '', { bTab = true, bParen = false, bForce = false } = {}) => {
 		const bEnabled = this.properties.bGlobalShortcuts[1] || bForce;
 		let shortcut = '';
 		switch (action.toLowerCase()) {
@@ -3266,7 +3266,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							key: 'Move selection to playlist',
 							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: true }), bStandAlone: true
 						},
-						{ key: 'Clone playlist in UI', func: clonePlaylistInUI.bind(this, this) },
+						{ key: 'Clone playlist in UI', func: (z, duplOpt) => clonePlaylistInUI({list:this, z, duplOpt}) },
 						{ key: 'Recycle playlist', func: this.removePlaylist },
 						{ key: 'Lock|Unlock playlist file', func: switchLock.bind(this, this) },
 						{ key: 'Lock|Unlock UI playlist', func: switchLockUI.bind(this, this) },
@@ -3925,7 +3925,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.dataAll.forEach((pls, playlistIndex) => {
 			if (pls.isLocked && !bForceLocked || pls.extension === '.ui' || pls.isAutoPlaylist || pls.query) { return; }
 			if (pls.extension === '.xspf' && this.playlistsExtension !== pls.extension) { return; } // Don't save XSPF playlists unless format will not be changed
-			if (current.some((uiPls) => uiPls.name === pls.nameId) ) { // There may be other checks later, but at least omit these ones...
+			if (current.some((uiPls) => uiPls.name === pls.nameId)) { // There may be other checks later, but at least omit these ones...
 				if (this.updatePlaylist({ playlistIndex, bCallback: false, bForceLocked })) { count++; }
 			}
 		});
@@ -4520,7 +4520,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				plsState = plsState.filter((oldPls) => {
 					return newPlsState.includes(oldPls) || (newPlsState.some((pls) =>
 						pls.nameId === oldPls.nameId && pls.path === oldPls.path && oldPls.extension === pls.extension
-					) );
+					));
 				});
 			}
 		}
@@ -4716,7 +4716,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				plsState = plsState.filter((oldPls) => {
 					return newPlsState.includes(oldPls) || (newPlsState.some((pls) =>
 						pls.nameId === oldPls.nameId && pls.path === oldPls.path && oldPls.extension === pls.extension
-					) );
+					));
 				});
 			}
 		}
@@ -6832,7 +6832,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		return loadPromise;
 	};
 
-	this.queuePlaylist = (idxOrPls, { bAsync= false, bRandom= false, bDedup= false } = {}) => {
+	this.queuePlaylist = (idxOrPls, { bAsync = false, bRandom = false, bDedup = false } = {}) => {
 		if (plman.GetPlaybackQueueHandles().Count >= MAX_QUEUE_ITEMS) {
 			console.log('Playlist Manager: Queue is full (' + MAX_QUEUE_ITEMS + ' items). Skip queueing playlist.');
 			return false;

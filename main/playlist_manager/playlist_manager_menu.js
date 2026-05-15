@@ -454,18 +454,18 @@ function createSelMenu(forcedIndex = -1) {
 				!list.bLiteMode && menu.newEntry({
 					entryText: 'Clone as standard playlist...', func: () => {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-						cloneAsStandardPls(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+						cloneAsStandardPls({ list, z, duplOpt: { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, bOpenOnExport: list.properties.bOpenOnExport[1] });
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.newEntry({
 					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist && !bIsPlsUI ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 AutoPlaylist no matter the original format
-						cloneAsAutoPls(list, z, uiIdx);
+						cloneAsAutoPls({ list: z, uiIdx });
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.addIndicatorNameLast(() => bIsPlsUI); // Add an indicator for required cloning
 				!list.bLiteMode && menu.newEntry({
 					entryText: 'Clone as Smart Playlist and edit...' + (pls.extension === '.xsp' ? list.getGlobalShortcut('clone') : '') + (bIsPlsUI ? '\t(cloning required)' : ''), func: () => { // Here creates a Kodi XSP smart no matter the original format
-						cloneAsSmartPls(list, z);
+						cloneAsSmartPls({ list, z });
 					}, flags: bIsValidXSP && !bIsPlsUI ? MF_STRING : MF_GRAYED
 				});
 				if (showMenus['Export and copy']) {
@@ -479,7 +479,7 @@ function createSelMenu(forcedIndex = -1) {
 						// Copy
 						!list.bLiteMode && menu.newEntry({
 							entryText: 'Copy playlist file to...', func: () => {
-								exportPlaylistFile(list, z);
+								exportPlaylistFile({ list, z });
 							}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED
 						});
 					}
@@ -487,7 +487,7 @@ function createSelMenu(forcedIndex = -1) {
 			} else if (list.bLiteMode) {
 				menu.newEntry({
 					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
-						clonePlaylistFile(list, z, '.ui');
+						clonePlaylistFile({ list, z, ext: '.ui' });
 					}
 				});
 			} else { // Export and Rel. Paths handling
@@ -512,7 +512,7 @@ function createSelMenu(forcedIndex = -1) {
 						if (menu.isSeparator(ext)) { menu.newEntry({ menuName: subMenuName, entryText, flags: MF_GRAYED }); return; }
 						menu.newEntry({
 							menuName: subMenuName, entryText, func: () => {
-								clonePlaylistFile(list, z, ext);
+								clonePlaylistFile({ list, z, ext, bOpenOnExport: list.properties.bOpenOnExport[1] });
 							}
 						});
 					});
@@ -521,7 +521,7 @@ function createSelMenu(forcedIndex = -1) {
 					// Copy
 					menu.newEntry({
 						entryText: 'Copy Playlist file to...', func: () => {
-							exportPlaylistFile(list, z);
+							exportPlaylistFile({ list, z });
 						}, flags: loadablePlaylistFormats.has(pls.extension) ? MF_STRING : MF_GRAYED
 					});
 					// Export and copy
@@ -543,7 +543,7 @@ function createSelMenu(forcedIndex = -1) {
 						if (menu.isSeparator(ext)) { menu.newEntry({ menuName: subMenuName, entryText, flags: MF_GRAYED }); return; }
 						menu.newEntry({
 							menuName: subMenuName, entryText, func: () => {
-								exportPlaylistFile(list, z, ext);
+								exportPlaylistFile({ list, z, ext });
 							}
 						});
 					});
@@ -860,7 +860,7 @@ function createSelMenu(forcedIndex = -1) {
 					const lockName = plman.GetPlaylistLockName(index);
 					const bSMPLock = lockName === window.Parent || !lockName;
 					const flags = bSMPLock ? MF_STRING : MF_GRAYED;
-					const subMenuName = menu.newMenu('Edit UI Playlist lock', void(0), currentLocks.size ? MF_CHECKED : MF_STRING);
+					const subMenuName = menu.newMenu('Edit UI Playlist lock', void (0), currentLocks.size ? MF_CHECKED : MF_STRING);
 					menu.newEntry({ menuName: subMenuName, entryText: 'Lock by action:' + (bSMPLock ? '' : '\t' + _p(lockName)), flags: MF_GRAYED });
 					menu.newSeparator(subMenuName);
 					lockTypes.forEach((lock) => {
@@ -1103,7 +1103,7 @@ function createFolderSubMenu(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, { remDupl: [] });
+					clonePlaylistMergeInUI({ list, zArr, duplOpt: { remDupl: [] } });
 				}
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
@@ -1113,7 +1113,7 @@ function createFolderSubMenu(menu, folder, z) {
 				if (!bOpen) { list.switchFolder(z); }
 				const zArr = playlists.map((p) => list.getIndex(p)).filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, { remDupl: list.removeDuplicatesAutoPls, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+					clonePlaylistMergeInUI({ list, zArr, duplOpt: { remDupl: list.removeDuplicatesAutoPls, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple } });
 				}
 				if (!bOpen) { list.switchFolder(z); }
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
@@ -1129,9 +1129,9 @@ function createFolderSubMenu(menu, folder, z) {
 					if (!isPlsUI(pls) && !isFolder(pls)) {
 						if (pls.isAutoPlaylist) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-							cloneAsStandardPls(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, false);
+							cloneAsStandardPls({ list, z, duplOpt: { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, bAddToList: false, bOpenOnExport: false });
 						} else {
-							clonePlaylistFile(list, z, '.ui');
+							clonePlaylistFile({ list, z, ext: '.ui' });
 						}
 					}
 				});
@@ -1336,7 +1336,7 @@ function createMulSelMenu(forcedIndexes = []) {
 			entryText: 'Merge-load playlists', func: () => {
 				const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, { remDupl: [] });
+					clonePlaylistMergeInUI({ list, zArr, duplOpt: { remDupl: [] } });
 				}
 			}, flags: playlists.length < 2 || !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
@@ -1344,7 +1344,7 @@ function createMulSelMenu(forcedIndexes = []) {
 			entryText: 'Merge-load (no duplicates)', func: () => {
 				const zArr = [...indexes].filter((idx, i) => !isFolder(playlists[i]));
 				if (zArr.length) {
-					clonePlaylistMergeInUI(list, zArr, { remDupl: list.removeDuplicatesAutoPls, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+					clonePlaylistMergeInUI({ list, zArr, duplOpt: { remDupl: list.removeDuplicatesAutoPls, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple } });
 				}
 			}, flags: !bIsValidXSPEveryOnly || bIsFolderEvery ? MF_GRAYED : MF_STRING
 		});
@@ -1357,9 +1357,9 @@ function createMulSelMenu(forcedIndexes = []) {
 					if (!isPlsUI(pls) && !isFolder(pls)) {
 						if (pls.isAutoPlaylist) {
 							const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-							cloneAsStandardPls(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, false);
+							cloneAsStandardPls({ list, z, duplOpt: { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple }, bAddToList: false, bOpenOnExport: false });
 						} else {
-							clonePlaylistFile(list, z, '.ui');
+							clonePlaylistFile({ list, z, ext: '.ui', });
 						}
 					}
 				});
@@ -1523,7 +1523,7 @@ function createMulSelMenu(forcedIndexes = []) {
 		{	// Copy
 			menu.newEntry({
 				entryText: 'Copy playlist files to...', func: () => {
-					exportPlaylistFiles(list, indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder));
+					exportPlaylistFiles({ list, zArr: indexes.filter((idx, i) => playlists[i].path.length && !playlists[i].isFolder), bOpenOnExport: list.properties.bOpenOnExport[1] });
 				}, flags: bIsAutoPlsEvery ? MF_GRAYED : flags
 			});
 		}
@@ -1592,7 +1592,7 @@ function createMulSelMenu(forcedIndexes = []) {
 									bAdvTitle: list.bAdvTitle,
 									bMultiple: list.bMultiple,
 									bExtendedM3U,
-									bOpenOnExport: i === indexes.length - 1 ? list.properties.bOpenOnExport[1] : false
+									bOpenOnExport: false
 								});
 								return Promise.wait(60).then(() => {
 									if (bDone && handleList) {
@@ -1603,6 +1603,7 @@ function createMulSelMenu(forcedIndexes = []) {
 								});
 							}
 						}, 100).then(() => {
+							if (list.properties.bOpenOnExport[1]) { _explorer(path); }
 							if (!bShift && dsp) {
 								console.log('Playlist Manager: ' + toConvertHandleList.Count + ' tracks to convert.');
 								fb.RunContextCommandWithMetadb('Convert/' + dsp, toConvertHandleList, 8);

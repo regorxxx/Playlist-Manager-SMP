@@ -651,7 +651,7 @@ function convertToRelPaths(list, z) {
 	return bDone;
 }
 
-function cloneAsAutoPls(list, z, uiIdx = -1, toFolder = void (0)) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsAutoPls({ list, z, toFolder, uiIdx = -1 } = {}) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -673,7 +673,7 @@ function cloneAsAutoPls(list, z, uiIdx = -1, toFolder = void (0)) { // May be us
 	return bDone;
 }
 
-function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Auto-Playlist or Smart Playlist
+function cloneAsSmartPls({ list, z, toFolder } = {}) { // May be used only to copy an Auto-Playlist or Smart Playlist
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -691,7 +691,7 @@ function cloneAsSmartPls(list, z, toFolder) { // May be used only to copy an Aut
 	return bDone;
 }
 
-async function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }, bAddToList = true) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
+async function cloneAsStandardPls({ list, z, duplOpt = { remDupl: [], bAdvTitle: false, bMultiple: false }, bAddToList = true, bOpenOnExport = true } = {}) { // May be used to copy an Auto-Playlist to standard playlist or simply to clone a standard one
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -718,25 +718,25 @@ async function cloneAsStandardPls(list, z, opt = { remDupl: [], bAdvTitle: false
 		fb.ShowPopupMessage('You can not have duplicated playlist names within foobar2000: ' + pls.name + '\n' + 'Please delete all playlist with that name first; you may leave one. Then try loading the playlist again.', window.FullPanelName);
 		return false;
 	}
-	if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
+	if (duplOpt.remDupl && duplOpt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: duplOpt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: duplOpt.bAdvTitle, bMultiple: duplOpt.bMultiple }); }
 	if (bAddToList) {
 		const objectPlaylist = list.add({ bEmpty: false }); // Create playlist from active playlist
 		bDone = objectPlaylist && _isFile(objectPlaylist.path); // Debug popups are already handled at prev line
 		if (bDone) {
-			if (list.properties.bOpenOnExport[1]) { _explorer(objectPlaylist.path); }
+			if (bOpenOnExport) { _explorer(objectPlaylist.path); }
 			console.log('Playlist Manager: cloning ' + playlistName + ' done.');
 		}
 	}
 	return bDone;
 }
 
-async function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false }, toFolder = void (0)) {
-	if (z < 0 || (!opt.bAlsoHidden && z >= list.items) || (opt.bAlsoHidden && z >= list.itemsAll)) {
+async function clonePlaylistInUI({ list, z, duplOpt = { remDupl: [], bAdvTitle: false, bMultiple: false, bAlsoHidden: false }, toFolder } = {}) {
+	if (z < 0 || (!duplOpt.bAlsoHidden && z >= list.items) || (duplOpt.bAlsoHidden && z >= list.itemsAll)) {
 		console.log('Playlist Manager: Error cloning playlist. Index out of bounds.');
 		return false;
 	}
 	let bDone = false;
-	const pls = opt.bAlsoHidden ? list.dataAll[z] : list.data[z];
+	const pls = duplOpt.bAlsoHidden ? list.dataAll[z] : list.data[z];
 	// For query playlists, use the UI copy if possible
 	const bUI = pls.extension === '.ui'
 		|| (pls.extension === '.xsp' || pls.isAutoPlaylist) && plman.FindPlaylist(pls.nameId) !== -1;
@@ -770,7 +770,7 @@ async function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false,
 			if (idx !== -1) {
 				plman.ActivePlaylist = idx;
 				plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-				if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
+				if (duplOpt.remDupl && duplOpt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: duplOpt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: duplOpt.bAdvTitle, bMultiple: duplOpt.bMultiple }); }
 				bDone = true;
 			}
 			if (toFolder) {
@@ -782,13 +782,13 @@ async function clonePlaylistInUI(list, z, opt = { remDupl: [], bAdvTitle: false,
 	return bDone;
 }
 
-async function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle: false, bMultiple: false }) {
+async function clonePlaylistMergeInUI({ list, zArr, duplOpt = { remDupl: [], bAdvTitle: false, bMultiple: false } } = {}) {
 	if (!Array.isArray(zArr)) {
 		console.log('Playlist Manager: Error merge-loading playlists. Index is not an array.');
 		return false;
 	}
 	for (let z of zArr) {
-		if (z < 0 || (!opt.bAlsoHidden && z >= list.items) || (opt.bAlsoHidden && z >= list.itemsAll)) {
+		if (z < 0 || (!duplOpt.bAlsoHidden && z >= list.items) || (duplOpt.bAlsoHidden && z >= list.itemsAll)) {
 			console.log('Playlist Manager: Error merge-loading playlists (merge). Index out of bounds.');
 			return false;
 		}
@@ -797,7 +797,7 @@ async function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle
 	let handleList = new FbMetadbHandleList();
 	let names = [];
 	for (let z of zArr) {
-		const pls = opt.bAlsoHidden ? list.dataAll[z] : list.data[z];
+		const pls = duplOpt.bAlsoHidden ? list.dataAll[z] : list.data[z];
 		const bUI = pls.extension === '.ui';
 		if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
 			fb.ShowPopupMessage('XSP has a non compatible type: ' + pls.type + '\nPlaylist: ' + pls.name + '\n\nRead the playlist formats documentation for more info', window.FullPanelName);
@@ -832,15 +832,15 @@ async function clonePlaylistMergeInUI(list, zArr, opt = { remDupl: [], bAdvTitle
 		else {
 			plman.ActivePlaylist = idx;
 			plman.InsertPlaylistItems(plman.ActivePlaylist, 0, handleList);
-			if (opt.remDupl && opt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: opt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: opt.bAdvTitle, bMultiple: opt.bMultiple }); }
+			if (duplOpt.remDupl && duplOpt.remDupl.length && removeDuplicates) { removeDuplicates({ checkKeys: duplOpt.remDupl, sortBias: globQuery.remDuplBias, bPreserveSort: true, bAdvTitle: duplOpt.bAdvTitle, bMultiple: duplOpt.bMultiple }); }
 		}
 		if (bDone) { console.log('Playlist Manager: merge-load ' + names.join(', ') + ' done.'); }
 	} else { bDone = false; }
 	return bDone;
 }
 
-async function clonePlaylistFile(list, z, ext, toFolder) {
-	if (ext === '.ui') { return clonePlaylistInUI(list, z, void (0), toFolder); }
+async function clonePlaylistFile({ list, z, ext, toFolder, bOpenOnExport = true } = {}) {
+	if (ext === '.ui') { return clonePlaylistInUI({list, z, toFolder}); }
 	let bDone = false;
 	const pls = list.data[z];
 	const bUI = pls.extension === '.ui';
@@ -875,7 +875,7 @@ async function clonePlaylistFile(list, z, ext, toFolder) {
 	}
 	bDone = bDone && _isFile(playlistPath); // Debug popups are already handled at prev line
 	if (bDone) {
-		if (list.properties.bOpenOnExport[1]) { _explorer(playlistPath); }
+		if (bOpenOnExport) { _explorer(playlistPath); }
 		console.log('Playlist Manager: cloning ' + playlistName + ' done.');
 		list.update();
 		list.filter();
@@ -886,7 +886,7 @@ async function clonePlaylistFile(list, z, ext, toFolder) {
 	return bDone;
 }
 
-async function exportPlaylistFile(list, z, ext, defPath = '') {
+async function exportPlaylistFile({ list, z, ext, defPath = '' } = {}) {
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -953,7 +953,7 @@ async function exportPlaylistFile(list, z, ext, defPath = '') {
 	return bDone;
 }
 
-function exportPlaylistFiles(list, zArr, defPath = '') {
+function exportPlaylistFiles({ list, zArr, defPath = '', bOpenOnExport = true } = {}) {
 	let bDone = false;
 	if (!zArr.length) { return bDone; }
 	const playlists = zArr.map((z) => list.data[z]);
@@ -984,7 +984,7 @@ function exportPlaylistFiles(list, zArr, defPath = '') {
 		return bDone;
 	});
 	bDone = bDone && bCopy.every(Boolean);
-	if (list.properties.bOpenOnExport[1] && bCopy.some(Boolean)) { _explorer(path); }
+	if (bOpenOnExport && bCopy.some(Boolean)) { _explorer(path); }
 	return bDone;
 }
 
@@ -1070,7 +1070,7 @@ function exportPlaylistFileWithTracks({ list, z, defPath = '', bAsync = true, bN
 				resolve('done');
 			});
 		}).then(() => {
-			if (list.properties.bOpenOnExport[1] && bOpenOnExport) { _explorer(newPath); }
+			if (bOpenOnExport) { _explorer(newPath); }
 			if (report.length) { fb.ShowPopupMessage('Failed when copying tracks to \'' + root + '\'.\nTracks not found:\n\n' + report.join('\n'), window.FullPanelName); }
 			console.log('Playlist Manager: exporting tracks -> ' + playlistName);
 			return bDone;
