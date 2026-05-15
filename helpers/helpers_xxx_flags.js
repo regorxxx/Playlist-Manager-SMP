@@ -1,7 +1,7 @@
 ﻿'use strict';
-//05/12/25
+//14/05/26
 
-/* global VK_CONTROL:readable, VK_ALT:readable, VK_SHIFT:readable, MK_LBUTTON:readable, MK_CONTROL:readable, MK_SHIFT:readable */
+/* global VK_CONTROL:readable, VK_ALT:readable, VK_SHIFT:readable, MK_LBUTTON:readable, MK_CONTROL:readable, MK_SHIFT:readable, MK_XBUTTON1:readable, MK_RBUTTON:readable, MK_MBUTTON:readable */
 /* exported buttonStates, getKeyboardMask, dropEffect, dropMask, VK_LWIN, VK_RWIN, Flag */
 
 const kMask = {
@@ -44,10 +44,21 @@ const dropEffect = {
 };
 
 const dropMask = { // on_drag_over, on_drag_leave, on_drag_over, on_drag_enter
-	ctrl: MK_LBUTTON + MK_CONTROL,
-	shift: MK_LBUTTON + MK_SHIFT,
-	shiftCtrl: MK_LBUTTON + MK_CONTROL + MK_SHIFT
+	l: MK_LBUTTON,
+	r: MK_RBUTTON,
+	m: MK_MBUTTON,
+	alt: MK_XBUTTON1,
+	ctrl: MK_CONTROL,
+	shift: MK_SHIFT,
+	altShift: MK_XBUTTON1 + MK_SHIFT,
+	altCtrl: MK_XBUTTON1 + MK_CONTROL,
+	shiftCtrl: MK_CONTROL + MK_SHIFT,
+	altShiftCtrl: MK_XBUTTON1 + MK_CONTROL + MK_SHIFT,
+	is: function is(mask, key, button) { return ((this[button] || 0) + this[key]) === mask; }, // Mask is mouse + key
+	has: function has(mask, key, button) { return ((this[button] || 0) + this[key]) === (mask & ((this[button] || 0) + this[key])); }
 };
+Object.defineProperty(dropMask, 'is', { enumerable: false });
+Object.defineProperty(dropMask, 'has', { enumerable: false });
 
 const VK_LWIN = 0x5B;
 const VK_RWIN = 0x5C;

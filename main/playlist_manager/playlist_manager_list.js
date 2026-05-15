@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/26
+//15/05/26
 
 /* exported _list */
 
@@ -9,7 +9,7 @@
 /* global background:readable, stats:readable, pop:readable, bottomToolbar:readable scrollBar:readable */
 
 include('..\\..\\helpers\\helpers_xxx.js');
-/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, IDC_HELP:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable, TTDT_AUTOMATIC:readable */
+/* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, IDC_HELP:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable, TTDT_AUTOMATIC:readable, dropMask:readable */
 include('..\\window\\window_xxx_input.js');
 /* global _inputBox:readable, kMask:readable, getKeyboardMask:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
@@ -3389,7 +3389,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			}
 		} else {
 			// Create new playlist when pressing alt
-			if ((mask & 32) === 32 || this.index === -1 || this.index >= this.items) {  // NOSONAR [structure]
+			if (dropMask.has(mask, 'alt') || this.index === -1 || this.index >= this.items) {  // NOSONAR [structure]
 				const bFromPlsUI = fb.GetSelectionType() === 1 && idx !== -1;
 				const name = this.properties.bAutoSelTitle[1]
 					? this.plsNameFromSelection()
@@ -3418,7 +3418,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			} else { // Send to existing playlist
 				const cache = [this.offset, this.index];
 				// Remove track on move
-				const bSuccess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: (mask & MK_CONTROL) !== MK_CONTROL });
+				const bSuccess = this.sendSelectionToPlaylist({ playlistIndex: this.index, bCheckDup: true, bAlsoHidden: false, bPaint: false, bDelSource: !dropMask.has(mask, 'ctrl') });
 				if (bSuccess) {
 					// Don't reload the list but just paint with changes to avoid jumps
 					this.repaint(false, 'list');

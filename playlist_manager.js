@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/04/26
+//15/05/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -1402,7 +1402,7 @@ if (list.properties.bSetup[1]) {
 		// Move playlist index only while not pressing alt
 		on_mouse_move(x, y, mask, true);
 		let bToFolder = false;
-		if ((mask & 32) === 32) {
+		if (dropMask.has(mask, 'alt')) {
 			if (list.index !== -1) {
 				if (list.data[list.index].isFolder) { bToFolder = true; }
 				else { list.index = -1; }
@@ -1428,7 +1428,7 @@ if (list.properties.bSetup[1]) {
 				return;
 			} else if (headerButtons.some((key) => list.headerButtons[key].inFocus)) { // New playlist button
 				if (list.headerButtons.newPls.inFocus) {
-					action.Text = 'Create new Playlist ' + _p((mask & MK_CONTROL) === MK_CONTROL ? 'copy' : 'move');
+					action.Text = 'Create new Playlist ' + _p(dropMask.has(mask, 'ctrl') ? 'copy' : 'move');
 				} else {
 					action.Effect = dropEffect.none;
 					action.Text = '';
@@ -1440,22 +1440,22 @@ if (list.properties.bSetup[1]) {
 				return;
 			}
 		} else if (bottomToolbar.curBtn !== null || (scrollBar && scrollBar.trace(x, y))) { // Scrollbar or buttons
-			// else if (bottomToolbar.curBtn !== null || (list.index === -1 && (mask & 32) !== 32)) {action.Effect = dropEffect.none; return;}
+			// else if (bottomToolbar.curBtn !== null || (list.index === -1 && !dropMask.has(mask, 'alt'))) {action.Effect = dropEffect.none; return;}
 			action.Effect = dropEffect.none;
 			action.Text = '';
 			return;
 		} else { // List
-			const modifier = (mask & MK_CONTROL) === MK_CONTROL
+			const modifier = dropMask.has(mask, 'ctrl')
 				? 'Copy'
 				: 'Move';
-			if ((mask & 32) === 32 || list.index === -1 || list.index >= list.items) { // NOSONAR [structure]
+			if (dropMask.has(mask, 'alt') || list.index === -1 || list.index >= list.items) { // NOSONAR [structure]
 				action.Text = 'Create new Playlist ' + _p(modifier.toLowerCase()) + (bToFolder ? ' (in folder)' : '');
 			} else if (list.data[list.index].isFolder) { action.Text = modifier + ' to selected Folder'; }
 			else { action.Text = modifier + ' to selected Playlist'; }
 		}
 		// Set effects
-		if ((mask & dropMask.ctrl) === dropMask.ctrl) { action.Effect = dropEffect.copy; } // Mask is mouse + key
-		// else if ((mask & 32) === 32) {action.Effect = dropEffect.link;} // BUG: sends callback to on_drag_leave
+		if (dropMask.has(mask, 'ctrl')) { action.Effect = dropEffect.copy; }
+		// else if (dropMask.has(mask, 'alt')) {action.Effect = dropEffect.link;} // BUG: sends callback to on_drag_leave
 		else { action.Effect = dropEffect.move; }
 	});
 
