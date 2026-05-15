@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/26
+//15/05/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -1591,7 +1591,8 @@ function createMulSelMenu(forcedIndexes = []) {
 									remDupl, // Include remDupl for XSP playlists
 									bAdvTitle: list.bAdvTitle,
 									bMultiple: list.bMultiple,
-									bExtendedM3U
+									bExtendedM3U,
+									bOpenOnExport: i === indexes.length - 1 ? list.properties.bOpenOnExport[1] : false
 								});
 								return Promise.wait(60).then(() => {
 									if (bDone && handleList) {

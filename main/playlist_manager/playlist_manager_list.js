@@ -7235,6 +7235,12 @@ function _list({ x, y, w, h, properties } = {}) {
 			fb.ShowPopupMessage('Playlist Manager has loaded a playlist with special tags associated to actions for the first time. This is an informative popup.\n\n-The list of special tags and their associated actions can be found at the documentation' + this.getGlobalShortcut('documentation', { bTab: false, bParen: true }) + ' and quick help' + this.getGlobalShortcut('quick help', { bTab: false, bParen: true }) + '.\n-These tag may be added or removed using the playlist contextual menu.\n-The actions are only applied if \'Playlist AutoTags and actions\' are enabled.', 'Playlist Manager: AutoTags and actions');
 		}
 	};
+	this.exportAndConvertPopup = (bForce = false) => {
+		if (!this.infoPopups.exportAndConvert || bForce) {
+			this.setInfoPopup('exportAndConvert');
+			fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', 'Playlist Manager: Export and convert');
+		}
+	};
 	this.shareUiSettings = (mode = 'popup') => {
 		const settings = Object.fromEntries([
 			...['bShowSize', 'bShowSep', 'bShowMenuHeader', 'bQuickSearchName', 'bQuickSearchNext', 'bQuickSearchCycle', 'statusIcons', 'playlistIcons', 'tooltipSettings', 'columns', 'uiElements', 'listColors', 'background', 'bDynamicColors', 'bDynamicColorsBg', 'bOnNotifyColors', 'bNotifyColors']

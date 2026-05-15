@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//15/05/26
 
 /* exported loadPlaylistsFromFolder, setTrackTags, setCategory, setPlaylist_mbid, switchLock, switchLockUI, convertToRelPaths, getFilePathsFromPlaylist, cloneAsAutoPls, cloneAsSmartPls, cloneAsStandardPls, findFormatErrors, clonePlaylistMergeInUI, clonePlaylistFile, exportPlaylistFile, exportPlaylistFiles, exportPlaylistFileWithTracks, exportPlaylistFileWithTracksConvert, exportAutoPlaylistFileWithTracksConvert, renamePlaylist, renameFolder, cycleCategories, cycleTags, rewriteXSPQuery, rewriteXSPSort, rewriteXSPLimit, findMixedPaths, backup, findExternal, findSubSongs, findBlank, findDurationMismatch, findSizeMismatch, findDuplicatesByPath, findDead, findCircularReferences, findDuplicatesByTF */
 
@@ -1079,9 +1079,8 @@ function exportPlaylistFileWithTracks({ list, z, defPath = '', bAsync = true, bN
 	return bDone;
 }
 
-function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true } = {}) {
-	const bOpenOnExport = list.properties.bOpenOnExport[1];
-	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.FullPanelName); }
+function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true, bOpenOnExport = true, bShowPopup = false } = {}) {
+	list.exportAndConvertPopup(bShowPopup);
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files
@@ -1199,9 +1198,8 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 	return { bDone, handleList };
 }
 
-function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true } = {}) {
-	const bOpenOnExport = list.properties.bOpenOnExport[1];
-	if (bOpenOnExport) { fb.ShowPopupMessage('Playlist file will be exported to selected path. Track filenames will be changed according to the TF expression set at configuration.\n\nNote the TF expression should match whatever preset is used at the converter panel, otherwise actual filenames will not match with those on exported playlist.\n\nSame comment applies to the destination path, the tracks at the converter panel should be output to the same path the playlist file was exported to...\n\nConverter preset, filename TF and default path can be set at configuration (header menu). Default preset uses the one which requires user input. It\'s recommended to create a new preset for this purpose and set the output folder to be asked at conversion step.', window.FullPanelName); }
+function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3', preset = '...', defPath = '', ext = '', playlistOutPath = '', remDupl = [], bAdvTitle = false, bMultiple = false, bExtendedM3U = true, bOpenOnExport = true, bShowPopup = false } = {}) {
+	list.exportAndConvertPopup(bShowPopup);
 	let bDone = false;
 	const pls = list.data[z];
 	if (pls.extension === '.xsp' && Object.hasOwn(pls, 'type') && pls.type !== 'songs') { // Don't load incompatible files

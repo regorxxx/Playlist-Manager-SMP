@@ -153,7 +153,8 @@ let properties = {
 		subsongItem: false,
 		networkDrive: false,
 		plsMirror: false,
-		autoTags: false
+		autoTags: false,
+		exportAndConvert: false
 	}), { func: isJSON, forceDefaults: true }],
 	bRelativePath: ['Use relative paths for all new playlists', false, { func: isBoolean }],
 	scrollSettings: ['Scroll settings', JSON.stringify({
