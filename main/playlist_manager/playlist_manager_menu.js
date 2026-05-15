@@ -459,7 +459,7 @@ function createSelMenu(forcedIndex = -1) {
 				});
 				menu.newEntry({
 					entryText: 'Clone as AutoPlaylist and edit...' + (pls.isAutoPlaylist && !bIsPlsUI ? list.getGlobalShortcut('clone') : ''), func: () => { // Here creates a foobar2000 AutoPlaylist no matter the original format
-						cloneAsAutoPls({ list: z, uiIdx });
+						cloneAsAutoPls({ list, z, uiIdx });
 					}, flags: bIsValidXSP ? MF_STRING : MF_GRAYED
 				});
 				menu.addIndicatorNameLast(() => bIsPlsUI); // Add an indicator for required cloning
