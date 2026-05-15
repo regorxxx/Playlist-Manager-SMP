@@ -1176,7 +1176,7 @@ if (list.properties.bSetup[1]) {
 					Promise.serial(idx, (i) => {
 						const item = list.dataAll[i];
 						const remDupl = (item.isAutoPlaylist && this.bRemoveDuplicatesAutoPls) || (item.extension === '.xsp' && this.bRemoveDuplicatesSmartPls) ? this.removeDuplicatesAutoPls : [];
-						return clonePlaylistInUI(list, i, { remDupl, bMultiple: list.bMultiple, bAdvTitle: list.bAdvTitle, bAlsoHidden: true });
+						return clonePlaylistInUI({ list, z: i, duplOpt: { remDupl, bMultiple: list.bMultiple, bAdvTitle: list.bAdvTitle, bAlsoHidden: true } });
 					});
 					bDone = true;
 					break;
@@ -1226,7 +1226,7 @@ if (list.properties.bSetup[1]) {
 					const idx = list.dataAll
 						.map((pls, i) => (pls.tags.includes('bMultMenu') ? i : -1))
 						.filter((idx) => idx !== -1);
-					Promise.serial(idx, (i) => clonePlaylistInUI(list, i, true));
+					Promise.serial(idx, (i) => clonePlaylistInUI({ list, z: i }));
 					bDone = true;
 					break;
 				}
