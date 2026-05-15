@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/05/26
+//14/05/26
 
 /* exported extendGR, checkCompatible */
 
@@ -589,7 +589,7 @@ if (!window.Bugs) { window.Bugs = {}; }
 
 window.Bugs.SetPlaylistLockedActions = ![
 	{ version: '1.6.2.25.10.29', target: 'smp' },
-	{ version: '3.6.1.2', target: 'jsplitter' }
+	{ version: '3.6.1.2', target: 'jsplitter' } // NOSONAR
 ].some((host) => isCompatible(host.version, host.target));
 
 window.Bugs.GetPlaybackQueueContents = ![
