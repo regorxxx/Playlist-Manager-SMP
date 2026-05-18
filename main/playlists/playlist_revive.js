@@ -358,14 +358,21 @@ function getDeadItems(playlistIndex) {
 	let deadItems = [];
 	let cache = new Set();
 	// Also checks AutoPlaylists, since dead items may be on library
-	const selItems = plman.GetPlaylistItems(playlistIndex);
-	selItems.Convert().forEach((handle, idx) => {
+	plman.GetPlaylistItems(playlistIndex).Convert().forEach((handle, idx) => {
 		if (cache.has(handle.RawPath)) { return; }
 		if (utils.IsFile(handle.Path)) { cache.add(handle.RawPath); return; }
 		if (!fileRegex.test(handle.RawPath)) { cache.add(handle.RawPath); return; } // Exclude streams and title-only tracks
 		deadItems.push({ handle, idx });
 	});
 	return deadItems;
+}
+
+/* exported countDeadItems */
+function countDeadItems(playlistIndex) {
+	if (playlistIndex === -1 || playlistIndex >= plman.PlaylistCount) { return 0; }
+	return plman.GetPlaylistItems(playlistIndex).Convert().reduce((prev, handle) => {
+		return fileRegex.test(handle.RawPath) && !utils.IsFile(handle.Path) ? prev + 1 : prev;
+	}, 0);
 }
 
 /* exported playlistReviveAll */
