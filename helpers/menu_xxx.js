@@ -503,8 +503,9 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	this.appendToLast = (text) => {
 		const lastEntry = this.getLastEntry();
 		if (lastEntry) {
-			const lastName = lastEntry.entryText;
-			lastEntry.entryText = () => (isFunction(lastName) ? lastName() : lastName) + (isFunction(text) ? String(text()) : text);
+			const key = lastEntry.bIsMenu ? 'menuName' : 'entryText';
+			const lastName = lastEntry[key];
+			lastEntry[key] = () => (isFunction(lastName) ? lastName() : lastName) + (isFunction(text) ? String(text()) : text);
 			return true;
 		}
 		return false;
@@ -600,6 +601,31 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		const check = (this.getCheckMenu(menuName) || []).find((check) => check.name === name);
 		return (check ? check.val : null);
 	};
+	/**
+	 * Sanitize entry/menu name as it's internally stored.
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name sanitize
+	 * @param {stringLike} [str]
+	 * @returns {string}
+	 */
+	this.sanitize = (str) => {
+		return str.toString().split('\t')[0] || ''; // NOSONAR
+	};
+	/**
+	 * Sanitize entry/menu name and splits into name and tip part
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name sanitizeSplit
+	 * @param {stringLike} [str]
+	 * @returns {[string] || [string, string]}
+	 */
+	this.sanitizeSplit = (str) => {
+		const out = str.toString().split('\t'); // NOSONAR
+		return out.length === 2 ? out : [...out, ''];
+	};
 	/* Internal methods (private) */
 	/**
 	 * Retrieves menu object by mapping or entire map.
@@ -610,7 +636,17 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {String} menuName - Menu name
 	 * @returns {Map<String, MenuObject>|MenuObject}
 	 */
-	this.getMenu = (menuName) => menuName ? menuMap.get(menuName) : menuMap;
+	this.getMenu = (menuName) => menuName ? menuMap.get(this.sanitize(menuName)) : menuMap;
+	/**
+	 * Sets menu object by mapping.
+	 * @private
+	 * @kind method
+	 * @memberof _menu
+	 * @name setMenu
+	 * @param {String} menuName - Menu name
+	 * @returns {void}
+	 */
+	this.setMenu = (menuName) => menuMap.set(this.sanitize(menuName), window.CreatePopupMenu());
 	/**
 	 * Retrieves menu entry idx by name or entire map.
 	 * @private
@@ -671,8 +707,8 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 */
 	this.createMenu = (menuName = this.getMainMenuName()) => {
 		if (isFunction(menuName)) { menuName = menuName(); }
-		menuMap.set(menuName, window.CreatePopupMenu());
-		return menuMap.get(menuName);
+		this.setMenu(menuName, window.CreatePopupMenu());
+		return this.getMenu(menuName);
 	};
 	/**
 	 * Adds a menu entry to a parent menu.
@@ -687,7 +723,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @returns {MenuObject}
 	 */
 	this.addToMenu = ({ entryText = null, func = null, menuName = this.getMainMenuName(), flags = MF_STRING }) => {
-		if (separator.test(entryText)) { menuMap.get(menuName).AppendMenuSeparator(); }
+		if (separator.test(entryText)) { this.getMenu(menuName).AppendMenuSeparator(); }
 		else {
 			idx++;
 			if (isFunction(menuName)) { menuName = menuName(); }
@@ -704,7 +740,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			else if (eType === 'function') { entryText = entryText.name; }
 			else if (eType !== 'string') { menuError({ 'function': 'addToMenu\n', menuName, entryText, flags }); throwError('entryText type is not recognized'); }
 			// Cut len
-			let [entryTextName, entryTextTab] = entryText.split('\t');
+			let [entryTextName, entryTextTab] = this.sanitizeSplit(entryText);
 			let entryTextSanitized = entryTextName;
 			const chars = [')', ']', '}', ':'];
 			if (entryTextName.length > iMaxEntryLen) {
@@ -720,7 +756,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			// Delete invisible chars since they may appear as bugged chars with some fonts on Wine
 			entryTextSanitized = entryTextSanitized.replace(hiddenCharsRegEx, '');
 			// Create FB menu entry. Add proper error info
-			try { menuMap.get(menuName).AppendMenuItem(flags, idx, entryTextSanitized); } catch (e) { throwError(e.message + '\nmenuName: ' + menuName); }
+			try { this.getMenu(menuName).AppendMenuItem(flags, idx, entryTextSanitized); } catch (e) { throwError(e.message + '\nmenuName: ' + menuName); }
 			// Add to index
 			const entryName = (menuName === this.getMainMenuName() ? entryText : menuName + '\\' + entryText);
 			entryMap.set(entryName, idx);
@@ -764,7 +800,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 					const delta = idxFunc();
 					if (typeof delta !== 'number') { console.log('Menu-Framework-SMP: .checkMenu() - idxFunc() not a number -> ' + menuName + ' -> ' + delta); }
 					if ((idxA + delta) > idxB) { console.log('Menu-Framework-SMP: .checkMenu() - idxA + idxFunc() over top idx (' + idxB + ') -> ' + menuName + ' -> ' + delta); } // NOSONAR
-					try { menuMap.get(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta); }
+					try { this.getMenu(menuName).CheckMenuRadioItem(idxA, idxB, idxA + delta); }
 					catch (e) {
 						throwError(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tentryTextB:\t' + entryTextB + '\n\tentryNameB:\t' + entryNameB + '\n\tmenuName:\t' + menuName);
 					}
@@ -776,7 +812,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 				name: entryTextA, val: null, func: () => {
 					const bVal = idxFunc();
 					if (typeof bVal !== 'boolean') { console.log('Menu-Framework-SMP: .checkMenu() - idxFunc() not a boolean -> ' + entryNameA + ' -> ' + bVal); }
-					try { menuMap.get(menuName).CheckMenuItem(idxA, bVal); }
+					try { this.getMenu(menuName).CheckMenuItem(idxA, bVal); }
 					catch (e) {
 						throwError(e.message + '\n\tentryTextA:\t' + entryTextA + '\n\tentryNameA:\t' + entryNameA + '\n\tmenuName:\t' + menuName);
 					}
@@ -1084,7 +1120,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name lastCoords
 	 * @type {[number, number]}
 	 */
-	this.lastCoords = void(0);
+	this.lastCoords = void (0);
 	Object.defineProperty(this, 'lastCoords', { get() { return [this.mx, this.my]; } });
 	/**
 	 * Checks if a menu entry (object) is a separator.

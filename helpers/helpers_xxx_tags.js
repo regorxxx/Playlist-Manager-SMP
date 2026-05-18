@@ -1,22 +1,19 @@
 ﻿'use strict';
-//07/05/26
+//18/05/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3 */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
 include('helpers_xxx.js');
-/* global globTags:readable, folders:readable */
+/* global globTags:readable, folders:readable, globQuery:readable, MF_STRING:readable, MF_GRAYED:readable */
 include('helpers_xxx_prototypes.js');
-/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable, strNumCollator:readable */
+/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable, strNumCollator:readable, _qCond:readable, _t:readable */
 include('helpers_xxx_cache_volatile.js');
 /* global VolatileCache:readable */
-include('callbacks_xxx.js');
 
 /*
 	Global Variables
 */
 const tagsVolatileCache = new VolatileCache(1000); // Deleted every 1000 ms
-addEventListener('on_metadb_changed', () => tagsVolatileCache.clear());
-
 const subsongRegex = /,\d+$/;
 const fileRegex = /^(unpack:.*)?file(-relative)?:\/+/i;
 
@@ -1028,4 +1025,168 @@ function isSubsongPath(path, ext = '') {
 	const blackList = new Set(['dsf']);
 	const subSong = path.split(',').pop();
 	return subsongRegex.test(path) && subSong !== '0' && !blackList.has(ext || path.split('.').pop().replace(',' + subSong, ''));
+}
+
+/**
+ * Creates AutoPlaylist presets based on global tags.
+ *
+ * @function
+ * @name function createAutoplaylistPresets
+ * @kind function
+ * @returns {{name: string, menu?: string, plsName?:string, query?: string, sort?: string, bSortForced?: boolean}[]}
+ */
+function createAutoplaylistPresets() {
+	const options = [
+		{ name: 'Media library', query: 'ALL' },
+	].concat([
+		{ name: 'sep' },
+		{
+			name: 'Recently added',
+			query: globQuery.added,
+			sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortAdded),
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{ name: 'sep', menu: 'Playcount and date' },
+		{
+			name: 'Never played',
+			query: _qCond(globTags.playCount) + ' IS 0',
+			menu: 'Playcount and date'
+		},
+		{
+			name: 'Last played today',
+			query: globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING #NOW#'),
+			sort: { tfo: globTags.playCountRateGlobalDay, direction: -1 },
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{
+			name: 'Last played yesterday',
+			query: globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING #YESTERDAY#'),
+			sort: { tfo: globTags.playCountRateGlobalDay, direction: -1 },
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{
+			name: 'Last played last 5 days',
+			query: globQuery.recentBy('5 DAYS'),
+			sort: 'SORT DESCENDING BY ' + _qCond(globTags.sortLastPlayed),
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{ name: 'sep', menu: 'Playcount and date' },
+		{
+			name: 'Daily listen rate ≥1',
+			query: 'NOT ' + _qCond(globTags.playCountRateGlobalDay) + ' LESS 1',
+			sort: { tfo: globTags.playCountRateGlobalDay, direction: -1 },
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{
+			name: 'Weekly listen rate ≥1',
+			query: 'NOT ' + _qCond(globTags.playCountRateGlobalWeek) + ' LESS 1',
+			sort: { tfo: globTags.playCountRateGlobalWeek, direction: -1 },
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{
+			name: 'Monthly listen rate ≥1',
+			query: 'NOT ' + _qCond(globTags.playCountRateGlobalMonth) + ' LESS 1',
+			sort: { tfo: globTags.playCountRateGlobalMonth, direction: -1 },
+			bSortForced: false,
+			menu: 'Playcount and date'
+		},
+		{
+			name: 'Yearly listen rate ≥1',
+			query: 'NOT ' + _qCond(globTags.playCountRateGlobalYear) + ' LESS 1',
+			sort: { tfo: globTags.playCountRateGlobalYear, direction: -1 },
+			bSortForced: false,
+			menu: 'Playcount and date'
+		}
+	]).concat([
+		{ name: 'sep' },
+		{ name: 'Unrated tracks', query: globQuery.noRating, menu: 'Rating' },
+		{ name: 'sep', menu: 'Rating' },
+		{ name: 'Rated 1 tracks', query: globTags.rating + ' IS 1', menu: 'Rating' },
+		{ name: 'Rated 2 tracks', query: globTags.rating + ' IS 2', menu: 'Rating' },
+		{ name: 'Rated 3 tracks', query: globTags.rating + ' IS 3', menu: 'Rating' },
+		{ name: 'Rated 4 tracks', query: globTags.rating + ' IS 4', menu: 'Rating' },
+		{ name: 'Rated 5 tracks', query: globTags.rating + ' IS 5', menu: 'Rating' },
+		{ name: 'sep', menu: 'Rating' },
+		{ name: 'Loved tracks', query: globQuery.loved, menu: 'Rating' },
+		{ name: 'Hated tracks', query: globQuery.hated, menu: 'Rating' },
+		{ name: 'sep', menu: 'Rating' },
+		{ name: 'Fav tracks', query: globQuery.fav, sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false, menu: 'Rating' },
+	]).concat([
+		{ name: 'sep' },
+		{
+			name: 'Same genres (any)',
+			query: globTags.genre + ' IS #' + globTags.genre + '#',
+			sort: 'SORT BY "$rand()"', bSortForced: false,
+			menu: 'From selection', expansionBy: 'OR',
+			plsName: 'Mix: ' + _t(globTags.genre)
+		},
+		{
+			name: 'Same styles (any)',
+			query: globTags.style + ' IS #' + globTags.style + '#',
+			sort: 'SORT BY "$rand()"', bSortForced: false,
+			menu: 'From selection', expansionBy: 'OR',
+			plsName: 'Mix: ' + _t(globTags.style)
+		},
+		{
+			name: 'Same genres (all)',
+			query: globTags.genre + ' IS #' + globTags.genre, sort: 'SORT BY "$rand()"',
+			bSortForced: false,
+			menu: 'From selection', expansionBy: 'AND',
+			plsName: 'Genre: ' + _t(globTags.genre)
+		},
+		{
+			name: 'Same styles (all)',
+			query: globTags.style + ' IS #' + globTags.style + '#',
+			sort: 'SORT BY "$rand()"', bSortForced: false,
+			menu: 'From selection', expansionBy: 'AND',
+			plsName: 'Style: ' + _t(globTags.style)
+		},
+		{ name: 'sep', menu: 'From selection' },
+		{
+			name: 'Tracks (by Artist)',
+			query: globTags.artist + ' IS #' + globTags.artistRaw + '#',
+			menu: 'From selection', expansionBy: 'OR',
+			plsName: 'Tracks by ' + globTags.artist
+		},
+		{
+			name: 'Rated ≥3 tracks (by Artist)',
+			query: queryJoin([globQuery.ratingGr2, globTags.artist + ' IS #' + globTags.artistRaw + '#']),
+			sort: 'SORT BY "$rand()"', bSortForced: false,
+			menu: 'From selection', expansionBy: 'OR',
+			plsName: 'Rated ≥3 by ' + globTags.artist
+		},
+		{
+			name: 'Fav tracks (by Artist)',
+			query: queryJoin([globQuery.fav, globTags.artist + ' IS #' + globTags.artistRaw + '#']),
+			sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false,
+			menu: 'From selection', expansionBy: 'OR',
+			plsName: 'Fav tracks by ' + globTags.artist
+		},
+		{
+			name: 'Loved tracks (by artist)',
+			query: queryJoin([globQuery.loved, globTags.artist + ' IS #' + globTags.artistRaw + '#']),
+			sort: 'SORT DESCENDING BY ' + _qCond(globTags.playCount), bSortForced: false,
+			menu: 'From selection', expansionBy: 'OR',
+			plsName: 'Loved tracks by ' + globTags.artist
+		},
+	]);
+	const sel = fb.GetFocusItem(true) || fb.GetSelection();
+	return options.map((opt) => {
+		opt.flags = MF_STRING;
+		if (opt.menu === 'From selection' && opt.query) {
+			if (sel) {
+				opt.query = queryReplaceWithCurrent(opt.query, sel, void (0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true });
+				opt.plsName	 = fb.TitleFormat(opt.plsName || opt.name).EvalWithMetadb(sel).cut(50);
+			} else { opt.flags = MF_GRAYED; }
+			delete opt.expansionBy;
+		}
+		if (!Object.hasOwn(opt, 'plsName') && Object.hasOwn(opt, 'name') && opt.name !== 'sep') { opt.plsName = opt.name; }
+		return opt;
+	});
 }
