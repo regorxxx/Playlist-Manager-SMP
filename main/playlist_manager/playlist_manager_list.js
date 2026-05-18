@@ -3266,7 +3266,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							key: 'Move selection to playlist',
 							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: true }), bStandAlone: true
 						},
-						{ key: 'Clone playlist in UI', func: (z, duplOpt) => clonePlaylistInUI({list:this, z, duplOpt}) },
+						{ key: 'Clone playlist in UI', func: (z, duplOpt) => clonePlaylistInUI({ list: this, z, duplOpt }) },
 						{ key: 'Recycle playlist', func: this.removePlaylist },
 						{ key: 'Lock|Unlock playlist file', func: switchLock.bind(this, this) },
 						{ key: 'Lock|Unlock UI playlist', func: switchLockUI.bind(this, this) },
