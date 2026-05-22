@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//22/05/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData */
 
@@ -24,6 +24,19 @@ const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 
 const absPathRegExp = /[A-z]*:\\/;
 const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR /* cspell:disable-line */
 
+if (utils.MessageBox) {
+	const old = WshShell.Popup;
+	WshShell.Popup = (msg, secsToWait, title, nType, helpText = '') => {
+		if (secsToWait) { return old.call(WshShell, msg, secsToWait, title, nType); }
+		const button = popup[['cancel_retry_continue', 'retry_cancel', 'yes_no', 'yes_no_cancel', 'abort_retry_ignore', 'ok_cancel', 'ok']
+			.find((k) => (nType & popup[k]) === popup[k])];
+		const icon = popup[['info', 'exclamation', 'question', 'stop', 'none']
+			.find((k) => (nType & popup[k]) === popup[k])];
+		const defaultButton = popup[['fourthButton', 'thirdButton', 'secondButton', 'firstButton']
+			.find((k) => (nType & popup[k]) === popup[k])];
+		return utils.MessageBox(msg, title, button, icon, defaultButton, helpText);
+	};
+}
 
 include('helpers_xxx.js');
 /* global folders:readable, lastStartup:readable, VK_SHIFT:readable */
@@ -82,6 +95,7 @@ const popup = {
 	yes_no_cancel: 3,
 	yes_no: 4,
 	retry_cancel: 5,
+	cancel_try_continue: 6,
 	// Return
 	timeout: -1,
 	okr: 1,
@@ -91,7 +105,10 @@ const popup = {
 	ignore: 5,
 	yes: 6,
 	no: 7,
+	try: 10,
+	continue: 11,
 	// Icon
+	none: 0,
 	stop: 16,
 	question: 32,
 	exclamation: 48,
@@ -959,7 +976,7 @@ function sanitize(value) {
 function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	if (!value || !value.length) { return ''; }
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
-	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
+	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/ *\/| +\\/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
 }
 
 function UUID() {

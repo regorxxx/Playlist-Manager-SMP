@@ -75,6 +75,7 @@
 ### Changed
 - UI: playlist contextual menu now shows a check (at lock submenu) whenever a loaded playlist is locked.
 - UI: playlist contextual menu cleanup and reordering.
+- UI: support for dark themed popups if JS host allows it.
 - Exporting Playlists: 'Export and convert' actions no longer show a popup per playlist when selecting multiple ones. Furthermore, the popup will only appear once the first time the feature is used after installation.
 - Exporting Playlists: 'Export and convert' actions no longer show a explorer window per playlist file exported when selecting multiple ones, but only one after all have been exported.
 ### Removed
