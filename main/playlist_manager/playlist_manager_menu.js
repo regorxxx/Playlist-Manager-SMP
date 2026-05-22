@@ -1,5 +1,5 @@
 'use strict';
-//18/05/26
+//22/05/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -5219,7 +5219,7 @@ function createSettingsMenu(parent, parentBackground) {
 	{	// Integration
 		const menuName = menu.newMenu('Integration');
 		{	// Dynamic menus
-			const flags = isCompatible('1.6.1', 'smp') || isCompatible('3.6.1', 'jsplitter') ? MF_STRING : MF_GRAYED;
+			const flags = isCompatible('1.6.1', 'foo_spider_monkey_panel') || isCompatible('3.6.1', 'foo_uie_jsplitter') ? MF_STRING : MF_GRAYED;
 			const subMenuName = menu.newMenu('Create dynamic menus', menuName);
 			const options = ['No: don\'t integrate the panel in main menu', 'Yes: for usage on UI buttons', 'Yes: for CMD, foo_httpcontrol (ajquery-xxx), ...'];
 			const optionsLength = options.length;

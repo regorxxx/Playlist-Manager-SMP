@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/05/26
+//22/05/26
 
 /* exported extendGR, checkCompatible */
 
@@ -557,9 +557,11 @@ if (!window.Parent) {
 		enumerable: false,
 		configurable: false,
 		writable: false,
-		value: fb.ComponentPath.includes('foo_uie_jsplitter')
+		value: fb.ComponentPath.toLowerCase().includes('foo_uie_jsplitter')
 			? 'foo_uie_jsplitter'
-			: 'foo_spider_monkey_panel'
+			: fb.ComponentPath.toLowerCase().includes('foo_spider_monkey_panel')
+				? 'foo_spider_monkey_panel'
+				: 'unknown'
 	});
 }
 
@@ -587,26 +589,36 @@ if (!window.FullPanelName) {
 
 if (!window.Bugs) { window.Bugs = {}; }
 
+// BUG: SMP if any lock is applied, playback doesn't work unless this is added
 window.Bugs.SetPlaylistLockedActions = ![
-	{ version: '1.6.2.25.10.29', target: 'smp' },
-	{ version: '3.6.1.2', target: 'jsplitter' } // NOSONAR
+	{ version: '1.6.2.25.10.29', target: 'foo_spider_monkey_panel' },
+	{ version: '3.6.1.2', target: 'foo_uie_jsplitter' } // NOSONAR
 ].some((host) => isCompatible(host.version, host.target));
-
+// BUG: CUI Album List not setting a selection during drag n' drop
 window.Bugs.GetPlaybackQueueContents = ![
-	{ version: '1.7.26.1.11', target: 'smp' },
-	{ version: '3.7.6', target: 'jsplitter' }
+	{ version: '1.7.26.1.11', target: 'foo_spider_monkey_panel' },
+	{ version: '3.7.6', target: 'foo_uie_jsplitter' },
+	{ version: '4.0.5.1-alpha', target: 'foo_uie_jsplitter' }
 ].some((host) => isCompatible(host.version, host.target));
-
+// BUG: Foobar2000 crash when custom_image is null | custom_image not used as fallback for unavailable album art
 window.Bugs.DoDragDrop = ![
-	{ version: '1.7.26.1.26', target: 'smp' },
-	{ version: '3.7.16', target: 'jsplitter' }
+	{ version: '1.7.26.5.2', target: 'foo_spider_monkey_panel' },
+	{ version: '3.8.3', target: 'foo_uie_jsplitter' },
+	{ version: '4.1.3', target: 'foo_uie_jsplitter' }
+].some((host) => isCompatible(host.version, host.target));
+// BUG: Windows alt key is never released properly on windows 11 (VK_ALT)
+window.Bugs.on_key_up = ![
+	{ version: '1.6.2.25.09.10', target: 'foo_spider_monkey_panel' },
+	{ version: '3.7.5', target: 'foo_uie_jsplitter' },
+	{ version: '4.0.5', target: 'foo_uie_jsplitter' }
 ].some((host) => isCompatible(host.version, host.target));
 
 /* Helpers */
 
-function compareVersions(from, to) {
+function compareVersions(from, to, sameMajor = false) {
 	if (typeof from === 'string') { from = from.split('.'); }
 	if (typeof to === 'string') { to = to.split('.'); }
+	if (sameMajor && from[0] !== to[0]) { return false; }
 	const collator = typeof strNumCollator === 'undefined'
 		? new Intl.Collator(void (0), { sensitivity: 'base', numeric: true })
 		: strNumCollator; // eslint-disable-line no-undef
@@ -620,17 +632,34 @@ function compareVersions(from, to) {
 	return true;
 }
 
-function isCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
+function isCompatible(requiredVersionStr = '1.6.1', target = 'foo_spider_monkey_panel') {
 	target = target.toLowerCase();
-	return target === 'smp' || target === 'jsplitter'
-		? compareVersions(utils.Version.split('.'), requiredVersionStr.split('.')) && (target === 'jsplitter' ? fb.ComponentPath.includes('foo_uie_jsplitter') : true)
+	const isJsHost = target !== 'fb';
+	const hostMatch = target === window.Parent;
+	return isJsHost
+		? hostMatch && compareVersions(utils.Version.split('.'), requiredVersionStr.split('.'), target === 'foo_uie_jsplitter')
 		: compareVersions(fb.Version.split('.'), requiredVersionStr.split('.'));
 }
 
-function checkCompatible(requiredVersionStr = '1.6.1', target = 'smp') {
-	target = target.toLowerCase();
-	if (!isCompatible(requiredVersionStr, target)) {
-		const isJsHost = target === 'smp' || target === 'jsplitter';
-		console.popup('This script requires v' + requiredVersionStr + '. Current ' + (isJsHost ? 'component' : 'Foobar2000') + ' version is v' + (isJsHost ? utils : fb).Version + '.', window.Name + ' (' + window.ScriptInfo.Name + ')');
+function checkCompatible(releases = [[{ version: '1.6.1', target: 'foo_spider_monkey_panel' }, { version: '3.6.1', target: 'foo_uie_jsplitter' }, { version: '4.0.0', target: 'foo_uie_jsplitter' }], [{ version: '1.4.0', target: 'fb' }]], bPopup = true) {
+	const out = releases.every((r) => Array.isArray(r)
+		? r.some((sr) => isCompatible(sr.version, sr.target))
+		: isCompatible(r.version, r.target)
+	);
+	if (!out && bPopup) {
+		const formatRelease = (r) => {
+			const isJsHost = r.target === 'foo_spider_monkey_panel' || r.target === 'foo_uie_jsplitter' && r.target !== 'fb';
+			return isJsHost
+				? 'Js Host Component: ' + r.target + ' v' + r.version
+				: 'foobar2000: v' + r.version;
+		};
+		console.popup(
+			'This script requires:' + releases.map((r) => Array.isArray(r)
+				? '\n(\n\t' + r.map(formatRelease).join('\n\t\tOR\n\t') + '\n)'
+				: '\n\t' + formatRelease(r)
+			).join('\n\tAND\n\t') + '\n\nCurrent version is:\n\tJs Host Component: ' + window.Parent + ' v' + utils.Version + '\n\tfoobar2000: v' + fb.Version,
+			window.Name + ' (' + window.ScriptInfo.Name + ')'
+		);
 	}
+	return out;
 }

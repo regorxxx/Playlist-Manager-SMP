@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/05/26
+//22/05/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -65,7 +65,7 @@ include('main\\window\\window_xxx_scrollbar.js');
 /* global _scrollBar:readable */
 
 globProfiler.Print('helpers');
-checkCompatible('1.6.1', 'smp');
+checkCompatible();
 
 const instances = newInstancesManager(globSettings.instanceManager);
 

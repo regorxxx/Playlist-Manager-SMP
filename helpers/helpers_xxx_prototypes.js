@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/04/26
+//20/05/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf */
 
@@ -920,6 +920,12 @@ if (!Set.prototype.differenceSize) {
 /*
 	Numbers
 */
+Object.defineProperty(Number, 'MAX_SMP_INT', {
+	enumerable: true,
+	configurable: false,
+	writable: false,
+	value: 4294967295
+});
 
 function isInt(n) {
 	return Number(n) === n && Number.isSafeInteger(n) && n % 1 === 0;

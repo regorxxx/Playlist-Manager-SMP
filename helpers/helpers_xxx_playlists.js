@@ -39,11 +39,11 @@ function removeNotSelectedTracks(playlistIndex, nTracks, start = 0) {
 	plman.RemovePlaylistSelection(playlistIndex, true);
 }
 
-function findTracksAtPlaylist(plsIdx, handleList, findTrack) {
+function findTracksAtPlaylist(plsIdx, handleArr, findTrack) {
 	const selItems = [];
 	const list = plman.GetPlaylistItems(plsIdx).Convert();
 	const reference = { idx: -1, found: false };
-	handleList.forEach((h) => { // Select duplicates handles
+	handleArr.forEach((h) => { // Select duplicates handles
 		let i = 0;
 		for (const handle of list) {
 			if (handle.Compare(h)) { selItems.push(i); }

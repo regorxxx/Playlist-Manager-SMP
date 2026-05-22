@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/04/26
+//19/05/26
 
 /* exported _background */
 
@@ -37,18 +37,21 @@ function _background({
 	 */
 	this.defaults = _background.defaults;
 	/**
+	 * @typedef {(bChanged:boolean, coverImg:{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }) => any} updateImageBgOnDone - Callback after bg img is updated
+	 */
+	/**
 	 * Updates background image based from preferred handle and calls color callbacks.
 	 * @function
 	 * @name updateImageBg
 	 * @kind method
 	 * @memberof _background
-	 * @type {(bForce:boolean, onDone:function) => void}
+	 * @type {(bForce:boolean, onDone: updateImageBgOnDone, bRepaint:boolean) => void}
 	 * @param {Boolean} bForce - [=false]
-	 * @param {Function?} onDone - [=null]
+	 * @param {updateImageBgOnDone} onDone - [=null]
 	 * @param {Boolean} bRepaint - [=true]
 	 * @returns {Promise.<boolean>}
 	 */
-	this.updateImageBg = debounce(async (bForce = false, onDone = null, bRepaint = true) => {
+	this.updateImageBg = debounce(async (bForce = false, /** @type {updateImageBgOnDone} */ onDone = null, bRepaint = true) => {
 		let handle;
 		if (this.coverModePriority.length) {
 			handle = this.getHandle();
@@ -79,7 +82,7 @@ function _background({
 			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
 			id = tf.EvalWithMetadb(handle);
 			if (!bForce && id === this.coverImg.id) {
-				if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
+				if (onDone && isFunction(onDone)) { onDone(false, this.coverImg); }
 				return false;
 			}
 		}
@@ -116,7 +119,7 @@ function _background({
 			this.applyArtColors(bRepaint);
 			this.notifyArtColors();
 			if (bRepaint) { this.repaint(); }
-			if (onDone && isFunction(onDone)) { onDone(this.coverImg); }
+			if (onDone && isFunction(onDone)) { onDone(true, this.coverImg); }
 		});
 	}, 250);
 	/**
@@ -1490,7 +1493,7 @@ function _background({
 	};
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap:null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
 	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null, blendImage: null }, handle: null, id: null };
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;

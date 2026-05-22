@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/05/26
+//20/05/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
@@ -480,7 +480,7 @@ function queryJoin(queryArray, setLogic = 'AND') {
  * // Returns '[ARTIST IS A OR ARTIST IS B, TITLE IS A OR TITLE IS B]
  * queryCombinations(['A','B'], ['ARTIST', 'TITLE'], 'OR', void(0), 'IS')
  */
-function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subTagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/) {
+function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/, subTagsArrayLogic /*AND, OR [NOT]*/, match = 'IS' /*IS, HAS, EQUAL*/, prefix = '') {
 	// Wrong tagsArray
 	if (tagsArray === null || Object.prototype.toString.call(tagsArray) !== '[object Array]' || tagsArray.length === null || tagsArray.length === 0) {
 		console.log('queryCombinations(): tagsArray was null, empty or not an array.\n\t', tagsArray);
@@ -544,7 +544,11 @@ function queryCombinations(tagsArray, queryKey, tagsArrayLogic /*AND, OR [NOT]*/
 			i++;
 		}
 	}
-	return query;
+	return query
+		? prefix
+			? prefix + '(' + query + ')'
+			: query
+		: '';;
 }
 
 /**
@@ -1182,7 +1186,7 @@ function createAutoplaylistPresets() {
 		if (opt.menu === 'From selection' && opt.query) {
 			if (sel) {
 				opt.query = queryReplaceWithCurrent(opt.query, sel, void (0), { expansionBy: opt.expansionBy || 'AND', bToLowerCase: true });
-				opt.plsName	 = fb.TitleFormat(opt.plsName || opt.name).EvalWithMetadb(sel).cut(50);
+				opt.plsName = fb.TitleFormat(opt.plsName || opt.name).EvalWithMetadb(sel).cut(50);
 			} else { opt.flags = MF_GRAYED; }
 			delete opt.expansionBy;
 		}

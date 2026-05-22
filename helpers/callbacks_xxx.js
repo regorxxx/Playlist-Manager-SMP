@@ -479,19 +479,20 @@ addEventListener('on_notify_data', (name, info) => {
 	}
 });
 
-addEventListener('on_key_down', (k) => {
-	if (k === 0x12) { // BUG: Windows alt key is never released properly on windows 11 (VK_ALT)
-		/* global isCompatible:readable */
-		if (typeof isCompatible !== 'undefined' && (isCompatible('4.0.5', 'jsplitter') || utils.Version.startsWith('3.') && isCompatible('3.7.5', 'jsplitter') || isCompatible('1.6.2.25.09.10', 'smp'))) { return; }
-		const id = setInterval(() => {
-			if (!utils.IsKeyPressed(k)) {
-				clearInterval(id);
-				if (typeof on_key_up !== 'undefined') { on_key_up(k); }
-			}
-		}, 60);
-		setTimeout(() => clearInterval(id), 5000);
-	}
-});
+// BUG: Windows alt key is never released properly on windows 11 (VK_ALT)
+if (window.Bugs && window.Bugs.on_key_up) {
+	addEventListener('on_key_down', (k) => {
+		if (k === 0x12) {
+			const id = setInterval(() => {
+				if (!utils.IsKeyPressed(k)) {
+					clearInterval(id);
+					if (typeof on_key_up !== 'undefined') { on_key_up(k); }
+				}
+			}, 60);
+			setTimeout(() => clearInterval(id), 5000);
+		}
+	});
+}
 
 addEventListener('on_paint', (gr) => { // Make it flash 3 times
 	if (callbacksListener.highlight) {
