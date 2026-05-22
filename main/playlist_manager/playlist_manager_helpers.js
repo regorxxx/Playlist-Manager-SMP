@@ -1007,8 +1007,8 @@ function exportPlaylistFileWithRelPaths({ list, z, ext = '', defPath = '', bNoIn
 	if (!newPath.length) { return { bDone, newPath }; }
 	if (newPath === playlistPath) { console.log('Playlist Manager: can\'t export playlist to original path.'); return { bDone, newPath }; }
 	const paths = getFilePathsFromPlaylist(playlistPath);
-	let relPaths = paths.map((path) => { return '.\\' + path.split('\\').pop(); });
-	if (ext.length) { relPaths = relPaths.map((path) => { return path.split('.').slice(0, -1).concat([ext]).join('.'); }); }
+	let relPaths = paths.map((path) => '.\\' + path.split('\\').pop());
+	if (ext.length) { relPaths = relPaths.map((path) => path.split('.').slice(0, -1).concat([ext]).join('.')); }
 	const codePage = checkCodePage(_open(playlistPath), pls.extension);
 	let file = _open(playlistPath, codePage === -1 ? 0 : codePage);
 	if (file.length) {
@@ -1172,14 +1172,14 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			if (!extension.length || playlistExt.length && (playlistExt.startsWith(extension) || extension.startsWith(playlistExt))) {
 				const codePage = checkCodePage(_open(playlistPath), pls.extension);
 				file = _open(playlistPath, codePage === -1 ? 0 : codePage);
-				paths.forEach((path, i) => { file = file.replace(path, fileNames[i]); });
+				paths.forEach((path, i) => { file = file.replace(path, sanitizePath(fileNames[i])); });
 				if ((extension === '.m3u8' || extension === '.m3u') && !bExtendedM3U) {
 					file = file.replace(/^#(?:EXT.*|.*:.*)[\r\n]*/gm, '');
 				}
 			} else { // Or create new playlist file when translating between different formats
 				savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
 				file = _open(newPath, utf8);
-				paths.forEach((path, i) => { file = file.replace(path, fileNames[i]); });
+				paths.forEach((path, i) => { file = file.replace(path, sanitizePath(fileNames[i])); });
 			}
 			if (bDeleted === false) {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.FullPanelName);
@@ -1274,7 +1274,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			// Create new playlist file when translating between different formats
 			savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
 			let file = _open(newPath, utf8);
-			paths.forEach((path, i) => { file = file.replace(path, fileNames[i]); });
+			paths.forEach((path, i) => { file = file.replace(path, sanitizePath(fileNames[i])); });
 			if (bDeleted === false) {
 				fb.ShowPopupMessage('Playlist generation failed when overwriting a file \'' + newPath + '\'. May be locked.', window.FullPanelName);
 				return { bDone, handleList };

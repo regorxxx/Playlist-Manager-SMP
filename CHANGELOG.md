@@ -78,6 +78,7 @@
 - UI: support for dark themed popups if JS host allows it.
 - Exporting Playlists: 'Export and convert' actions no longer show a popup per playlist when selecting multiple ones. Furthermore, the popup will only appear once the first time the feature is used after installation.
 - Exporting Playlists: 'Export and convert' actions no longer show a explorer window per playlist file exported when selecting multiple ones, but only one after all have been exported.
+- Exporting Playlists: track paths written to output playlist files are now sanitized to match foobar2000 converter output for illegal chars.
 ### Removed
 ### Fixed
 
