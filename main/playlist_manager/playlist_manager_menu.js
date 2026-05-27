@@ -1,5 +1,5 @@
 'use strict';
-//22/05/26
+//28/05/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -978,7 +978,7 @@ function createSelMenu(forcedIndex = -1) {
 		if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUI || bIsPlsLoaded)) { menu.newSeparator(); }
 		{	// Other tools
 			const subMenuName = menu.newMenu('Other tools');
-			if (bIsPlsUI) {
+			if (bIsPlsUI || bIsPlsLoaded) {
 				const deadItems = plman.PlaylistItemCount(uiIdx) < 20000
 					? countDeadItems(uiIdx)
 					: '?';
@@ -1865,7 +1865,7 @@ function createMulSelMenu(forcedIndexes = []) {
 		if (showMenus['File locks'] || showMenus['UI playlist locks'] && (bIsPlsUISome || bIsPlsLoadedSome)) { menu.newSeparator(); }
 		{	// Other tools
 			const subMenuName = menu.newMenu('Other tools');
-			if (bIsPlsUISome) {
+			if (bIsPlsUISome || bIsPlsLoadedSome) {
 				const deadItemsArr = [];
 				let bLocked = true;
 				playlistsUi.forEach((pls, i) => {
