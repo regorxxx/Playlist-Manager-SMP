@@ -1,5 +1,5 @@
-﻿'use strict';
-//15/05/26
+'use strict';
+//28/05/26
 
 /* exported _list */
 
@@ -875,7 +875,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				// Text
 				if (this.uiElements['Search filter'].enabled) {
 					if (!this.searchInput) {
-						this.searchInput = new _inputBox(panel.w - (LM * 2) - iconOffsetLeft, lineY, this.searchCurrent, 'Search', blendColors(panel.colors.headerButtons, panelBgColor, 0.1), opaqueColor(panelBgColor, 5), opaqueColor(panelBgColor, 5), this.colors.selectedPlaylist, this.search, this, folders.xxx + 'helpers\\readme\\input_box.txt', 700);
+						this.searchInput = new _inputBox({ w: panel.w - (LM * 2) - iconOffsetLeft, h: lineY, defaultText: this.searchCurrent, emptyText: 'Search', textColor: blendColors(panel.colors.headerButtons, panelBgColor, 0.1), backColor: opaqueColor(panelBgColor, 5), borderColor: opaqueColor(panelBgColor, 5), backSelectionColor: this.colors.selectedPlaylist, func: this.search, parent: this, helpFile: folders.xxx + 'helpers\\readme\\input_box.txt', timeout: 700, bSupressShortcuts: false });
 						if (this.searchMethod.text && !this.searchMethod.bResetStartup) {
 							this.searchMethod.text = this.validateSearch(this.searchMethod.text);
 							if (this.searchMethod.text.length) {
@@ -2001,7 +2001,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 	};
 
-	this.on_focus = (bFocused) => { // eslint-disable-line no-unused-vars
+	this.on_focus = (bFocused) => {
+		if (window.SetShortcutFilter) { window.SetShortcutFilter(bFocused); }
 		if (this.searchInput) {
 			this.searchInput.check('down', -1, -1);
 			this.searchInput.check('up', -1, -1);

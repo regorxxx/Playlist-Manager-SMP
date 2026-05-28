@@ -73,6 +73,8 @@
 ### Added
 - UI: added playlist revive tool to playlist contextual menu (within 'Other tools' submenu).
 ### Changed
+- Quick-search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
+- Search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
 - UI: playlist contextual menu now shows a check (at lock submenu) whenever a loaded playlist is locked.
 - UI: playlist contextual menu cleanup and reordering.
 - UI: support for dark themed popups if JS host allows it.

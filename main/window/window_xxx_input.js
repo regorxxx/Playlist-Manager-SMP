@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/26
+//28/05/26
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -672,7 +672,7 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
 // Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
-function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null, timeout = 500) {
+function _inputBox({w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null, timeout = 500, bSupressShortcuts = true} = {}) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.fontItalic = _gdiFont('Segoe UI', _scale(10), FontStyle.Italic);
@@ -701,6 +701,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 	this.active = false;
 	this.helpFile = helpFile;
 	this.timeout = timeout;
+	this.bSupressShortcuts = bSupressShortcuts;
 
 	this.setSize = function (w, h, fontSize = 10) {
 		this.w = w;
@@ -878,6 +879,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 		switch (callback) {
 			case 'down':
 				if (this.hover) {
+					if (this.bSupressShortcuts && window.SetShortcutFilter) { window.SetShortcutFilter(true); }
 					this.dblclk = false;
 					this.drag = true;
 					this.edit = true;
@@ -887,6 +889,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					this.SelEnd = this.Cpos;
 					this.resetCursorTimer();
 				} else {
+					if (this.bSupressShortcuts && window.SetShortcutFilter) { window.SetShortcutFilter(false); }
 					this.edit = false;
 					this.select = false;
 					this.SelBegin = 0;
@@ -917,6 +920,7 @@ function _inputBox(w, h, defaultText, emptyText, textColor, backColor, borderCol
 					this.dblclk = false;
 				}
 				this.drag = false;
+				if (this.bSupressShortcuts && !this.active && window.SetShortcutFilter) { window.SetShortcutFilter(false); }
 				break;
 			case 'dblclk':
 				if (this.hover) {
