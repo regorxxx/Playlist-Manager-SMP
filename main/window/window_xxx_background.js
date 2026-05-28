@@ -1,10 +1,10 @@
 ﻿'use strict';
-//19/05/26
+//28/05/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable, invert:readable, SmoothingMode:readable, blendColors:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable, invert:readable, SmoothingMode:readable, blendColors:readable, applyManipulation:readable */
 
 /**
  * Background for panel with different cover options
@@ -37,7 +37,7 @@ function _background({
 	 */
 	this.defaults = _background.defaults;
 	/**
-	 * @typedef {(bChanged:boolean, coverImg:{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }) => any} updateImageBgOnDone - Callback after bg img is updated
+	 * @typedef {(bChanged:boolean, coverImg:{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null, blendUiImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }) => any} updateImageBgOnDone - Callback after bg img is updated
 	 */
 	/**
 	 * Updates background image based from preferred handle and calls color callbacks.
@@ -681,19 +681,36 @@ function _background({
 		limits = { x, y, w, h },
 		alpha = this.colorModeOptions.blendAlpha
 	} = {}) => {
-		if (this.useColorsBlend && !!this.coverImg.art.image && limits.h > 1 && limits.w > 1) {
-			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
-			// To mimic Biography blend, HighQuality interpolation must be used. Cache img for given size
-			if (!this.coverImg.art.blendImage || this.coverImg.art.blendImage.Width !== limits.w || this.coverImg.art.blendImage.Height !== limits.h) {
-				this.coverImg.art.blendImage = this.coverImg.art.image
-					.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
-					.Resize(limits.w, limits.h, InterpolationMode.HighQuality);
+		if (this.useColorsBlend && limits.h > 1 && limits.w > 1) {
+			let img;
+			if (this.coverImg.art.image) {
+				const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
+				// To mimic Biography blend, HighQuality interpolation must be used. Cache img for given size
+				if (!this.coverImg.art.blendImage || this.coverImg.art.blendImage.Width !== limits.w || this.coverImg.art.blendImage.Height !== limits.h) {
+					this.coverImg.art.blendImage = this.coverImg.art.image
+						.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
+						.Resize(limits.w, limits.h, InterpolationMode.HighQuality);
+				}
+				img = this.coverImg.art.blendImage;
+
+			} else {
+				if (!this.coverImg.art.blendUiImage) {
+					this.coverImg.art.blendUiImage = applyManipulation(gdi.CreateImage(500, 500), (img, grImg, w, h) => {
+						grImg.SetSmoothingMode(SmoothingMode.HighQuality);
+						const col1 = window.InstanceType === 0 ? window.GetColourCUI(0) : window.GetColourDUI(0);
+						const col2 = window.InstanceType === 0 ? window.GetColourCUI(3) : window.GetColourDUI(1);
+						grImg.FillSolidRect(0, 0, w, h, col1);
+						grImg.FillGradRect(-1, 0, w, h, 90, col2 & 0xbbffffff, col2, 1);
+						grImg.SetSmoothingMode();
+					});
+				}
+				img = this.coverImg.art.blendUiImage;
 			}
-			const img = this.coverImg.art.blendImage;
 			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
+			// To mimic Biography blend, coords must be translated to img source before interpolation
+			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			const offset = 90 - intensity;
-			// To mimic Biography blend, coords must be translated to img source before interpolation
 			const destOffsetW = offset / ((limits.w - limits.x + offset * 2) / img.Width || 1);
 			const destOffsetH = offset / ((limits.h - limits.y + offset * 2) / img.Height || 1);
 			gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, destOffsetW, destOffsetH, img.Width - 2 * destOffsetW, img.Height - 2 * destOffsetH, this.coverModeOptions.angle, alpha);
@@ -1130,6 +1147,17 @@ function _background({
 		this.coverImg.id = null;
 	};
 	/**
+		 * Reset blend stub image
+		 * @property
+		 * @name resetBlendUi
+		 * @kind method
+		 * @memberof _background
+		 * @returns {void}
+		 */
+	this.resetBlendUi = () => {
+		this.coverImg.art.blendUiImage = null;
+	};
+	/**
 	 * Returns available cover modes plus 'none' as first value
 	 * @property
 	 * @name getCoverModes
@@ -1465,6 +1493,7 @@ function _background({
 	 * @returns {boolean}
 	*/
 	this.colorsChanged = (bRepaint = true, bSaveProperties = true, bChangeConfig = true) => {
+		this.resetBlendUi();
 		if (this.colorModeOptions.bUiColors) {
 			const color = [window.InstanceType === 0 ? window.GetColourCUI(3) : window.GetColourDUI(1)];
 			color[1] = RGBA(...toRGB(this.colorModeOptions.color[0]).map((v) => v + 5));
@@ -1472,7 +1501,7 @@ function _background({
 			else { this.colorModeOptions.color = color; }
 			return true;
 		}
-		return false;
+		return this.useColorsBlend;
 	};
 	/**
 	 * Panel init.
@@ -1493,8 +1522,8 @@ function _background({
 	};
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
-	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null, blendImage: null }, handle: null, id: null };
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null, blendUiImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
+	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null, blendImage: null, blendUiImage: null }, handle: null, id: null };
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} - Height margin for image drawing */

@@ -78,6 +78,7 @@
 - UI: playlist contextual menu now shows a check (at lock submenu) whenever a loaded playlist is locked.
 - UI: playlist contextual menu cleanup and reordering.
 - UI: support for dark themed popups if JS host allows it.
+- UI: improved blend color mode to use a mix of CUI/DUI colors when no art is available (like Biograhpy and Library-Tree-SMP do).
 - Exporting Playlists: 'Export and convert' actions no longer show a popup per playlist when selecting multiple ones. Furthermore, the popup will only appear once the first time the feature is used after installation.
 - Exporting Playlists: 'Export and convert' actions no longer show a explorer window per playlist file exported when selecting multiple ones, but only one after all have been exported.
 - Exporting Playlists: track paths written to output playlist files are now sanitized to match foobar2000 converter output for illegal chars.
