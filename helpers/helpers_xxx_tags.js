@@ -1,7 +1,7 @@
 ﻿'use strict';
-//20/05/26
+//28/05/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable, globQuery:readable, MF_STRING:readable, MF_GRAYED:readable */
@@ -616,6 +616,22 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 	}
 	if (!bAllowPlaylist && queryNoSort && new RegExp(/.*#(PLAYLIST|playlist)# IS.*/).exec(queryNoSort)) { bPass = false; }
 	return bPass;
+}
+
+/**
+ * Checks if a dynamic query is valid
+ *
+ * @function
+ * @name checkDynQuery
+ * @kind function
+ * @param {string} query
+ * @param {boolean} bAllowEmpty - [=false] If false, empty queries are non-valid
+ * @param {boolean} bAllowSort - [=false] If false, queries with 'SORT BY' expressions are non-valid
+ * @param {boolean} bAllowPlaylist - [=false] If false, queries with '#PLAYLIST#' expressions are non-valid
+ * @returns {boolean}
+ */
+function checkDynQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlaylist = false) {
+	return hasQueryExpression(query) && query.count('#') >= 2 || checkQuery(query, bAllowEmpty, bAllowSort, bAllowPlaylist);
 }
 
 /**

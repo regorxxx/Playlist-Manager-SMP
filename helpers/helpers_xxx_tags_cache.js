@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/25
+//28/05/26
 
 include('callbacks_xxx.js');
 include('helpers_xxx.js');
@@ -8,8 +8,7 @@ include('helpers_xxx_file.js');
 /* global _createFolder:readable, _save:readable, _deleteFile:readable, _asciify:readable, _isFolder:readable, _open:readable, utf8:readable, getFiles:readable, _jsonParse:readable */
 include('helpers_xxx_prototypes.js');
 /* global MapReplacer:readable, isArray:readable, */
-include('helpers_xxx_crc.js');
-/* global crc32:readable */
+if (!utils.CRC32) { include('helpers_xxx_checksum.js'); }
 if (!isFoobarV2) { console.log('Tags Cache is being used on foobar2000 <2.0. This is not recommended.'); }
 
 // Tags cache
@@ -54,8 +53,7 @@ tagsCache.cacheTags = function (tagNames, iSteps, iDelay, libItems = fb.GetLibra
 		const total = Math.ceil(count / iSteps);
 		const promises = [];
 		const tf = tagNames.map((tag) => { return fb.TitleFormat(tag); });
-		if (!count) { promises.push('done'); }
-		else {
+		if (count) {
 			let prevProgress = -1;
 			for (let i = 1; i <= total; i++) {
 				promises.push(new Promise((resolve) => {
@@ -77,7 +75,7 @@ tagsCache.cacheTags = function (tagNames, iSteps, iDelay, libItems = fb.GetLibra
 					}, iDelay * i);
 				}));
 			}
-		}
+		} else { promises.push(Promise.resolve('done')); }
 		Promise.all(promises).then(() => {
 			console.log('cacheTags: got ' + JSON.stringify(tagNames) + ' tags from ' + count + ' items.');
 			tagNames.forEach((tag) => {
@@ -153,13 +151,13 @@ tagsCache.load = function (folder = this.folder) {
 		if (obj) {
 			const tag = obj.tag;
 			const entries = obj.entries;
-			if (!this.cache.has(tag)) { this.cache.set(tag, new Map(entries)); }
-			else {
+			if (this.cache.has(tag)) {
 				const tagCache = this.cache.get(tag);
 				entries.forEach((pair) => { tagCache.set(pair[0], pair[1]); });
 			}
+			else { this.cache.set(tag, new Map(entries)); }
 		}
-		this.filesCRC[fileName] = this.currCRC[fileName] = crc32(file);
+		this.filesCRC[fileName] = this.currCRC[fileName] = utils.CRC32(file);
 		this.toStr[fileName] = file;
 		this.files[fileName] = filePath;
 	});
@@ -228,5 +226,5 @@ tagsCache.updateCacheCRC = function (tag) {
 	const key = _asciify(tag);
 	const tagCache = this.cache.get(tag);
 	this.toStr[key] = JSON.stringify({ tag, entries: tagCache }, MapReplacer, '\t');
-	this.currCRC[key] = crc32(this.toStr[key]);
+	this.currCRC[key] = utils.CRC32(this.toStr[key]);
 };

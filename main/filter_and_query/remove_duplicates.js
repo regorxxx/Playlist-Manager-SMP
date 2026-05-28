@@ -1,5 +1,5 @@
 ﻿'use strict';
-//04/02/26
+//28/05/26
 
 /*
 	Remove duplicates
@@ -70,7 +70,7 @@ function filterDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => new RegExp(titleRe).exec(key)) && bAdvTitle;
 
 	// Active playlist or input list
 	let bActivePlaylist = false;
@@ -106,7 +106,7 @@ function filterDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 	const count = tfoCopy.length;
 	const countMap = new Map([]);
 	if (bMultiple) {
-		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		const toSplitKeys = checkKeys.map((key) => !new RegExp(globRegExp.singleTags.re).exec(key));
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
@@ -258,7 +258,7 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => new RegExp(titleRe).exec(key)) && bAdvTitle;
 
 	// Active playlist or input list?
 	let bActivePlaylist = false;
@@ -294,7 +294,7 @@ function removeDuplicates({ handleList = null, sortOutput = null, checkKeys = gl
 	const set = new Set();
 	const count = tfoCopy.length;
 	if (bMultiple) {
-		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		const toSplitKeys = checkKeys.map((key) => !new RegExp(globRegExp.singleTags.re).exec(key));
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
@@ -412,13 +412,13 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 	// Check input
 	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
 		console.log('removeDuplicatesAsync: checkKeys [' + checkKeys + '] was null, empty or not an array');
-		return Promise.resolve(handleList);
+		return handleList;
 	} else {
 		let i = checkKeys.length;
 		while (i--) {
 			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]' || checkKeys[i] === '') {
 				console.log('removeDuplicatesAsync: checkKeys [' + checkKeys + '] some keys are not String objects');
-				return Promise.resolve(handleList);
+				return handleList;
 			}
 		}
 	}
@@ -427,14 +427,14 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => new RegExp(titleRe).exec(key)) && bAdvTitle;
 
 	// Active playlist or input list?
 	let bActivePlaylist = false;
 	if (handleList === null) {
 		if (plman.ActivePlaylist === -1) {
 			console.log('removeDuplicatesAsync: No active playlist');
-			return Promise.resolve(null);
+			return null;
 		}
 		bActivePlaylist = true;
 		handleList = plman.GetPlaylistItems(plman.ActivePlaylist);
@@ -477,7 +477,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 	const set = new Set();
 	if (bMultiple) {
 		const dictionaries = Array.from({ length: checkLength }, () => new Set());
-		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		const toSplitKeys = checkKeys.map((key) => !new RegExp(globRegExp.singleTags.re).exec(key));
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
@@ -560,7 +560,7 @@ async function removeDuplicatesAsync({ handleList = null, sortOutput = null, che
 		}
 	}
 	if (bProfile) { test.Print('Task #1: Remove duplicates', false); }
-	return Promise.resolve(items);
+	return items;
 }
 
 /**
@@ -596,7 +596,7 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 
 	// Only use RegExp title matching when the tags contain title!
 	const titleRe = /title/i;
-	bAdvTitle = checkKeys.some((key) => RegExp(titleRe).exec(key)) && bAdvTitle;
+	bAdvTitle = checkKeys.some((key) => new RegExp(titleRe).exec(key)) && bAdvTitle;
 
 	// Active playlist or input list?
 	let bActivePlaylist = false;
@@ -626,7 +626,7 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 	const idxMap = new Map();
 	const count = tfoCopy.length;
 	if (bMultiple) {
-		const toSplitKeys = checkKeys.map((key) => !RegExp(globRegExp.singleTags.re).exec(key));
+		const toSplitKeys = checkKeys.map((key) => !new RegExp(globRegExp.singleTags.re).exec(key));
 		if (bAdvTitle) {
 			const titleRe = globRegExp.title.re;
 			const titleReV2 = globRegExp.ingAposVerbs.re;
@@ -640,8 +640,8 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 				const combs = cartesian(...strArr);
 				for (let str of combs) {
 					const id = str.join(sep);
-					if (!idxMap.has(id)) { idxMap.set(id, new Set([i])); }
-					else { idxMap.set(id, idxMap.get(id).add(i)); break; }
+					if (idxMap.has(id)) { idxMap.set(id, idxMap.get(id).add(i)); break; }
+					else { idxMap.set(id, new Set([i])); }
 				}
 				i++;
 			}
@@ -655,8 +655,8 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 				const combs = cartesian(...strArr);
 				for (let str of combs) {
 					const id = str.join(sep);
-					if (!idxMap.has(id)) { idxMap.set(id, new Set([i])); }
-					else { idxMap.set(id, idxMap.get(id).add(i)); break; }
+					if (idxMap.has(id)) { idxMap.set(id, idxMap.get(id).add(i)); break; }
+					else { idxMap.set(id, new Set([i])); }
 				}
 				i++;
 			}
@@ -670,15 +670,15 @@ function showDuplicates({ handleList = null, sortOutput = null, checkKeys = glob
 				const str = tfoCopy[i]
 					.replace(titleRe, '').replace(titleReV2, 'ing').replace(titleReV3, '$&g')
 					.trim();
-				if (!idxMap.has(str)) { idxMap.set(str, new Set([i])); }
-				else { idxMap.set(str, idxMap.get(str).add(i)); }
+				if (idxMap.has(str)) { idxMap.set(str, idxMap.get(str).add(i)); }
+				else { idxMap.set(str, new Set([i])); }
 				i++;
 			}
 		} else {
 			while (i < count) {
 				const str = tfoCopy[i];
-				if (!idxMap.has(str)) { idxMap.set(str, new Set([i])); }
-				else { idxMap.set(str, idxMap.get(str).add(i)); }
+				if (idxMap.has(str)) { idxMap.set(str, idxMap.get(str).add(i)); }
+				else { idxMap.set(str, new Set([i])); }
 				i++;
 			}
 		}
