@@ -672,7 +672,7 @@ function _button(x, y, w, h, text, func, gFont = _gdiFont('Segoe UI', 12), descr
 
 // Mostly based on INPUT BOX by Br3tt aka Falstaff (c)2013-2015
 // Added extra functionality (like keyboard shortcuts), missing contextual menu actions and code cleanup
-function _inputBox({w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null, timeout = 500, bSupressShortcuts = true} = {}) {
+function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderColor, backSelectionColor, func, parent = null, helpFile = null, timeout = 500, bSupressShortcuts = true } = {}) {
 	this.tt = '';
 	this.font = _gdiFont('Segoe UI', _scale(10));
 	this.fontItalic = _gdiFont('Segoe UI', _scale(10), FontStyle.Italic);
@@ -702,6 +702,7 @@ function _inputBox({w, h, defaultText, emptyText, textColor, backColor, borderCo
 	this.helpFile = helpFile;
 	this.timeout = timeout;
 	this.bSupressShortcuts = bSupressShortcuts;
+	this.pendingSearch = false;
 
 	this.setSize = function (w, h, fontSize = 10) {
 		this.w = w;
@@ -1601,7 +1602,7 @@ function _inputBox({w, h, defaultText, emptyText, textColor, backColor, borderCo
 				}
 			}
 		}
-		this.autoValidate(); // autosearch: has text changed after on_key or on_char ?
+		if (this.sText !== this.text) { this.autoValidate(); } // autosearch: has text changed after on_key or on_char ?
 	};
 
 	this.on_char = function (code, mask = getKeyboardMask()) { // callback doesn't provide mask
@@ -1636,24 +1637,35 @@ function _inputBox({w, h, defaultText, emptyText, textColor, backColor, borderCo
 				this.select = false;
 			}
 			this.repaint();
+			if (this.sText !== this.text) { this.autoValidate(); } // autosearch: has text changed after on_key or on_char ?
 		}
-		this.autoValidate(); // autosearch: has text changed after on_key or on_char ?
 	};
 
 	this.autoValidate = () => {
+		this.pendingSearch = this.text !== this.prevText;
 		if (this.autoValidation && this.func) {
 			if (this.text !== this.prevText) {
 				// launch timer to process the search
 				timer && window.ClearTimeout(timer);
+				this.prevText = this.text;
 				timer = window.SetTimeout(() => {
 					this.func();
 					timer && window.ClearTimeout(timer);
 					timer = false;
+					this.pendingSearch = false;
 				}, this.timeout);
-				this.prevText = this.text;
 			}
+		} else {
+			this.prevText = this.text;
 		}
 	};
+
+	this.isSearching;
+	Object.defineProperty(this, 'isSearching', { // NOSONAR
+		enumerable: true,
+		configurable: false,
+		get: () => this.text.length !== 0 || this.autoValidation && this.func && this.pendingSearch
+	});
 }
 
 // Helpers

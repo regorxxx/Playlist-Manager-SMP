@@ -3085,6 +3085,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			return { plsState: found.length ? found : [{}] };
 		} else if (bFilter) {
 			this.filter({ plsState: [], bSkipSearch: true });
+			return { plsState: this.plsState };
 		}
 		return { plsState: [] };
 	};
@@ -4497,9 +4498,9 @@ function _list({ x, y, w, h, properties } = {}) {
 			Extension: this.constExtStates()[0] !== this.extStates[0],
 			'Lock state': this.constLockStates()[0] !== this.lockStates[0],
 			MBID: this.constMbidStates()[0] !== this.mbidStates[0],
-			Playlist: this.plsState.length !== 0 && (this.searchInput === null || this.searchInput.text.length === 0),
+			Playlist: this.plsState.length !== 0 && (this.searchInput === null || !this.searchInput.isSearching),
 			'Playlist type': this.constAutoPlaylistStates()[0] !== this.autoPlaylistStates[0],
-			Search: this.plsState.length !== 0 && this.searchInput !== null && this.searchInput.text.length !== 0,
+			Search: this.plsState.length !== 0 && this.searchInput !== null && this.searchInput.isSearching,
 			Tag: !isArrayEqual(this.tagState, this.tags())
 		};
 		return bActiveOnly
@@ -8336,8 +8337,8 @@ function _list({ x, y, w, h, properties } = {}) {
 			altColor: (x, y, mask, parent) => { // eslint-disable-line no-unused-vars
 				const filterKeys = Object.keys(this.getFilter(true));
 				return this.bInit && this.itemsAll > 0 && (this.searchMethod.bResetFilters
-					? filterKeys.length
-					: filterKeys.filter((key) => key !== 'Search').length);
+					? filterKeys.length !== 0
+					: filterKeys.some((key) => key !== 'Search'));
 			}
 		},
 		columns: {

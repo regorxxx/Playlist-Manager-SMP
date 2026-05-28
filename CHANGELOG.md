@@ -84,6 +84,7 @@
 - Exporting Playlists: track paths written to output playlist files are now sanitized to match foobar2000 converter output for illegal chars.
 ### Removed
 ### Fixed
+- UI: minor filter button glitch (shows an X) after clearing the search box for a some seconds, if panel was previously filtered by search text.
 
 ## [1.0.0-beta.9] - 2026-04-28
 ### Added
