@@ -4,7 +4,7 @@
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable, invert:readable, SmoothingMode:readable, blendColors:readable, applyManipulation:readable */
+/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable, invert:readable, SmoothingMode:readable, blendColors:readable, applyManipulation:readable, tintColor:readable */
 
 /**
  * Background for panel with different cover options
@@ -634,7 +634,7 @@ function _background({
 				break;
 			}
 			case 'blend': { // NOSONAR
-				if (this.coverImg.art.image) { break; }
+				if (this.coverImg.art.image || this.coverImg.art.blendUiImage) { break; }
 			}
 			case 'bigradient': { // eslint-disable-line no-fallthrough
 				if (bCreateImg || !this.colorModeOptions.bDither) {
@@ -683,8 +683,8 @@ function _background({
 	} = {}) => {
 		if (this.useColorsBlend && limits.h > 1 && limits.w > 1) {
 			let img;
+			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 			if (this.coverImg.art.image) {
-				const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 				// To mimic Biography blend, HighQuality interpolation must be used. Cache img for given size
 				if (!this.coverImg.art.blendImage || this.coverImg.art.blendImage.Width !== limits.w || this.coverImg.art.blendImage.Height !== limits.h) {
 					this.coverImg.art.blendImage = this.coverImg.art.image
@@ -697,18 +697,22 @@ function _background({
 				if (!this.coverImg.art.blendUiImage) {
 					this.coverImg.art.blendUiImage = applyManipulation(gdi.CreateImage(500, 500), (img, grImg, w, h) => {
 						grImg.SetSmoothingMode(SmoothingMode.HighQuality);
-						const col1 = window.InstanceType === 0 ? window.GetColourCUI(0) : window.GetColourDUI(0);
-						const col2 = window.InstanceType === 0 ? window.GetColourCUI(3) : window.GetColourDUI(1);
-						grImg.FillSolidRect(0, 0, w, h, col1);
-						grImg.FillGradRect(-1, 0, w, h, 90, col2 & 0xbbffffff, col2, 1);
+						const bgCol = window.InstanceType === 0 ? window.GetColourCUI(3) : window.GetColourDUI(1);
+						const textCol = tintColor(window.InstanceType === 0 ? window.GetColourCUI(0) : window.GetColourDUI(0), 10, bgCol);
+						grImg.FillSolidRect(0, 0, w, h, textCol);
+						grImg.FillGradRect(-1, 0, w + 5, h, 90, bgCol & 0xbbffffff, bgCol, 1);
 						grImg.SetSmoothingMode();
-					});
+						const font = gdi.Font('Segoe UI', 90, 1);
+						grImg.DrawString('       NO       \n SELECTION', font, textCol & 0x25ffffff, 0, 100, w, h, 0);
+						grImg.FillSolidRect(60, 388, 380, 50, textCol & 0x15ffffff);
+					})
+						.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
+						.Resize(limits.w, limits.h, InterpolationMode.HighQuality);;
 				}
 				img = this.coverImg.art.blendUiImage;
 			}
 			gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, this.getUiColors()[0]);
 			// To mimic Biography blend, coords must be translated to img source before interpolation
-			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 			gr.SetInterpolationMode(InterpolationMode.LowQuality);
 			const offset = 90 - intensity;
 			const destOffsetW = offset / ((limits.w - limits.x + offset * 2) / img.Width || 1);
@@ -888,7 +892,7 @@ function _background({
 		if (config.colorMode || config.colorModeOptions) {
 			this.colorImg = null;
 			if (this.colorModeOptions.bUiColors) { this.colorsChanged(false, false, false); }
-			if (config.colorMode === 'blend' && !(config.coverMode || config.coverModeOptions)) { this.updateImageBg(true); }
+			if (config.colorMode || config.colorModeOptions && Object.hasOwn(config.colorModeOptions, 'blendIntensity')) { this.resetBlendUi(); }
 		}
 		this.resize({ bRepaint });
 		if (callback && isFunction(callback)) { callback.call(this, this.exportConfig(true), arguments[0], callbackArgs); }
@@ -1574,10 +1578,12 @@ function _background({
 	 * @typedef {object} ColorModeOptions - Art settings
 	 * @property {Boolean} bDither - Flag to apply dither effect
 	 * @property {Boolean} bUiColors - Flag to use colors from DUI/CUI
+	 * @property {boolean} bDarkBiGradOut - Flag to ensure the darkest color is used on bigradient mode
 	 * @property {number} angle - Gradient angle (0-360)
 	 * @property {number} focus - Gradient focus (0-1)
 	 * @property {[Number, Number]} color - Array of colors (at least 2 required for gradient usage)
-	 * @property {boolean} bDarkBiGradOut - Flag to ensure the darkest color is used on bigradient mode
+	 * @property {number} blendIntensity - Blend effect (0-90)
+	 * @property {number} blendAlpha - Blend effect alpha (0-255)
 	 */
 	/** @type {ColorModeOptions} - Color settings */
 	this.colorModeOptions = {};

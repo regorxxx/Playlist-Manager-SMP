@@ -1,5 +1,5 @@
 'use strict';
-//14/05/26
+//29/05/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -375,9 +375,9 @@ function darkenColor(color, percent, bUseAlpha = false) {
 	return RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), bUseAlpha ? a : 255);
 }
 
-function tintColor(color, percent, bUseAlpha = false) {
+function tintColor(color, percent, reference, bUseAlpha = false) {
 	const [r, g, b, a] = toRGBA(color);
-	return isDark(r, g, b)
+	return (reference ? isDark(...toRGB(reference)) : isDark(r, g, b))
 		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), bUseAlpha ? a : 255)
 		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), bUseAlpha ? a : 255);
 }
