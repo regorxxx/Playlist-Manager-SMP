@@ -377,7 +377,7 @@ function darkenColor(color, percent, bUseAlpha = false) {
 
 function tintColor(color, percent, reference, bUseAlpha = false) {
 	const [r, g, b, a] = toRGBA(color);
-	return (reference ? isDark(...toRGB(reference)) : isDark(r, g, b))
+	return (typeof reference === 'undefined' ? isDark(r, g, b) : isDark(...toRGB(reference)))
 		? RGBA(lightenColorVal(r, percent), lightenColorVal(g, percent), lightenColorVal(b, percent), bUseAlpha ? a : 255)
 		: RGBA(darkenColorVal(r, percent), darkenColorVal(g, percent), darkenColorVal(b, percent), bUseAlpha ? a : 255);
 }
