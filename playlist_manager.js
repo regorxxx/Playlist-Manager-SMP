@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/26
+//31/05/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -366,7 +366,8 @@ let properties = {
 	statusIcons: ['Playlist status icons', JSON.stringify({
 		active: { enabled: true, string: String.fromCodePoint(8226) /* • */, offset: true },
 		playing: { enabled: true, string: String.fromCodePoint(9654) /* ▶ */, offset: false },
-		loaded: { enabled: true, string: String.fromCodePoint(187) /* » */, offset: true }
+		loaded: { enabled: true, string: String.fromCodePoint(187) /* » */, offset: true },
+		['UI-only']: { enabled: false, string: String.fromCodePoint(187) /* » */, offset: true }
 	}), { func: isJSON, forceDefaults: true }],
 	bForceCachePls: ['Force playlist cache at init', false, { func: isBoolean }],
 	importPlaylistFilters: ['Import file \\ url filters', JSON.stringify([globQuery.stereo, globQuery.notLowRating, globQuery.noLive, globQuery.noLiveNone]), { func: (x) => isJSON(x) && JSON.parse(x).every((query) => checkQuery(query, true)) }],

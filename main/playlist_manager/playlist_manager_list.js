@@ -1,5 +1,5 @@
 'use strict';
-//28/05/26
+//31/05/26
 
 /* exported _list */
 
@@ -1196,7 +1196,8 @@ function _list({ x, y, w, h, properties } = {}) {
 				switch (true) {
 					case fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist: label = 'playing'; break;
 					case findPlsIdx === plman.ActivePlaylist: label = 'active'; break;
-					case pls.extension !== '.ui' || !this.bLiteMode: label = 'loaded'; break;
+					case pls.extension !== '.ui': label = 'loaded'; break;
+					case pls.extension === '.ui' && !this.bLiteMode: label = 'UI-only'; break;
 				}
 				if (label) {
 					const icon = iconChars[label];

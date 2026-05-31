@@ -72,6 +72,8 @@
 ## [Unreleased][]
 ### Added
 - UI: added playlist revive tool to playlist contextual menu (within 'Other tools' submenu).
+- UI: added loaded status icon setting for UI-only playlists on non-lite mode; disabled by default. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
+
 ### Changed
 - Quick-search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
 - Search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
