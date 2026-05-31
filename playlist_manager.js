@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/05/26
+//29/05/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -655,7 +655,7 @@ let plsRwLock;
 				}
 			}
 		});
-		setTimeout(() => removeEventListener(listener.event, null, listener.id), 20000);
+		if (listener) { setTimeout(() => removeEventListener(listener.event, null, listener.id), 20000); }
 		// Due to automatic category tagging, UI-only playlists (or old playlists with category set) would be hidden on first init...
 		new Promise((resolve) => {
 			const timer = setInterval(() => {

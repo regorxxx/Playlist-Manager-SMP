@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/04/26
+//29/05/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks */
 
@@ -195,11 +195,11 @@ parentWindow.eventListener = { event: null, id: null };
  * 																																		? (taskId: number, success: boolean, responseText: string, status: number, contentType: string) => void
  * 																																		: () => void
  * } listener - Callback function
- * @param {boolean} bRegister? - Add to global context
- * @returns {false | { event: smpEvent; id: string; }}
+ * @param {boolean?} bRegister - Add to global context
+ * @returns {null | { event: smpEvent; id: string; }}
  */
 function addEventListener(event, listener, bRegister = true) { // eslint-disable-line no-redeclare
-	if (!Object.hasOwn(callbacks, event)) { console.log('addEventListener: event does not exist -> ' + event); return false; }
+	if (!Object.hasOwn(callbacks, event)) { console.log('addEventListener: event does not exist -> ' + event); return null; }
 	const id = UUID();
 	callbacks[event].listeners.push({ id, listener });
 	hookCustomEventListener(event);
