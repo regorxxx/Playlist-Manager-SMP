@@ -1,5 +1,5 @@
 'use strict';
-//28/05/26
+//01/06/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -4341,6 +4341,18 @@ function createSettingsMenu(parent, parentBackground) {
 					checkFunc: () => parent.properties.bNotifyColors[1] && parentBackground.useCoverColors
 				});
 			}
+			menu.newSeparator(subMenuName);
+			menu.newEntry({
+				menuName: subMenuName, entryText: 'Show row stripes', func: () => {
+					panel.colors.bAltRowsColor = !panel.colors.bAltRowsColor;
+					panel.properties.bAltRowsColor[1] = panel.colors.bAltRowsColor;
+					overwriteProperties(panel.properties);
+					panel.colorsChanged();
+					list.checkConfigPostUpdate(list.checkConfig({ bResetColors: true })); // Ensure related settings is set properly
+					list.repaint();
+				}
+			});
+			menu.newCheckMenuLast(() => panel.colors.bAltRowsColor);
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'Reset all to default', func: () => {
