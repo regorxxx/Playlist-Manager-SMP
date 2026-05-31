@@ -83,6 +83,7 @@
 - Exporting Playlists: 'Export and convert' actions no longer show a explorer window per playlist file exported when selecting multiple ones, but only one after all have been exported.
 - Exporting Playlists: track paths written to output playlist files are now sanitized to match foobar2000 converter output for illegal chars.
 ### Removed
+- UI: loaded status icon being shown for UI-only playlists on lite mode despite such info being totally useless. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
 ### Fixed
 - UI: minor filter button glitch (shows an X) after clearing the search box for a some seconds, if panel was previously filtered by search text.
 

@@ -1196,11 +1196,13 @@ function _list({ x, y, w, h, properties } = {}) {
 				switch (true) {
 					case fb.IsPlaying && findPlsIdx === plman.PlayingPlaylist: label = 'playing'; break;
 					case findPlsIdx === plman.ActivePlaylist: label = 'active'; break;
-					default: label = 'loaded'; break;
+					case pls.extension !== '.ui' || !this.bLiteMode: label = 'loaded'; break;
 				}
-				const icon = iconChars[label];
-				if (icon.enabled) {
-					gr.GdiDrawText(icon.string, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.rowHeight, RIGHT);
+				if (label) {
+					const icon = iconChars[label];
+					if (icon.enabled) {
+						gr.GdiDrawText(icon.string, panel.fonts.small, panel.colors.text, this.x + icon.offset, textY, iconsRightW, panel.rowHeight, RIGHT);
+					}
 				}
 			}
 		};
