@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/05/26
+//29/05/26
 
 /* exported _background */
 
@@ -1059,7 +1059,7 @@ function _background({
 		const modes = [...trackCoverModes].rotate(trackCoverModes.indexOf(this.coverMode) + Math.sign(next));
 		let bDone;
 		const handle = this.getHandle();
-		for (let i = 0; i < modes.length; i++) {
+		for (let i = 0; i < modes.length; i++) { // NOSONAR
 			bDone = await this.getHandleArt(handle, modes[0], true)
 				.then((artPromise) => {
 					if (artPromise.path.length) {
