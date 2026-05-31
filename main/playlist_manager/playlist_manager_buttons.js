@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/04/26
+//29/05/26
 
 /* global list:readable, chars:readable, isArrayEqual:readable, cycleCategories:readable, cycleTags:readable, properties */
 /* exported ThemedPanelButton, calcNextButtonCoordinates, on_paint_buttn, on_mouse_move_buttn, on_mouse_leave_buttn, on_mouse_lbtn_down_buttn, on_size_buttn, _listButtons */
@@ -34,7 +34,7 @@ function _listButtons(bSetup = false) {
 	this.y = 0;
 	this.w = 0;
 	this.h = 0;
-	const parent = this;
+	const parent = this; // NOSONAR
 
 	const calcNextButtonCoordinates = (coord, recalc = true) => {
 		let newCoordinates;
@@ -57,8 +57,8 @@ function _listButtons(bSetup = false) {
 		state,
 		description,
 		icon = null,
-		gFont = _gdiFont(globFonts.button.name, !properties ? panel.fonts.buttons.Size : globFonts.button.size),
-		gFontIcon = _gdiFont(globFonts.buttonIcon.name, !properties ? panel.fonts.buttons.Size : globFonts.buttonIcon.size),
+		gFont = _gdiFont(globFonts.button.name, properties ? globFonts.button.size : panel.fonts.buttons.Size),
+		gFontIcon = _gdiFont(globFonts.buttonIcon.name, properties ? globFonts.buttonIcon.size : panel.fonts.buttons.Size),
 	} = {}) {
 		this.state = state || buttonStates.normal;
 		this.x = x;
@@ -76,7 +76,7 @@ function _listButtons(bSetup = false) {
 		this.textWidth = isFunction(this.text)
 			? () => _textWidth(this.text(), gFont)
 			: _textWidth(this.text, gFont);
-		this.icon = this.gFontIcon.Name !== 'Microsoft Sans Serif' ? icon : null; // if using the default font, then it has probably failed to load the right one, skip icon
+		this.icon = this.gFontIcon.Name === 'Microsoft Sans Serif' ? null : icon; // if using the default font, then it has probably failed to load the right one, skip icon
 		this.iconWidth = isFunction(this.icon)
 			? () => _textWidth(this.icon(), gFontIcon)
 			: _textWidth(this.icon, gFontIcon);
@@ -235,7 +235,10 @@ function _listButtons(bSetup = false) {
 				}
 			}
 			const offset = 10;
-			if (this.icon !== null) {
+			if (this.icon === null) {
+				const textCalculated = isFunction(this.text) ? this.text() : this.text;
+				gr.GdiDrawText(textCalculated, this.gFont, parent.config.textColor, xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
+			} else {
 				const iconWidthCalculated = isFunction(this.icon) ? this.iconWidth() : this.iconWidth;
 				const textWidthCalculated = wCalc - iconWidthCalculated - offset;
 				const iconCalculated = isFunction(this.icon) ? this.icon() : this.icon;
@@ -246,9 +249,6 @@ function _listButtons(bSetup = false) {
 				} else {
 					gr.GdiDrawText(textCalculated, this.gFont, parent.config.textColor, xCalc + offset * 2 + iconWidthCalculated, yCalc, wCalc - offset * 3 - iconWidthCalculated, hCalc, DT_LEFT | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 				}
-			} else {
-				const textCalculated = isFunction(this.text) ? this.text() : this.text;
-				gr.GdiDrawText(textCalculated, this.gFont, parent.config.textColor, xCalc, yCalc, wCalc, hCalc, DT_CENTER | DT_VCENTER | DT_CALCRECT | DT_NOPREFIX); // Text
 			}
 		};
 
@@ -370,8 +370,8 @@ function _listButtons(bSetup = false) {
 		if (bSetup) { return; }
 		this.oldButtonCoordinates.x = 0;
 		Object.keys(this.buttons).forEach((key) => {
-			this.buttons[key].gFont = _gdiFont(globFonts.button.name, !properties ? panel.fonts.buttons.Size : globFonts.button.size);
-			this.buttons[key].gFontIcon = _gdiFont(globFonts.buttonIcon.name, !properties ? panel.fonts.buttons.Size : globFonts.buttonIcon.size);
+			this.buttons[key].gFont = _gdiFont(globFonts.button.name, properties ? globFonts.button.size : panel.fonts.buttons.Size);
+			this.buttons[key].gFontIcon = _gdiFont(globFonts.buttonIcon.name, properties ? globFonts.buttonIcon.size : panel.fonts.buttons.Size);
 		});
 	};
 
@@ -438,7 +438,7 @@ function _listButtons(bSetup = false) {
 			x: () => 1,
 			y: () => window.Height - buttonCoordinatesOne.h(),
 			w: () => window.Width / 7 * 2,
-			h: () => _gdiFont(globFonts.buttonIcon.name, !properties ? panel.fonts.buttons.Size : globFonts.buttonIcon.size).Height + _scale(6)
+			h: () => _gdiFont(globFonts.buttonIcon.name, properties ? globFonts.buttonIcon.size : panel.fonts.buttons.Size).Height + _scale(6)
 		};
 		const buttonCoordinatesTwo = {
 			x: () => buttonCoordinatesOne.x() + buttonCoordinatesOne.w(),
@@ -515,13 +515,13 @@ function filterName() {
 			const states = list.categories();
 			const options = ['All', ...states];
 			const idx = list.categoryState.length === 1 ? options.indexOf(list.categoryState[0]) : -1;
-			const name = idx !== -1
-				? options[idx]
-				: !list.bInit || isArrayEqual(list.categoryState, states)
+			const name = idx === -1
+				? !list.bInit || isArrayEqual(list.categoryState, states)
 					? options[0]
-					: 'Multiple...';
+					: 'Multiple...'
+				: options[idx];
 			const lines = _textLinesWrap(name, this.gFont, this.w() - 50);
-			return lines[0] !== name ? lines[0] + '...' : name;
+			return lines[0] === name ? name : lines[0] + '...';
 		}
 		case 'Extension': {
 			return list.extStates[0];
@@ -545,13 +545,13 @@ function filterName() {
 			const states = list.tags();
 			const options = ['All', ...states];
 			const idx = list.tagState.length === 1 ? options.indexOf(list.tagState[0]) : -1;
-			const name = idx !== -1
-				? options[idx]
-				: !list.bInit || isArrayEqual(list.tagState, states)
+			const name = idx === -1
+				? !list.bInit || isArrayEqual(list.tagState, states)
 					? options[0]
-					: 'Multiple...';
+					: 'Multiple...'
+				: options[idx];
 			const lines = _textLinesWrap(name, this.gFont, this.w() - 50);
-			return lines[0] !== name ? lines[0] + '...' : name;
+			return lines[0] === name ? name : lines[0] + '...';
 		}
 	}
 }
@@ -650,7 +650,7 @@ function filterTooltip() {
 
 function sortTooltip() {
 	let ttText = '';
-	ttText = !list.getIndexSortState() ? 'Natural sort' : 'Inverted sort';
+	ttText = list.getIndexSortState() ? 'Inverted sort' : 'Natural sort';
 	if (list.tooltipSettings.bShowTips) {
 		ttText += '\n-----------------------------------------';
 		ttText += '\n(L. Click to invert sorting)';
@@ -676,14 +676,14 @@ function sortIcon() {
 }
 
 function filterIcon() {
-	const processChar = (c) => { return String.fromCharCode(parseInt(c, 16)); };
+	const processChar = (c) => { return String.fromCodePoint(Number.parseInt(c, 16)); };
 	const icons = list.playlistIcons;
 	switch (this.method) {
 		case 'Category': {
 			const curr = list.categoryState;
 			const states = list.categories();
-			if (!isArrayEqual(curr, states)) { return chars.bookmark; }
-			else { return chars.filter; }
+			if (isArrayEqual(curr, states)) { return chars.filter; }
+			else { return chars.bookmark; }
 		}
 		case 'Extension': {
 			const curr = list.extStates[0];
@@ -716,8 +716,8 @@ function filterIcon() {
 		case 'Tag': {
 			const curr = list.tagState;
 			const states = list.tags();
-			if (!isArrayEqual(curr, states)) { return curr.length === 1 ? chars.tag : chars.tags; }
-			else { return chars.filter; }
+			if (isArrayEqual(curr, states)) { return chars.filter; }
+			else { return curr.length === 1 ? chars.tag : chars.tags; }
 		}
 		default: {
 			return chars.filter;

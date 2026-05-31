@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/01/26
+//29/05/26
 
 /* exported _listStatistics */
 
@@ -12,7 +12,7 @@ include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 
 function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
-	const parent = this;
+	const parent = this; // NOSONAR
 	const sizeThreshold = 25; // Used at getData to classify playlists by size
 	let rows = 0;
 	let columns = 0;
@@ -193,7 +193,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					entryText: 'Size', args: { axis: 'Size', data: { option: 'property', arg: 'size' } }
 				},
 			].forEach(createMenuOption('data', null, subMenu, true, (option) => {
-				option.newValue = Array(1).fill(...parent.getData({ source: parent.source, sourceArg: parent.sourceArg, option: option.args.data.option, arg: option.args.data.arg }));
+				option.newValue = new Array(1).fill(...parent.getData({ source: parent.source, sourceArg: parent.sourceArg, option: option.args.data.option, arg: option.args.data.arg }));
 				[parent.option, parent.arg] = [option.args.data.option, option.args.data.arg];
 				this.changeConfig(
 					{
@@ -246,7 +246,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						parent.sourceArg = option.args.data.sourceArg;
 					}
 				}
-				option.newValue = Array(1).fill(...parent.getData({ source: option.args.data.source, sourceArg: parent.sourceArg, option: parent.option, arg: parent.arg }));
+				option.newValue = new Array(1).fill(...parent.getData({ source: option.args.data.source, sourceArg: parent.sourceArg, option: parent.option, arg: parent.arg }));
 				parent.source = option.args.data.source;
 			}));
 		}
@@ -397,8 +397,8 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 					}
 					(Array.isArray(val) ? val : [val]).forEach((subVal) => {
 						if (subVal === null) { return; }
-						if (!count.has(subVal)) { count.set(subVal, 1); }
-						else { count.set(subVal, count.get(subVal) + 1); }
+						if (count.has(subVal)) { count.set(subVal, count.get(subVal) + 1); }
+						else { count.set(subVal, 1); }
 					});
 				});
 				data = [Array.from(count, (point) => { return { x: point[0], y: point[1] }; })];
@@ -455,7 +455,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			[ // Row
 				{
 					...config,
-					data: Array(1).fill(...this.getData({ source: this.source, sourceArg: this.sourceArg, option: this.option, arg: this.arg }))
+					data: new Array(1).fill(...this.getData({ source: this.source, sourceArg: this.sourceArg, option: this.option, arg: this.arg }))
 				},
 			]
 		];

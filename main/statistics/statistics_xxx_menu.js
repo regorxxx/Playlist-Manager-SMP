@@ -220,7 +220,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			const subMenuGreat = menu.newMenu('Greater than', subMenu);
 			const subMenuLow = menu.newMenu('Lower than', subMenu);
 			// Create a filter entry for each fraction of the max value (duplicates filtered)
-			const parent = this;
+			const parent = this; // NOSONAR
 			const options = [...new Set([
 				this.stats.minY, this.stats.maxY,
 				...[1000, 100, 10, 10 / 2, 10 / 3, 10 / 5, 10 / 7].map((frac) => Math.round(this.stats.maxY / frac) || 1)
@@ -340,7 +340,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 				if (this.graph.multi) {
 					menu.newEntry({ menuName: subMenuGroup, entryText: 'Z-points per X-value to show:', flags: MF_GRAYED });
 					menu.newSeparator(subMenuGroup);
-					const parent = this;
+					const parent = this; // NOSONAR
 					const options = [...new Set([this.stats.maxGroup, 10, 8, 5, 4, 3, 2, 1].map((frac) => {
 						return Math.round(this.stats.maxGroup / frac) || this.stats.minGroup; // Don't allow zero
 					}))];

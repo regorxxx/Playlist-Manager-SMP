@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/05/26
+//29/05/26
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
@@ -1660,7 +1660,7 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 		}
 	};
 
-	this.isSearching;
+	this.isSearching; // NOSONAR
 	Object.defineProperty(this, 'isSearching', { // NOSONAR
 		enumerable: true,
 		configurable: false,
