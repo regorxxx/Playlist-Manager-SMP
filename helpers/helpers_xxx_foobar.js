@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/25
+//29/05/26
 
 /* exported memoryUsed, isPortable, lastStartup, memoryPrint*/
 
@@ -24,9 +24,9 @@ function memoryPrint(text, obj) {
 	console.log(
 		window.Name  + _ps(window.ScriptInfo.Name) + (text ? ' - ' + text : '') +
 		(
-			typeof obj !== 'undefined'
-				? '\n\t Args memory usage: ' + utils.FormatFileSize(roughSizeOfObject(obj))
-				: ''
+			typeof obj === 'undefined'
+				? ''
+				: '\n\t Args memory usage: ' + utils.FormatFileSize(roughSizeOfObject(obj))
 		) +
 		'\n\t Panel memory usage: ' + utils.FormatFileSize(window.JsMemoryStats.MemoryUsage) +
 		'  /  Total memory usage:: ' + utils.FormatFileSize(window.JsMemoryStats.TotalMemoryLimit)

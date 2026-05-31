@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/03/26
+//29/05/26
 
 /* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2 */
 
@@ -73,7 +73,7 @@ function onStateChangeV2(resolve, reject, func = null, type = null) {
 // May be used to async run a func for the response or as promise
 function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
 	const p = new Promise((resolve, reject) => {
-		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; }
+		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; } // NOSONAR
 		let timer = null;
 		const xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
 		if (window.WebRequests) { window.WebRequests.add(xmlhttp); }
@@ -82,7 +82,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 		xmlhttp.open(
 			method,
 			URL + (bypassCache
-				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime()
+				? (/\?/.test(URL) ? '&' : '?') + Date.now()
 				: '')
 		);
 		requestHeader.forEach((pair) => {
@@ -100,7 +100,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 			if (!func) { // 408 Request Timeout
 				let status;
 				try { status = xmlhttp.status; } catch (e) { status = 408; } // eslint-disable-line no-unused-vars
-				reject({ status, responseText: 'Request Timeout' });
+				reject({ status, responseText: 'Request Timeout' });  // NOSONAR
 			}
 		}, timeOut, xmlhttp);
 		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type);
@@ -111,7 +111,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 
 function sendV2({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
 	const p = new Promise((resolve, reject) => {
-		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; }
+		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; }  // NOSONAR
 		const winHttp = new ActiveXObject('WinHttp.WinHttpRequest.5.1');
 		if (window.WebRequests) { window.WebRequests.add(winHttp); }
 		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
@@ -119,7 +119,7 @@ function sendV2({ method = 'GET', URL, body = void (0), func = null, requestHead
 		winHttp.Open(
 			method,
 			URL + (bypassCache
-				? (/\?/.test(URL) ? '&' : '?') + new Date().getTime()
+				? (/\?/.test(URL) ? '&' : '?') + Date.now()
 				: ''),
 			true
 		);
@@ -144,11 +144,11 @@ function sendV2({ method = 'GET', URL, body = void (0), func = null, requestHead
 				onStateChangeV2.call(winHttp, resolve, reject, func, type);
 			} catch (e) {
 				let status = 400;
-				if (e.message.indexOf('0x80072ee7') !== -1) { status = 400; }
-				else if (e.message.indexOf('0x80072ee2') !== -1) { status = 408; }
-				else if (e.message.indexOf('0x8000000a') !== -1) { status = 408; }
+				if (e.message.includes('0x80072ee7')) { /* do nothing */ }
+				else if (e.message.includes('0x80072ee2')) { status = 408; }
+				else if (e.message.includes('0x8000000a')) { status = 408; }
 				winHttp.Abort();
-				if (!func) { reject({ status, responseText: e.message }); }
+				if (!func) { reject({ status, responseText: e.message }); } // NOSONAR
 			}
 		}, timeOut);
 		const checkResponse = setInterval(() => {
@@ -183,12 +183,12 @@ function paginatedFetch({ URL, queryParams = {}, requestHeader, keys = [], incre
 	return send({ method: 'GET', URL: URL + urlParams, requestHeader, bypassCache: true })
 		.then(
 			(resolve) => {
-				if (!keys.length) {
-					return resolve ? JSON.parse(resolve) : [];
-				} else {
+				if (keys.length) {
 					return resolve
 						? keys.reduce((acc, key) => { return acc && Object.hasOwn(acc, key) ? acc[key] : null; }, JSON.parse(resolve)) || []
 						: [];
+				} else {
+					return resolve ? JSON.parse(resolve) : [];
 				}
 			},
 			() => []

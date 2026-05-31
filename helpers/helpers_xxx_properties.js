@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/01/26
+//29/05/26
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues, checkJsonProperties */
 
@@ -27,16 +27,16 @@ function setProperties(propertiesDescriptor, prefix = '', count = 1, bPadding = 
 		const property = propertiesDescriptorOut[k] = [...propertiesDescriptor[k]];
 		const description = property[0] = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + property[0];
 		if (bForce) { // Only use set when overwriting... this is done to have default values set first and then overwriting if needed.
-			if (!checkProperty(property)) {
-				window.SetProperty(description, property[3]);
-			} else {
+			if (checkProperty(property)) {
 				window.SetProperty(description, property[1]);
+			} else {
+				window.SetProperty(description, property[3]);
 			}
 		} else {
-			if (!checkProperty(property)) {
-				checkProperty(property, window.GetProperty(description, property[3]));
-			} else {
+			if (checkProperty(property)) {
 				checkProperty(property, window.GetProperty(description, property[1]));
+			} else {
+				checkProperty(property, window.GetProperty(description, property[3]));
 			}
 		}
 		if (bNumber) { count++; }
@@ -50,10 +50,10 @@ function overwriteProperties(propertiesDescriptor) { // Equivalent to setPropert
 	for (const k in propertiesDescriptor) {
 		if (!Object.hasOwn(propertiesDescriptor, k)) { continue; }
 		const property = propertiesDescriptor[k];
-		if (!checkProperty(property)) {
-			window.SetProperty(property[0], property[3]);
-		} else {
+		if (checkProperty(property)) {
 			window.SetProperty(property[0], property[1]);
+		} else {
+			window.SetProperty(property[0], property[3]);
 		}
 	}
 	return propertiesDescriptor;
@@ -209,7 +209,7 @@ function checkProperty(property, withValue) {
 	let bPass = true;
 	let report = '';
 	if (property.length < 4) { return true; }  // No checks needed (?)
-	const valToCheck = (typeof withValue !== 'undefined' ? withValue : property[1]);
+	const valToCheck = (typeof withValue === 'undefined' ? property[1] : withValue);
 	const checks = property[2];
 	if (Object.hasOwn(checks, 'lower') && valToCheck >= checks['lower']) {
 		bPass = false; report += 'Value must be lower than ' + checks['lower'] + '\n';

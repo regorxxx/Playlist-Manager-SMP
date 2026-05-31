@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/12/25
+//29/05/26
 
 /* exported _popup */
 
@@ -62,7 +62,7 @@ function _popup({
 		}
 	}
 	this.fontSize *= scale;
-	this.gFont = _gdiFont(typeof globFonts !== 'undefined' ? globFonts.standard.name : 'Segoe UI', this.fontSize, FontStyle.Bold);
+	this.gFont = _gdiFont(typeof globFonts === 'undefined' ? 'Segoe UI' : globFonts.standard.name, this.fontSize, FontStyle.Bold);
 
 	// Paint
 	this.paint = (gr) => { // on_paint

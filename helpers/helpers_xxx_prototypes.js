@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/05/26
+//29/05/26
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable, strNumCollator:readable */
@@ -1017,6 +1017,15 @@ Math.randomNum = function randomNum(min, max, { integer = false, includeMax = fa
 Math.randomInt = function randomNum(min, max, includeMax = false) {
 	return Math.randomNum(min, max, { integer: true, includeMax });
 };
+
+function secondsToTime(secs) {
+	const h = Math.floor(secs / (60 * 60));
+	const divisorMinutes = secs % (60 * 60);
+	const m = Math.floor(divisorMinutes / 60);
+	const divisorSeconds = divisorMinutes % 60;
+	const s = Math.ceil(divisorSeconds);
+	return (h ? h + 'h ' : '') + (m ? m + 'min ' + s + 's' : s + 's');
+}
 
 /*
 	UUID

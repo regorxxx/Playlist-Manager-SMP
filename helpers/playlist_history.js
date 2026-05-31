@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/11/24
+//29/05/26
 
 /* exported PlsHistory */
 
@@ -47,7 +47,7 @@ function PlsHistory({ size = 11, bAutoInit = true } = {}) {
 
 	this.getPrevPlsName = () => {
 		const prevPls = this.getPrevPls();
-		return prevPls !== -1 ? plman.GetPlaylistName(prevPls) : '-None-';
+		return prevPls === -1 ? '-None-' : plman.GetPlaylistName(prevPls);
 	};
 
 	this.getAll = () => {

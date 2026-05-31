@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//29/05/26
 
 /* exported newInstancesManager*/
 
@@ -68,7 +68,7 @@ function _instancesManager() {
 			const self = this.getSelf(key);
 			window.NotifyOthers('sendInstance', { caller: window.ID, key, ...self });
 			return Promise.wait(this._timeout).then(() => {
-				removeEventListener(listener.event, null, listener.id);
+				if (listener) { removeEventListener(listener.event, null, listener.id); }
 				if (this._[key]) {
 					this._[key].length = 0;
 					if (self) { this._[key].push(self); }
@@ -108,7 +108,7 @@ function _instancesManager() {
 		return false;
 	};
 	this.init = function () {
-		const parent = this;
+		const parent = this; // NOSONAR
 		addEventListener('on_notify_data', (name, /** @type {{caller:string, name:string, id:string, date:number, panelName: window.Name}} */ info) => {
 			if (name === 'storeInstance' && info) {
 				parent.push({ ...info });

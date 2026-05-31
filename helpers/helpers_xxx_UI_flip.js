@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/12/23
+//29/05/26
 
 String.prototype.flip = function () { // NOSONAR
 	const last = this.length - 1;
@@ -7,7 +7,7 @@ String.prototype.flip = function () { // NOSONAR
 	for (let i = last; i >= 0; --i) {
 		let c = this.charAt(i);
 		let r = flipTable[c.toLowerCase()];
-		result[last - i] = r !== void (0) ? r : c;
+		result[last - i] = typeof r === 'undefined' ? c : r;
 	}
 	return result.join('');
 };

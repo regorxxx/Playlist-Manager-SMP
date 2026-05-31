@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/05/26
+//29/05/26
 
 /* exported extendGR, checkCompatible */
 
@@ -542,7 +542,7 @@ if (fb.AddLocationsAsync) {
 						resolve(handleList);
 					}
 				});
-				setTimeout(() => removeEventListener(listener.event, void (0), listener.id), 60000);
+				if (listener) { setTimeout(() => removeEventListener(listener.event, void (0), listener.id), 60000); }
 			} else {
 				throw new Error('callbacks_xxx.js is missing'); // NOSONAR
 			}
