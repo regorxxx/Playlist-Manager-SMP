@@ -448,7 +448,7 @@ function createSelMenu(forcedIndex = -1) {
 				menu.newEntry({
 					entryText: 'Clone in UI' + list.getGlobalShortcut('clone ui'), func: () => {
 						const remDupl = (pls.isAutoPlaylist && list.bRemoveDuplicatesAutoPls) || (pls.extension === '.xsp' && list.bRemoveDuplicatesSmartPls) ? list.removeDuplicatesAutoPls : [];
-						clonePlaylistInUI(list, z, { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple });
+						clonePlaylistInUI({ list, z, duplOpt: { remDupl, bAdvTitle: list.bAdvTitle, bMultiple: list.bMultiple } });
 					}
 				});
 				!list.bLiteMode && menu.newEntry({
