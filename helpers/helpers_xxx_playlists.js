@@ -326,9 +326,10 @@ function focusOnItem(plsIdx, idx, selection = [], bClear = true) {
 }
 
 function movePlaylistSelection(plsIdx, posIdx, bScroll) { // Works with non contiguous selection
-	plman.UndoBackup(plsIdx);
 	const selIdxArr = getPlaylistSelectedIndexes(plsIdx);
-	let toPlsPos = posIdx === -1 ? plman.PlaylistItemCount(plsIdx) - 1 : posIdx;
+	if (plman.GetPlaylistLockedActions(plsIdx).includes('ReorderItems')) { return selIdxArr;}
+	plman.UndoBackup(plsIdx);
+	let toPlsPos = posIdx === -1 ? plman.PlaylistItemCount(plsIdx) - 1 : Math.min(posIdx, plman.PlaylistItemCount(plsIdx) - 1);
 	let bMoved = false;
 	const toSel = [];
 	const chunks = selIdxArr.chunkBy((curr, prev) => curr !== prev + 1);
@@ -336,32 +337,48 @@ function movePlaylistSelection(plsIdx, posIdx, bScroll) { // Works with non cont
 	if (middle !== -1) { toPlsPos = chunks[middle].at(0) - 1; }
 	let mBreak = middle === -1 ? chunks.findLastIndex((arr) => arr[0] < posIdx) : middle - 1;
 	let toMove = mBreak === -1 ? [] : chunks.slice(0, mBreak + 1);
-	if (toMove.length) {
-		bMoved = true;
-		let movedCount = 0;
-		toMove.reverse().forEach((arr) => {
+	if (middle === 0 && chunks.length === 1) {
+		toPlsPos = posIdx === -1
+			? plman.PlaylistItemCount(plsIdx) - 1
+			: posIdx;
+		if (chunks[0].at(0) === toPlsPos || toPlsPos + chunks[0].length > plman.PlaylistItemCount(plsIdx)) { toPlsPos = -1; }
+		if (toPlsPos === -1) {
+			selIdxArr.forEach((i) => toSel.push(i));
+		} else {
 			plman.ClearPlaylistSelection(plsIdx);
-			plman.SetPlaylistSelection(plsIdx, arr, true);
-			plman.MovePlaylistSelection(plsIdx, toPlsPos - arr.at(-1) - movedCount);
-			movedCount += arr.length;
-		});
-		range(toPlsPos, toPlsPos - movedCount + 1, -1).forEach((i) => toSel.push(i));
-		toSel.sort((a, b) => a - b);
-	}
-	toMove = selIdxArr.filter((idx) => idx > toPlsPos);
-	if (bMoved) { toPlsPos += 1; }
-	if (middle !== -1) { toPlsPos = chunks[middle].at(-1) + 1; chunks[middle].forEach((i) => toSel.push(i)); }
-	mBreak = middle === -1 ? chunks.findLastIndex((arr) => arr[0] < posIdx) : middle;
-	toMove = mBreak === -1 ? chunks : chunks.slice(mBreak + 1);
-	if (toMove.length) {
-		let movedCount = 0;
-		toMove.forEach((arr) => {
+			plman.SetPlaylistSelection(plsIdx, chunks[0], true);
+			plman.MovePlaylistSelection(plsIdx, toPlsPos - chunks[0].at(0));
 			plman.ClearPlaylistSelection(plsIdx);
-			plman.SetPlaylistSelection(plsIdx, arr, true);
-			plman.MovePlaylistSelection(plsIdx, toPlsPos - arr.at(0) + movedCount);
-			movedCount += arr.length;
-		});
-		range(toPlsPos, toPlsPos + movedCount - 1, 1).forEach((i) => toSel.push(i));
+			chunks[0].forEach((i) => toSel.push(i + toPlsPos - chunks[0].at(0)));
+		}
+	} else {
+		if (toMove.length) {
+			bMoved = true;
+			let movedCount = 0;
+			toMove.reverse().forEach((arr) => {
+				plman.ClearPlaylistSelection(plsIdx);
+				plman.SetPlaylistSelection(plsIdx, arr, true);
+				plman.MovePlaylistSelection(plsIdx, toPlsPos - arr.at(-1) - movedCount);
+				movedCount += arr.length;
+			});
+			range(toPlsPos, toPlsPos - movedCount + 1, -1).forEach((i) => toSel.push(i));
+			toSel.sort((a, b) => a - b);
+		}
+		toMove = selIdxArr.filter((idx) => idx > toPlsPos);
+		if (bMoved) { toPlsPos += 1; }
+		if (middle !== -1) { toPlsPos = chunks[middle].at(-1) + 1; chunks[middle].forEach((i) => toSel.push(i)); }
+		mBreak = middle === -1 ? chunks.findLastIndex((arr) => arr[0] < posIdx) : middle;
+		toMove = mBreak === -1 ? chunks : chunks.slice(mBreak + 1);
+		if (toMove.length) {
+			let movedCount = 0;
+			toMove.forEach((arr) => {
+				plman.ClearPlaylistSelection(plsIdx);
+				plman.SetPlaylistSelection(plsIdx, arr, true);
+				plman.MovePlaylistSelection(plsIdx, toPlsPos - arr.at(0) + movedCount);
+				movedCount += arr.length;
+			});
+			range(toPlsPos, toPlsPos + movedCount - 1, 1).forEach((i) => toSel.push(i));
+		}
 	}
 	plman.ClearPlaylistSelection(plsIdx);
 	plman.SetPlaylistSelection(plsIdx, toSel, true);
