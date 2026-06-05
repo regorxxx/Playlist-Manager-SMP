@@ -73,7 +73,7 @@
 ### Added
 - UI: added playlist revive tool to playlist contextual menu (within 'Other tools' submenu).
 - UI: added loaded status icon setting for UI-only playlists on non-lite mode; disabled by default. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
-
+- Exporting Playlist: added new Namida 'Export and convert' preset.
 ### Changed
 - Quick-search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
 - Search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
@@ -84,6 +84,7 @@
 - Exporting Playlists: 'Export and convert' actions no longer show a popup per playlist when selecting multiple ones. Furthermore, the popup will only appear once the first time the feature is used after installation.
 - Exporting Playlists: 'Export and convert' actions no longer show a explorer window per playlist file exported when selecting multiple ones, but only one after all have been exported.
 - Exporting Playlists: track paths written to output playlist files are now sanitized to match foobar2000 converter output for illegal chars.
+- Exporting Playlist: updated Fiio 'Export and convert' preset to split artist into artist initial subfolders (android doesn't handle a huge amount of folders at any path really well). Added new Namida preset.
 ### Removed
 - UI: loaded status icon being shown for UI-only playlists on lite mode despite such info being totally useless. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
 ### Fixed
