@@ -76,6 +76,7 @@
 - Exporting Playlist: added new Namida 'Export and convert' preset.
 ### Changed
 - Quick-search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
+- Quick-search: tooltip is now disabled while quick-searching.
 - Search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).
 - UI: playlist contextual menu now shows a check (at lock submenu) whenever a loaded playlist is locked.
 - UI: playlist contextual menu cleanup and reordering.

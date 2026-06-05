@@ -1,5 +1,5 @@
 'use strict';
-//31/05/26
+//06/06/26
 
 /* exported _list */
 
@@ -50,6 +50,7 @@ include('playlist_manager_helpers.js');
  */
 function _list({ x, y, w, h, properties } = {}) {
 	const bDebug = false;
+	const quickSearchDuration = 1200;
 	// Pls Keys
 	const defPls = new PlaylistObj();
 	const defPlsKeys = new Set(Object.keys(new PlaylistObj()));
@@ -1445,7 +1446,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			animation.fRepaint = setTimeout(() => {
 				animation.fRepaint = null;
 				this.repaint(false, 'list');
-			}, 600);
+			}, quickSearchDuration);
 		}
 		// Draw a tooltip box on drag n drop
 		if (this.bIsDragDrop && this.dragDropText && this.dragDropText.length) {
@@ -2628,8 +2629,9 @@ function _list({ x, y, w, h, properties } = {}) {
 	};
 
 	this.quickSearch = (keyChar, next = 0) => {
+		this.tooltip.SetValue(null);
 		if (animation.fRepaint !== null) { clearTimeout(animation.fRepaint); }
-		if (Number.isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > 600) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false }; }
+		if (Number.isFinite(this.lastCharsPressed.ms) && Math.abs(this.lastCharsPressed.ms - Date.now()) > quickSearchDuration) { this.lastCharsPressed = { str: '', ms: Infinity, bDraw: false, bAnyPosition: false }; }
 		let method = this.methodState.split('\t')[0].replace('By ', '');
 		if (method === 'name' || this.properties.bQuickSearchName[1] || !Object.hasOwn(new PlaylistObj(), method)) { method = 'nameId'; } // Fallback to name for sorting methods associated to non tracked variables
 		let bNext = false;
