@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/05/26
+//05/06/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -197,7 +197,7 @@ let properties = {
 		{ name: '--Foobar2000 mobile (root)--', dsp: '...', tf: '.\\music\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same root than music (without a folder)
 		{ name: '--Foobar2000 mobile (same folder)--', dsp: '...', tf: '.\\$ascii($if2($meta(' + globTags.artistRaw + ',0),$meta(ARTIST,0))\\%ALBUM%\\%TRACK% - %TITLE%).mp3', path: '', playlistOutPath: '', extension: '.m3u8', bExtendedM3U: true }, // Foobar2000 mobile, playlists on same folder than music
 		{ name: '--FiiO (playlists folder)--', dsp: '...', tf: '\\storage\\external_sd1\\music\\' + globTags.initialArtistAlbumTrackTitlePath + '.mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST#.playlist#EXT#', extension: '.m3u8', bExtendedM3U: false }, // FiiO music
-		{ name: '--Namida (playlists folder)--', dsp: '...', tf: '..\\music\\' + globTags.initialArtistAlbumTrackTitlePath + '.mp3', path: '', playlistOutPath: '#EXPORT##PLAYLIST##EXT#', extension: '.m3u8', bExtendedM3U: false } // Namida App
+		{ name: '--Namida (playlists folder)--', dsp: '...', tf: '..\\music\\' + globTags.initialArtistAlbumTrackTitlePath + '.opus', path: '', playlistOutPath: '#EXPORT##PLAYLIST##EXT#', extension: '.m3u8', bExtendedM3U: true } // Namida App
 	]), { func: isJSON }],
 	bForbidDuplicates: ['Skip duplicates when adding to playlists', true, { func: isBoolean }],
 	bDeadCheckAutoSave: ['Warn about dead items on auto-save', false, { func: isBoolean }],
