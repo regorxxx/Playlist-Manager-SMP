@@ -533,15 +533,15 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (mask === MK_CONTROL) {
 			tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
 			tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
-			tooltipText += rShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
+			tooltipText += rShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')';
 		} else if (mask === MK_SHIFT) {
 			tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
 			tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
-			tooltipText += rShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
+			tooltipText += rShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')';
 		} else if (mask === MK_SHIFT + MK_CONTROL) {
 			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
 		} else if (this.tooltipSettings.bShowTips) { // All Tips
 			tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
 			tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')';

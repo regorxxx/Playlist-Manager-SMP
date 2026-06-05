@@ -92,6 +92,7 @@
 ### Fixed
 - UI: minor filter button glitch (shows an X) after clearing the search box for a some seconds, if panel was previously filtered by search text.
 - UI: added back alternate row colors settings (now named 'Show row stripes'), due to an unintended change removed at [1.0.0-beta.9](#100-beta9---2026-04-28). See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
+- UI: fixed R. Click shortcuts listing at tooltips. It was showing M. Click actions instead.
 
 ## [1.0.0-beta.9] - 2026-04-28
 ### Added
