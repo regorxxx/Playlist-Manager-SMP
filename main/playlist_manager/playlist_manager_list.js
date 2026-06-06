@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //06/06/26
 
 /* exported _list */
@@ -392,17 +392,12 @@ function _list({ x, y, w, h, properties } = {}) {
 			const lShortcuts = this.getShortcuts('L', 'HEADER');
 			const mShortcuts = this.getShortcuts('M', 'HEADER');
 			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
-			const getMask = (action) => {
-				if (action.mask === 'SG_CLICK') { return action.mouseBtn + '. Click'; }
-				else if (action.mask === 'DB_CLICK') { return 'Double ' + action.mouseBtn + '. Click'; }
-				else { return action.maskName + ' + ' + action.mouseBtn + '. Click'; }
-			};
 			if (this.tooltipSettings.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
 				tooltipText += '\n----------------------------------------------';
 			}
 			if (mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
 				[lShortcuts[mask], mShortcuts[mask]]
-					.forEach((s) => tooltipText += s.key === defaultAction ? '' : '\n(' + getMask(s) + ' ' + s.separator + ' ' + s.key + ')');
+					.forEach((s) => tooltipText += s.key === defaultAction ? '' : '\n(' + this.getShortcutsMaskText(s) + ' ' + s.separator + ' ' + s.key + ')');
 			} else if (this.tooltipSettings.bShowTips || bForceActions) {
 				if (this.modeUI === 'traditional' || bForceActions) {
 					tooltipText += '\n(R. Click for config menus)';
@@ -411,7 +406,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					.forEach((s) => {
 						['SG_CLICK', 'DB_CLICK', MK_CONTROL, MK_SHIFT, MK_SHIFT + MK_CONTROL].forEach((m) => {
 							if (!s[m]) { return; }
-							tooltipText += s[m].key === defaultAction ? '' : '\n(' + getMask(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
+							tooltipText += s[m].key === defaultAction ? '' : '\n(' + this.getShortcutsMaskText(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
 						});
 					});
 			}
@@ -421,7 +416,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					.forEach((s) => {
 						['SG_CLICK', 'DB_CLICK'].forEach((m) => {
 							if (!s[m]) { return; }
-							tooltipText += s[m].key === defaultAction ? '' : '\n(' + getMask(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
+							tooltipText += s[m].key === defaultAction ? '' : '\n(' + this.getShortcutsMaskText(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
 						});
 					});
 			}
@@ -518,11 +513,6 @@ function _list({ x, y, w, h, properties } = {}) {
 		const mShortcuts = this.getShortcuts('M');
 		const rShortcuts = this.getShortcuts('R');
 		const defaultAction = this.getDefaultShortcutAction('M'); // All actions are shared for M or L mouse
-		const getMask = (action) => {
-			if (action.mask === 'SG_CLICK') { return action.mouseBtn + '. Click'; }
-			else if (action.mask === 'DB_CLICK') { return 'Double ' + action.mouseBtn + '. Click'; }
-			else { return action.maskName + ' + ' + action.mouseBtn + '. Click'; }
-		};
 		// Delete non valid actions (default is none)
 		[lShortcuts, mShortcuts, rShortcuts].forEach((shortcuts) => {
 			for (const key in shortcuts) {
@@ -536,13 +526,13 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		if (mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
 			[lShortcuts[mask], mShortcuts[mask], rShortcuts[mask]]
-				.forEach((s) => tooltipText += s.key === defaultAction ? '' : '\n(' + getMask(s) + ' ' + s.separator + ' ' + s.key + ')');
+				.forEach((s) => tooltipText += s.key === defaultAction ? '' : '\n(' + this.getShortcutsMaskText(s) + ' ' + s.separator + ' ' + s.key + ')');
 		} else if (this.tooltipSettings.bShowTips) { // All Tips
 			[lShortcuts, mShortcuts, rShortcuts]
 				.forEach((s) => {
 					['SG_CLICK', 'DB_CLICK', MK_CONTROL, MK_SHIFT, MK_SHIFT + MK_CONTROL].forEach((m) => {
 						if (!s[m]) { return; }
-						tooltipText += s[m].key === defaultAction ? '' : '\n(' + getMask(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
+						tooltipText += s[m].key === defaultAction ? '' : '\n(' + this.getShortcutsMaskText(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
 						if (s === lShortcuts && m === 'DB_CLICK' && !this.uiElements['Header buttons'].elements['List menu'].enabled) { tooltipText += '\n(R. Click for other tools / new playlists)'; }
 					});
 				});
@@ -2767,11 +2757,6 @@ function _list({ x, y, w, h, properties } = {}) {
 
 	this.quickHelp = () => {
 		const showMenus = JSON.parse(this.properties.showMenus[1]);
-		const getMask = (action) => {
-			if (action.mask === 'SG_CLICK') { return ''; }
-			else if (action.mask === 'DB_CLICK') { return 'Double '; }
-			else { return action.maskName + ' + '; }
-		};
 		return 'Global shortcuts:' +
 			'\n-----------------' +
 			this.listGlobalShortcuts(void (0), false) +
@@ -2841,7 +2826,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			['L', 'M', 'R'].map((m) => {
 				const actions = Object.values(this.getShortcuts(m, 'LIST'))
 					.filter((entry) => entry.key.startsWith('Multiple selection'));
-				return actions.map((action) => '\n• ' + getMask(action) + m + '. Click' + ': ' + action.key + '.')
+				return actions.map((action) => '\n• ' + this.getShortcutsMaskText(action) + ': ' + action.key + '.')
 					.join('');
 			}).filter(Boolean).join('') +
 			'\n' +
@@ -2850,7 +2835,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			['L', 'M', 'R'].map((m) => {
 				const actions = Object.values(this.getShortcuts(m, 'LIST'));
 				return actions.filter((action) => action.key !== '- None -')
-					.map((action) => '\n• ' + getMask(action) + m + '. Click' + ': ' + action.key + '.')
+					.map((action) => '\n• ' + this.getShortcutsMaskText(action) +  ': ' + action.key + '.')
 					.join('');
 			}).filter(Boolean).join('') +
 			'\n' +
@@ -3328,6 +3313,12 @@ function _list({ x, y, w, h, properties } = {}) {
 			}
 		}
 		return shortcuts;
+	};
+
+	this.getShortcutsMaskText = (action) => {
+		if (action.mask === 'SG_CLICK') { return action.mouseBtn + '. Click'; }
+		else if (action.mask === 'DB_CLICK') { return 'Double ' + action.mouseBtn + '. Click'; }
+		else { return action.maskName + ' + ' + action.mouseBtn + '. Click'; }
 	};
 
 	// Drag n drop
