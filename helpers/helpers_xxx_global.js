@@ -191,7 +191,7 @@ function addGlobValues(type) {
 				'|$add(1,$if2(' + _t(globTags.feedback) + ',%2003_LOVED%))' +
 				'|$if($strstr($lower(%TRACKDSP%),best),1,0)' +
 				'|$ifgreater(%__CHANNELS%,2,0,1)' +
-				'|$add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0))' +
+				'|$max(0,$sub($add($ifgreater(%__BITSPERSAMPLE%,16,0,1),$ifgreater(%__SAMPLERATE%,44100,0,1),$if($stricmp(%__ENCODING%,lossless),1,0)),$ifequal(%__BITSPERSAMPLE%,1,2,0)))' +
 				'|%DYNAMIC RANGE%' +
 				'|' + globTags.playCount;
 			globQuery.fav = '((' + globQuery.loved + ') OR (' + globQuery.ratingTop + '))';

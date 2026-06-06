@@ -1,5 +1,5 @@
 ﻿'use strict';
-//28/05/26
+//06/06/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
@@ -605,6 +605,7 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 		queryNoSort = stripSort(query);
 		if (!queryNoSort.length || queryNoSort !== query && !checkSort(query.replace(queryNoSort, ''))) { return false; }
 	}
+	if (queryNoSort.length > 212796) { return false; } // BUG: Foobar2000 crash due to too long queris https://hydrogenaudio.org/index.php/topic,126743.msg1082511.html#msg1082511
 	try { fb.GetQueryItems(new FbMetadbHandleList(), queryNoSort); }  // Test query against empty handle list since it's much faster!
 	catch (e) { bPass = false; } // eslint-disable-line no-unused-vars
 	if (bPass) {
