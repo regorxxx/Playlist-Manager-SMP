@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/06/26
+//06/06/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -1113,11 +1113,15 @@ if (list.properties.bSetup[1]) {
 				break;
 			}
 			case window.ScriptInfo.Name + ': share UI settings': {
-				if (info) { list.applyUiSettings(clone(info)); }
+				if (info) {
+					if (info.window && !info.window.includes(window.Name)) { break; }
+					list.applyUiSettings(clone(info));
+				}
 				break;
 			}
 			case window.ScriptInfo.Name + ': set colors': { // Needs an array of 5 colors or an object {background, text, headerButtons, buttonsText, buttonsToolbar }
 				if (info && list.properties.bOnNotifyColors[1]) {
+					if (info.window && !info.window.includes(window.Name)) { break; }
 					const colors = clone(info);
 					const getColor = (key) => Object.hasOwn(colors, key) ? colors.background : colors[['background', 'text', 'headerButtons', 'buttonsText', 'buttonsToolbar'].indexOf(key)];
 					const hasColor = (key) => typeof getColor(key) !== 'undefined';
@@ -1136,13 +1140,25 @@ if (list.properties.bSetup[1]) {
 			}
 			case 'Colors: set color scheme':
 			case window.ScriptInfo.Name + ': set color scheme': { // Needs an array of at least 6 colors to automatically adjust dynamic colors
-				if (info && list.properties.bOnNotifyColors[1]) { background.callbacks.artColors(clone(info), true); }
+				if (info && list.properties.bOnNotifyColors[1]) {
+					if (info.window && !info.window.includes(window.Name)) { break; }
+					background.callbacks.artColors(clone(info), true);
+				}
 				break;
 			}
 			case 'Colors: ask color scheme': {
 				if (info && list.properties.bNotifyColors[1] && background.scheme) {
+					if (info.window && !info.window.includes(window.Name)) { break; }
 					window.NotifyOthers(String(info), background.scheme);
 				}
+				break;
+			}
+			case window.ScriptInfo.Name + ': switch enable panel':
+			case window.ScriptInfo.Name + ': disable panel':
+			case window.ScriptInfo.Name + ': enable panel': {
+				if (info && info.window && !info.window.includes(window.Name)) { break; }
+				if (name === (window.ScriptInfo.Name + ': switch enable panel')) { list.switchTracking(); }
+				else { list.switchTracking(name === (window.ScriptInfo.Name + ': enable panel')); }
 				break;
 			}
 		}
