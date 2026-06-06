@@ -392,39 +392,38 @@ function _list({ x, y, w, h, properties } = {}) {
 			const lShortcuts = this.getShortcuts('L', 'HEADER');
 			const mShortcuts = this.getShortcuts('M', 'HEADER');
 			const defaultAction = this.getDefaultShortcutAction('M', 'HEADER'); // All actions are shared for M or L mouse
+			const getMask = (action) => {
+				if (action.mask === 'SG_CLICK') { return action.mouseBtn + '. Click'; }
+				else if (action.mask === 'DB_CLICK') { return 'Double ' + action.mouseBtn + '. Click'; }
+				else { return action.maskName + ' + ' + action.mouseBtn + '. Click'; }
+			};
 			if (this.tooltipSettings.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || bForceActions) {
 				tooltipText += '\n----------------------------------------------';
 			}
-			if (mask === MK_CONTROL) {
-				tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
-				tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + lShortcuts[MK_CONTROL].key + ')';
-			} else if (mask === MK_SHIFT) {
-				tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
-				tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + lShortcuts[MK_SHIFT].key + ')';
-			} else if (mask === MK_SHIFT + MK_CONTROL) {
-				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+			if (mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
+				[lShortcuts[mask], mShortcuts[mask]]
+					.forEach((s) => tooltipText += s.key === defaultAction ? '' : '\n(' + getMask(s) + ' ' + s.separator + ' ' + s.key + ')');
 			} else if (this.tooltipSettings.bShowTips || bForceActions) {
 				if (this.modeUI === 'traditional' || bForceActions) {
 					tooltipText += '\n(R. Click for config menus)';
 				}
-				// L. Click
-				tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
-				tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')';
-				tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
-				tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
-				tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-				// Middle button
-				tooltipText += mShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')';
-				tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
-				tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
-				tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+				[lShortcuts, mShortcuts]
+					.forEach((s) => {
+						['SG_CLICK', 'DB_CLICK', MK_CONTROL, MK_SHIFT, MK_SHIFT + MK_CONTROL].forEach((m) => {
+							if (!s[m]) { return; }
+							tooltipText += s[m].key === defaultAction ? '' : '\n(' + getMask(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
+						});
+					});
 			}
 			if (headerRe.test(tooltipText)) { // If no shortcut was found, show default ones
 				tooltipText += '\n(R. Click for config menus)';
-				// L. Click
-				tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
-				tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double Click to ' + lShortcuts['DB_CLICK'].key + ')';
+				[lShortcuts, mShortcuts]
+					.forEach((s) => {
+						['SG_CLICK', 'DB_CLICK'].forEach((m) => {
+							if (!s[m]) { return; }
+							tooltipText += s[m].key === defaultAction ? '' : '\n(' + getMask(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
+						});
+					});
 			}
 			if (this.bLiteMode) {
 				const replaceActions = [
@@ -519,6 +518,11 @@ function _list({ x, y, w, h, properties } = {}) {
 		const mShortcuts = this.getShortcuts('M');
 		const rShortcuts = this.getShortcuts('R');
 		const defaultAction = this.getDefaultShortcutAction('M'); // All actions are shared for M or L mouse
+		const getMask = (action) => {
+			if (action.mask === 'SG_CLICK') { return action.mouseBtn + '. Click'; }
+			else if (action.mask === 'DB_CLICK') { return 'Double ' + action.mouseBtn + '. Click'; }
+			else { return action.maskName + ' + ' + action.mouseBtn + '. Click'; }
+		};
 		// Delete non valid actions (default is none)
 		[lShortcuts, mShortcuts, rShortcuts].forEach((shortcuts) => {
 			for (const key in shortcuts) {
@@ -530,35 +534,18 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (this.tooltipSettings.bShowTips || mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL || iDup > 1) {
 			tooltipText += '\n---------------------------------------------------';
 		}
-		if (mask === MK_CONTROL) {
-			tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
-			tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
-			tooltipText += rShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')';
-		} else if (mask === MK_SHIFT) {
-			tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
-			tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
-			tooltipText += rShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')';
-		} else if (mask === MK_SHIFT + MK_CONTROL) {
-			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+		if (mask === MK_CONTROL || mask === MK_SHIFT || mask === MK_SHIFT + MK_CONTROL) {
+			[lShortcuts[mask], mShortcuts[mask], rShortcuts[mask]]
+				.forEach((s) => tooltipText += s.key === defaultAction ? '' : '\n(' + getMask(s) + ' ' + s.separator + ' ' + s.key + ')');
 		} else if (this.tooltipSettings.bShowTips) { // All Tips
-			tooltipText += lShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(L. Click to ' + lShortcuts['SG_CLICK'].key + ')';
-			tooltipText += lShortcuts['DB_CLICK'].key === defaultAction ? '' : '\n(Double L. Click to ' + lShortcuts['DB_CLICK'].key + ')';
-			if (!this.uiElements['Header buttons'].elements['List menu'].enabled) { tooltipText += '\n(R. Click for other tools / new playlists)'; }
-			tooltipText += lShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + L. Click to ' + lShortcuts[MK_CONTROL].key + ')';
-			tooltipText += lShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + L. Click to ' + lShortcuts[MK_SHIFT].key + ')';
-			tooltipText += lShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + L. Click to ' + lShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-			// Middle button
-			tooltipText += mShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(M. Click to ' + mShortcuts['SG_CLICK'].key + ')';
-			tooltipText += mShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + M. Click to ' + mShortcuts[MK_CONTROL].key + ')';
-			tooltipText += mShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + M. Click to ' + mShortcuts[MK_SHIFT].key + ')';
-			tooltipText += mShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + M. Click to ' + mShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
-			// R. Button
-			tooltipText += rShortcuts['SG_CLICK'].key === defaultAction ? '' : '\n(R. Click to ' + rShortcuts['SG_CLICK'].key + ')';
-			tooltipText += rShortcuts[MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + R. Click to ' + rShortcuts[MK_CONTROL].key + ')';
-			tooltipText += rShortcuts[MK_SHIFT].key === defaultAction ? '' : '\n(Shift + R. Click to ' + rShortcuts[MK_SHIFT].key + ')';
-			tooltipText += rShortcuts[MK_SHIFT + MK_CONTROL].key === defaultAction ? '' : '\n(Ctrl + Shift + R. Click to ' + rShortcuts[MK_SHIFT + MK_CONTROL].key + ')';
+			[lShortcuts, mShortcuts, rShortcuts]
+				.forEach((s) => {
+					['SG_CLICK', 'DB_CLICK', MK_CONTROL, MK_SHIFT, MK_SHIFT + MK_CONTROL].forEach((m) => {
+						if (!s[m]) { return; }
+						tooltipText += s[m].key === defaultAction ? '' : '\n(' + getMask(s[m]) + ' ' + s[m].separator + ' ' + s[m].key + ')';
+						if (s === lShortcuts && m === 'DB_CLICK' && !this.uiElements['Header buttons'].elements['List menu'].enabled) { tooltipText += '\n(R. Click for other tools / new playlists)'; }
+					});
+				});
 		}
 		if (headerRe.test(tooltipText)) { // If no shortcut was found, show default ones
 			if (this.uiElements['Header buttons'].elements['List menu'].enabled) {
@@ -3261,49 +3248,53 @@ function _list({ x, y, w, h, properties } = {}) {
 			switch (element.toUpperCase()) {
 				case 'LIST': {
 					shortcuts.actions = [
-						{ key: '- None -', func: () => { void (0); } },
-						{ key: 'Manage playlist', func: this.playlistMenu },
-						{ key: 'Playlist\'s items menu', func: this.contextMenu },
-						{ key: 'Load|Show playlist', func: this.loadPlaylistOrShow },
+						{ key: '- None -', func: () => { void (0); }, separator: '' },
+						{ key: 'Manage playlist', func: this.playlistMenu, separator: 'to' },
+						{ key: 'Playlist\'s items menu', func: this.contextMenu, separator: 'for' },
+						{ key: 'Load|Show playlist', func: this.loadPlaylistOrShow, separator: 'to' },
 						{
 							key: 'Copy selection to playlist',
-							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: false }), bStandAlone: true
+							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: false }), bStandAlone: true,
+							separator: 'to'
 						},
 						{
 							key: 'Move selection to playlist',
-							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: true }), bStandAlone: true
+							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: true }), bStandAlone: true,
+							separator: 'to'
 						},
-						{ key: 'Clone playlist in UI', func: (z, duplOpt) => clonePlaylistInUI({ list: this, z, duplOpt }) },
-						{ key: 'Recycle playlist', func: this.removePlaylist },
-						{ key: 'Lock|Unlock playlist file', func: switchLock.bind(this, this) },
-						{ key: 'Lock|Unlock UI playlist', func: switchLockUI.bind(this, this) },
-						{ key: 'Multiple selection', func: this.multSelect },
-						{ key: 'Multiple selection (range)', func: this.multSelectRange }
+						{ key: 'Clone playlist in UI', func: (z, duplOpt) => clonePlaylistInUI({ list: this, z, duplOpt }), separator: 'to' },
+						{ key: 'Recycle playlist', func: this.removePlaylist, separator: 'to' },
+						{ key: 'Lock|Unlock playlist file', func: switchLock.bind(this, this), separator: 'to' },
+						{ key: 'Lock|Unlock UI playlist', func: switchLockUI.bind(this, this), separator: 'to' },
+						{ key: 'Multiple selection', func: this.multSelect, separator: 'for' },
+						{ key: 'Multiple selection (range)', func: this.multSelectRange, separator: 'for' }
 					];
 					break;
 				}
 				case 'HEADER': {
 					shortcuts.actions = [
-						{ key: '- None -', func: () => { void (0); } },
-						{ key: 'Show Current|Playing playlist', func: () => { this.showCurrPls() || this.showCurrPls({ bPlayingPls: true }); } },
-						{ key: 'Multiple selection (all)', func: this.multSelectAll },
-						{ key: 'Cycle categories', func: cycleCategories.bind(this, this) },
-						{ key: 'Cycle tags', func: cycleTags.bind(this, this) },
+						{ key: '- None -', func: () => { void (0); }, separator: '' },
+						{ key: 'Show Current|Playing playlist', func: () => { this.showCurrPls() || this.showCurrPls({ bPlayingPls: true }); }, separator: 'to' },
+						{ key: 'Multiple selection (all)', func: this.multSelectAll, separator: 'for' },
+						{ key: 'Cycle categories', func: cycleCategories.bind(this, this), separator: 'to' },
+						{ key: 'Cycle tags', func: cycleTags.bind(this, this), separator: 'to' },
 						{
 							key: 'Add new empty playlist file', func: () => {
 								if (this.bLiteMode) { this.addUiPlaylist({ bInputName: true }); }
 								else { this.add({ bEmpty: true }); }
-							}
+							},
+							separator: 'to'
 						},
 						{
 							key: 'Add active playlist', func: () => {
 								if (this.bLiteMode) { this.addUiPlaylist({ bInputName: true, bEmpty: false }); }
 								else { this.add({ bEmpty: false }); }
-							}
+							},
+							separator: 'to'
 						},
-						{ key: 'Manual refresh', func: this.manualRefresh },
-						{ key: 'Manual saving (all not locked)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(false) + ' playlists.'); } },
-						{ key: 'Manual saving (all)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(true) + ' playlists.'); } },
+						{ key: 'Manual refresh', func: this.manualRefresh, separator: 'for' },
+						{ key: 'Manual saving (all not locked)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(false) + ' playlists.'); }, separator: 'for' },
+						{ key: 'Manual saving (all)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(true) + ' playlists.'); }, separator: 'for' },
 					];
 					break;
 				}
@@ -3330,10 +3321,10 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		if (prop) {
 			for (let key in prop) {
-				const { mask, key: maskName } = (options.find((obj) => { return obj.key === key; }) || { key: 'none', mask: 'none' });
+				const { mask, key: maskName } = { key: 'none', mask: 'none', ...options.find((obj) => obj.key === key) };
 				const action = prop[key];
-				const func = (actions.find((obj) => { return obj.key === action; }) || {}).func || (() => { console.popup('Shortcut not properly set: ' + mouseBtn + ' ' + key + ' --> ' + action, window.FullPanelName); });
-				shortcuts[mask] = { key: action, func, mask, maskName };
+				const { func, separator } = { func: () => { console.popup('Shortcut not properly set: ' + mouseBtn + ' ' + key + ' --> ' + action, window.FullPanelName); }, separator: '', ...actions.find((obj) => obj.key === action) };
+				shortcuts[mask] = { key: action, func, mask, maskName, separator, mouseBtn };
 			}
 		}
 		return shortcuts;
