@@ -1,10 +1,10 @@
 ﻿'use strict';
-//29/05/26
+//08/06/26
 
 /* exported _toggleControl, _colorPicker, _dropdownList, _check, _buttonList, _inputBox, _button */
 
 include('window_xxx_helpers.js');
-/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _textWidth:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable, FontStyle:readable */
+/* global _gdiFont:readable, _scale:readable, RGBA:readable, RGB:readable, lightenColor:readable, toRGB:readable, isFunction:readable, SmoothingMode:readable, buttonStates:readable, _textWidth:readable, blendColors:readable, kMask:readable, getKeyboardMask:readable, TPM_TOPALIGN:readable, _menu:readable, FontStyle:readable, _setClipboardData:readable, _getClipboardData:readable */
 include('..\\..\\helpers\\helpers_xxx_flags.js');
 /* global DT_VCENTER:readable, DT_CENTER:readable, DT_NOPREFIX:readable, IDC_HAND:readable, DT_LEFT:readable, DT_CALCRECT:readable, DT_SINGLELINE:readable, DT_END_ELLIPSIS:readable, IDC_IBEAM:readable, IDC_ARROW:readable, DT_END_ELLIPSIS:readable, MF_STRING:readable, MF_GRAYED:readable, MF_DISABLED:readable, VK_DELETE:readable, VK_HOME:readable, VK_SHIFT:readable, VK_ESCAPE:readable, VK_BACK:readable, VK_RETURN:readable, VK_LEFT:readable, VK_END:readable , VK_RIGHT:readable */
 
@@ -704,6 +704,12 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 	this.bSupressShortcuts = bSupressShortcuts;
 	this.pendingSearch = false;
 
+	const cInputBox = {
+		timerCursor: false,
+		cursorState: true,
+		clipboard: null
+	};
+
 	this.setSize = function (w, h, fontSize = 10) {
 		this.w = w;
 		this.h = h;
@@ -1002,7 +1008,7 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 
 	this.showContextMenu = function (x, y) {
 		const _menu = window.CreatePopupMenu();
-		cInputBox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputBox.doc.parentWindow.clipboardData.getData('Text');
+		cInputBox.clipboard = _getClipboardData();
 		_menu.AppendMenuItem(this.sText.length ? MF_STRING : MF_GRAYED | MF_DISABLED, 1, 'Undo');
 		_menu.AppendMenuSeparator();
 		_menu.AppendMenuItem(this.select ? MF_STRING : MF_GRAYED | MF_DISABLED, 2, 'Cut');
@@ -1024,7 +1030,7 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 				break;
 			case 2:
 				if (this.edit && this.select) {
-					utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
+					_setClipboardData(this.textSelected);
 					const p1 = this.SelBegin;
 					const p2 = this.SelEnd;
 					this.offset = this.offset >= this.textSelected.length ? this.offset - this.textSelected.length : 0;
@@ -1039,9 +1045,7 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 				}
 				break;
 			case 3:
-				if (this.edit && this.select) {
-					utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
-				}
+				if (this.edit && this.select) { _setClipboardData(this.textSelected); }
 				break;
 			case 4:
 				if (this.edit && cInputBox.clipboard) {
@@ -1358,14 +1362,12 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 						}
 					}
 					if (vKey == 67) { // CTRL + C
-						if (this.edit && this.select) {
-							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
-						}
+						if (this.edit && this.select) { _setClipboardData(this.textSelected); }
 					}
 					if (vKey == 88) { // CTRL + X
 						if (this.edit && this.select) {
 							this.sText = this.text;
-							utils.SetClipboardText ? utils.SetClipboardText(this.textSelected.toString()) : cInputBox.doc.parentWindow.clipboardData.setData('Text', this.textSelected);
+							_setClipboardData(this.textSelected);
 							const p1 = this.SelBegin;
 							const p2 = this.SelEnd;
 							this.select = false;
@@ -1384,7 +1386,7 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 						}
 					}
 					if (vKey == 86) { // CTRL + V
-						cInputBox.clipboard = utils.GetClipboardText ? utils.GetClipboardText() : cInputBox.doc.parentWindow.clipboardData.getData('Text');
+						cInputBox.clipboard = _getClipboardData();
 						if (this.edit && cInputBox.clipboard) {
 							this.sText = this.text;
 							if (this.select) {
@@ -1667,12 +1669,3 @@ function _inputBox({ w, h, defaultText, emptyText, textColor, backColor, borderC
 		get: () => this.text.length !== 0 || this.autoValidation && this.func && this.pendingSearch
 	});
 }
-
-// Helpers
-
-const cInputBox = {
-	timerCursor: false,
-	cursorState: true,
-	doc: new ActiveXObject('htmlfile'),
-	clipboard: null
-};
