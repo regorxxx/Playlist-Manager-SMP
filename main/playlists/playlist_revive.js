@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/26
+//05/06/26
 
 /*
 	Playlist Revive
@@ -20,17 +20,19 @@
 
 include('..\\..\\helpers\\helpers_xxx.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
+/* global isFunction:readable */
 include('..\\..\\helpers\\helpers_xxx_levenshtein.js');
 /* global similarity:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
-/* global focusOnItem:readable */
+/* global focusOnItem:readable, getSource:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global getHandleListTagsV2:readable, queryCombinations:readable, queryJoin:readable, fileRegex:readable */
+/* global getHandleListTagsV2:readable, queryCombinations:readable, queryJoin:readable, fileRegex:readable, checkQuery:readable */
 
 function playlistRevive({
 	playlist = plman.ActivePlaylist, // Set to -1 to create a clone of selItems and output the revived list
 	selItems = playlist === -1 ? null : plman.GetPlaylistItems(playlist),
 	simThreshold = 1, // 1 only allows exact matches, lower allows some tag differences, but at least the main tag must be the same!
+	source = () => getSource('library'),
 	bFindAlternative = false,
 	bSimulate = false,
 	bReportAllMatches = false,
@@ -88,9 +90,8 @@ function playlistRevive({
 	// queryJoin(queryCombinations(tags, tagsToCheck, 'OR', 'OR'), 'OR');
 	const query = queryJoin(queryArr.filter(Boolean), 'OR');
 	if (!bSilent && bSimulate) { console.log('Filtered library by: ' + query); }
-	try { fb.GetQueryItems(fb.GetLibraryItems(), query); } // Sanity check
-	catch (e) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query); return; } // eslint-disable-line no-unused-vars
-	const libraryItems = fb.GetQueryItems(fb.GetLibraryItems(), query);
+	if (!checkQuery(query, true)) { fb.ShowPopupMessage('Query not valid. Check query:\n' + query); return; }
+	const libraryItems = fb.GetQueryItems(isFunction(source) ? source() : source, query);
 	const tagsLibrary = getHandleListTagsV2(libraryItems, tagsToCheck.slice(0, 5), { splitBy: null });  // discard path related tags
 	const libraryItemsArr = libraryItems.Convert();
 	// Find coincidences in library
