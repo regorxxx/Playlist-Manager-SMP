@@ -1,7 +1,7 @@
 'use strict';
-//25/05/26
+//06/06/26
 
-/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS, focusOnItem, findTracksAtPlaylist, hasAnyLocks, movePlaylistSelection */
+/* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS, focusOnItem, findTracksAtPlaylist, hasAnyLocks, movePlaylistSelection, selectTracksAtPlaylist, selectTracksAtPlaylistAndFocus */
 
 include('helpers_xxx_prototypes.js');
 /* global range:readable, isArrayNumbers:readable */
@@ -19,7 +19,7 @@ function playlistCountLocked(type = []) {
 	let count = 0;
 	for (let i = 0; i < playlistsNum; i++) {
 		const lockActions = plman.GetPlaylistLockedActions(i);
-		if (bAll && lockActions.length || !bAll && new Set(lockActions).isSuperset(new Set(type))) { count++; }
+		if (bAll && lockActions.length || !bAll && new Set(lockActions).isSupersetOf(new Set(type))) { count++; }
 	}
 	return count;
 }
@@ -52,6 +52,32 @@ function findTracksAtPlaylist(plsIdx, handleArr, findTrack) {
 		}
 	});
 	return { selection: { idx: selItems, count: selItems.length, focus: selItems[0] }, plsIdx, reference };
+}
+
+function selectTracksAtPlaylist({ items, selection, plsIdx }) {
+	plman.ClearPlaylistSelection(plsIdx);
+	const selIdx = selection ? selection.idx : [];
+	if (!selection && items && items.Count) {
+		const handleList = plman.GetPlaylistItems(plsIdx);
+		const selItems = items.Clone();
+		selItems.Sort();
+		handleList.Convert().map((handle, i) => {
+			if (selItems.BSearch(handle) !== -1) { selIdx.push(i); }
+		});
+	}
+	if (selIdx.length) { plman.SetPlaylistSelection(plsIdx, selIdx, true); }
+	return selIdx;
+}
+
+function selectTracksAtPlaylistAndFocus({ selection, plsIdx }) {
+	plman.ClearPlaylistSelection(plsIdx);
+	const count = Object.hasOwn(selection, 'count') ? selection.count : selection.idx.length;
+	if (count) {
+		plman.SetPlaylistSelection(plsIdx, selection.idx, true);
+		if (Object.hasOwn(selection, 'focus')) { focusOnItem(plsIdx, selection.focus, void (0), false); }
+		return true;
+	}
+	return false;
 }
 
 // Outputs names of all playlists
@@ -327,7 +353,7 @@ function focusOnItem(plsIdx, idx, selection = [], bClear = true) {
 
 function movePlaylistSelection(plsIdx, posIdx, bScroll) { // Works with non contiguous selection
 	const selIdxArr = getPlaylistSelectedIndexes(plsIdx);
-	if (plman.GetPlaylistLockedActions(plsIdx).includes('ReorderItems')) { return selIdxArr;}
+	if (plman.GetPlaylistLockedActions(plsIdx).includes('ReorderItems')) { return selIdxArr; }
 	plman.UndoBackup(plsIdx);
 	let toPlsPos = posIdx === -1 ? plman.PlaylistItemCount(plsIdx) - 1 : Math.min(posIdx, plman.PlaylistItemCount(plsIdx) - 1);
 	let bMoved = false;

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/26
+//06/06/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime */
 
@@ -859,14 +859,31 @@ function cartesian(...args) {
 	Sets
 */
 
-if (!Set.prototype.isSuperset) {
-	Set.prototype.isSuperset = function (subset) { // NOSONAR
+if (!Set.prototype.isSupersetOf) {
+	Set.prototype.isSupersetOf = function (subset) { // NOSONAR
+		if (this.size < subset.size) { return false; }
+		let bSome = false;
 		for (const elem of subset) {
 			if (!this.has(elem)) {
 				return false;
 			}
+			bSome = true;
 		}
-		return true;
+		return bSome;
+	};
+}
+
+if (!Set.prototype.isSubsetOf) {
+	Set.prototype.isSubsetOf = function (subset) { // NOSONAR
+		if (this.size > subset.size) { return false; }
+		let bSome = false;
+		for (const elem of this) {
+			if (!subset.has(elem)) {
+				return false;
+			}
+			bSome = true;
+		}
+		return bSome;
 	};
 }
 
@@ -904,7 +921,13 @@ if (!Set.prototype.difference) {
 
 if (!Set.prototype.isEqual) {
 	Set.prototype.isEqual = function (subset) { // NOSONAR
-		return (this.size === subset.size && this.isSuperset(subset));
+		if (this.size !== subset.size) { return false; }
+		for (const elem of subset) {
+			if (!this.has(elem)) {
+				return false;
+			}
+		}
+		return true;
 	};
 }
 
