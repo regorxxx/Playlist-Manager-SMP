@@ -1,9 +1,9 @@
-7-Zip Extra 21.02
+7-Zip Extra 26.01
 -----------------
 
 7-Zip Extra is package of extra modules of 7-Zip. 
 
-7-Zip Copyright (C) 1999-2021 Igor Pavlov.
+7-Zip Copyright (C) 1999-2026 Igor Pavlov.
 
 7-Zip is free software. Read License.txt for more information about license.
 
@@ -17,17 +17,19 @@ This package contains the following files:
 7zxa.dll    - library for extracting from 7z archives
 License.txt - license information
 readme.txt  - this file
+7-zip.chm   - Help file
 
 Far\        - plugin for Far Manager
 x64\        - binaries for x64
+arm64\      - binaries for arm64
 
 
 All 32-bit binaries can work in:
   Windows 2000 / 2003 / 2008 / XP / Vista / 7 / 8 / 10
-  and  in any Windows x64 version with WoW64 support.
+  and in any Windows x64 version with WoW64 support.
 All x64 binaries can work in any Windows x64 version. 
 
-All binaries use msvcrt.dll.
+All x86 and x64 binaries use msvcrt.dll.
 
 7za.exe 
 -------
@@ -48,12 +50,12 @@ of all commands and switches for 7za.exe and 7z.exe.
   - High compression ratio in 7z format
   - Supported formats:
       - Packing / unpacking: 7z, xz, ZIP, GZIP, BZIP2 and TAR 
-      - Unpacking only: Z, lzma, CAB.
+      - Unpacking only: lzma, CAB, ZSTD.
   - Highest compression ratio for ZIP and GZIP formats.
   - Fast compression and decompression
   - Strong AES-256 encryption in 7z and ZIP formats.
 
-Note: LZMA SDK contains 7zr.exe - more reduced version of 7za.exe.
+Note: another package "LZMA SDK" contains 7zr.exe - that is reduced version of 7za.exe.
 But you can use 7zr.exe as "public domain" code.
 
 
