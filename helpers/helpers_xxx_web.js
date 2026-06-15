@@ -1,7 +1,14 @@
 ﻿'use strict';
-//29/05/26
+//12/06/26
 
-/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2 */
+/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate*/
+
+include('helpers_xxx.js');
+/* global folders:readable, compareVersions:readable, globSettings:readable */
+include('helpers_xxx_prototypes.js');
+/* global _q:readable */
+include('helpers_xxx_file.js');
+/* global _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable */
 
 function downloadText(URL) {
 	return URL.includes('http://') || URL.includes('https://')
@@ -241,6 +248,106 @@ function encodeUrlParams(params) {
 	}).join('&');
 }
 
+function downloadFileV2(url, path) {
+	const curl = getCurl();
+	if (!curl) { return Promise.resolve(null); }
+	return _exec(_q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10 -L -o ' + _q(_resolvePath(path)) + ' ' + url)
+		.catch(() => void (0))
+		.then(() => _isFile(path) ? path : null);
+
+}
+
+function downloadFile(url, path) {
+	const curl = getCurl();
+	if (!curl) { return Promise.resolve(null); }
+	return new Promise((resolve) => {
+		let id = setInterval(() => { if (_isFile(path)) { clearInterval(id); id = null; resolve(path); } }, 50);
+		setTimeout(() => { if (id) { clearInterval(id); id = null; resolve(null); } }, 10000);
+		_runCmd('CMD /C ' + _q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10 -L -o ' + _q(_resolvePath(path)) + ' ' + url, false);
+	})
+		.catch(() => void (0))
+		.then((path) => path || null);
+}
+
+function downloadImg(url, path, method = 'v1') {
+	return (method.toLowerCase() === 'v1' ? downloadFile : downloadFileV2)(url, path)
+		.then((path) => path ? gdi.LoadImageAsyncV2(window.IDBCursor, path) : Promise.resolve(null));
+}
+
+function getCurl(impersonate = globSettings.curlImpersonate) {
+	const curl = [
+		fb.ProfilePath + 'binaries\\',
+		folders.xxx + 'binaries\\',
+		folders.xxx + 'helpers-external\\',
+		fb.ComponentPath + 'binaries\\',
+		fb.FoobarPath + 'binaries\\'
+	]
+		.map((p) => {
+			return {
+				path: p + 'curl\\' + (impersonate || 'curl.exe'),
+				certs: p + 'curl\\curl-ca-bundle.crt'
+			};
+		})
+		.find((c) => _isFile(c.path)) || { path: '', certs: '' };
+	if (!_isFile(curl.certs)) {
+		WshShell.popup('Download certificates from:\nhttps://github.com/bagder/ca-bundle\nhttps://curl.se/docs/caextract.html\n\nFile should be named \'curl-ca-bundle.crt\' and placed next to the curl executable.', 60, 'Curl certificates not found', popup.ok);
+		return '';
+	}
+	if (!curl.path) {
+		WshShell.popup('Missing curl executable.', 60, 'Curl certificates not found', popup.ok);
+		return '';
+	}
+	return curl.path;
+}
+
+function checkUpdate({
+	scriptName = window.ScriptInfo.Name,
+	repository = 'https://github.com/' + window.ScriptInfo.Author + '/' + (scriptName || '').replace(/ /g, '-') + ((scriptName || '').endsWith('-SMP') ? '' : '-SMP'),
+	version = window.ScriptInfo.Version,
+	bDownload = false,
+	bOpenWeb = true,
+	bDisableWarning = true
+} = {}) {
+	const bGithub = repository.startsWith('https://github.com/');
+	const versionURL = bGithub
+		? repository.replace('github.com', 'raw.githubusercontent.com').replace(/\/$/, '') + '/main/VERSION'
+		: repository;
+	return downloadText(versionURL)
+		.then((lastVersion) => {
+			if (!compareVersions(version, lastVersion.replace(/^v/i, ''))) {
+				console.log('A new version has been found for ' + scriptName + ' script: ' + lastVersion.replace(/^v/i, ''));
+				const nameIsUUID = /{.{8}-.{4}-.{4}-.{4}-.{12}}/.test(window.Name);
+				const answer = WshShell.Popup('A new version is available: ' + lastVersion + (bGithub && bDownload ? '\nDownload?' : bOpenWeb ? '\nOpen script webpage?' : '') + (bDisableWarning ? '\n\n(Automatic update checking can be disabled at settings)' : ''), 0, nameIsUUID ? scriptName : window.Name + ': ' + scriptName, popup.info + popup.yes_no);
+				const packageName = repository.replace(/\/$/, '').split('/').at(-1);
+				if (bDownload && answer === popup.yes) {
+					let file, fileURL;
+					if (bGithub) {
+						file = packageName + '-' + lastVersion.replace(/^v/i, '').replace(/\./g, '-') + '-package.zip';
+						fileURL = repository.replace(/\/$/, '') + '/releases/latest/download/' + file;
+					}
+					const output = folders.xxx + 'packages\\' + file;
+					_runCmd('CMD /C ' + folders.xxx + '\\helpers-external\\curl\\curl.exe -L -o ' + output + ' ' + fileURL + ' & ECHO. & ECHO File downloaded to ' + _q(output) + ' & ECHO A new window will show the file' + (bOpenWeb ? ' and the browser the release page' : '') + ' & ECHO Press any key to exit & EXPLORER /SELECT,' + output + ' & PAUSE>nul', false, 1);
+				}
+				if (bOpenWeb && answer === popup.yes) {
+					if (bGithub) {
+						_explorer(repository.replace(/\/$/, '') + '/releases/latest/');
+					} else {
+						_explorer(repository);
+					}
+				}
+				return true;
+			}
+			return false;
+		}).catch((reason) => {
+			if (typeof reason === 'object') { reason = reason.responseText || reason.status; }
+			switch (reason) {
+				case 12007: reason = 'Network error'; break;
+				case '': reason = 'Unknown error'; break;
+			}
+			console.log('downloadText(): ' + reason + '\n\t ' + versionURL);
+			return false;
+		});
+}
 
 // Add handling to terminate activeX objects on foobar shutdown to avoid crashes
 // If a panel error is thrown while a web request is active, the entire foobar2000

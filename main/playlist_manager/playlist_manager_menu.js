@@ -1,5 +1,5 @@
 'use strict';
-//01/06/26
+//12/06/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -5391,7 +5391,7 @@ function createSettingsMenu(parent, parentBackground) {
 				parent.properties.bAutoUpdateCheck[1] = !parent.properties.bAutoUpdateCheck[1];
 				overwriteProperties(parent.properties);
 				if (parent.properties.bAutoUpdateCheck[1]) {
-					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web.js'); }
 					setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
 				}
 			}
@@ -5400,7 +5400,7 @@ function createSettingsMenu(parent, parentBackground) {
 		menu.newSeparator(menuName);
 		menu.newEntry({
 			menuName, entryText: 'Check for updates...', func: () => {
-				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
 					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.FullPanelName + ': Update check'));
 			}
@@ -6371,7 +6371,7 @@ function onRbtnUpImportSettings(properties = this.properties || {}) {
 				this.properties.bAutoUpdateCheck[1] = !this.properties.bAutoUpdateCheck[1];
 				overwriteProperties(this.properties);
 				if (this.properties.bAutoUpdateCheck[1]) {
-					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+					if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web.js'); }
 					setTimeout(checkUpdate, 1000, { bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false });
 				}
 			}
@@ -6380,7 +6380,7 @@ function onRbtnUpImportSettings(properties = this.properties || {}) {
 		menu.newSeparator(menuName);
 		menu.newEntry({
 			menuName, entryText: 'Check for updates...', func: () => {
-				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web_update.js'); }
+				if (typeof checkUpdate === 'undefined') { include('..\\..\\helpers\\helpers_xxx_web.js'); }
 				checkUpdate({ bDownload: globSettings.bAutoUpdateDownload, bOpenWeb: globSettings.bAutoUpdateOpenWeb, bDisableWarning: false })
 					.then((bFound) => !bFound && fb.ShowPopupMessage('No updates found.', window.FullPanelName + ': Update check'));
 			}

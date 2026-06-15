@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.29/05/2026
+REM Create packages (zip file) from js files v.12/06/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -176,7 +176,6 @@ CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_UI_flip.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\popup_xxx.js
 CALL :check_folder helpers\readme
@@ -328,7 +327,6 @@ CALL :copy_file helpers\helpers_xxx_UI_draw.js
 CALL :copy_file helpers\helpers_xxx_UI_flip.js
 CALL :copy_file helpers\helpers_xxx_utils.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\popup_xxx.js
 CALL :check_folder helpers\readme
@@ -432,7 +430,6 @@ CALL :copy_file helpers\helpers_xxx_so.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\seekbar.txt
@@ -535,7 +532,6 @@ CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_UI_flip.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\menu_xxx_extras.js
 CALL :copy_file helpers\popup_xxx.js
@@ -619,7 +615,6 @@ CALL :copy_file helpers\helpers_xxx_so.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\volume_seekbar.txt
@@ -743,7 +738,6 @@ CALL :copy_file helpers\helpers_xxx_tags_extra.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\menu_xxx_extras.js
 CALL :copy_file helpers\menu_xxx_macros.js
@@ -901,7 +895,6 @@ CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_UI_draw.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\library_tree_callbacks.txt
 CALL :copy_file helpers\readme\library_tree_presets.txt
@@ -985,7 +978,6 @@ CALL :copy_file helpers\helpers_xxx_so.js
 CALL :copy_file helpers\helpers_xxx_UI.js
 CALL :copy_file helpers\helpers_xxx_UI_chars.js
 CALL :copy_file helpers\helpers_xxx_web.js
-CALL :copy_file helpers\helpers_xxx_web_update.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\art_display.txt
