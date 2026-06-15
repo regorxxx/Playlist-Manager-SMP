@@ -1,5 +1,5 @@
 ﻿'use strict';
-//11/02/26
+//15/06/26
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -19,7 +19,7 @@ Object.defineProperty(console, 'Enabled', { enumerable: false, configurable: fal
 Object.defineProperty(console, 'EnabledFile', { enumerable: false, configurable: false, writable: true, value: true });
 
 /* global fso:readable */
-const fsoCL = typeof fso !== 'undefined' ? fso : new ActiveXObject('Scripting.FileSystemObject'); // Reuse fso if possible
+const fsoCL = typeof fso === 'undefined' ? new ActiveXObject('Scripting.FileSystemObject') : fso; // Reuse fso if possible
 
 // Override logging
 function consoleLog() {
@@ -55,23 +55,18 @@ function consoleLog() {
 }
 
 console.formatArg = (arg) => {
+	const clean = (v) => v.replace(/\\"|[[\]{}]\n/g, '').replace(/\\\\/g, '\\');
 	const type = typeof arg;
-	let val = null;
 	switch (type) {
-		case 'undefined': {
-			val = void (0);
-			break;
-		}
+		case 'undefined': return 'undefined';
+		case 'number': return arg.toString().replace(/(-)?INFINITY/gi, '$1\u221E');
 		case 'function':
-		case 'number':
 		case 'boolean':
-		case 'string': {
-			val = arg.toString();
-			break;
-		}
+		case 'string': return clean(arg.toString());
 		case 'object':
 		default: {
-			if (arg !== null) {
+			let val = arg;
+			if (val !== null) {
 				let instance = null;
 				switch (true) {	// Get object types
 					case Array.isArray(arg): { instance = { name: 'Array', type: 'array' }; break; }
@@ -90,7 +85,7 @@ console.formatArg = (arg) => {
 					}
 				}
 				try {
-					val = (instance ? instance.name + ' ' : 'Object ') + JSON.stringify(val || arg, (k, v) => {
+					val = (instance ? instance.name + ' ' : 'Object ') + clean(JSON.stringify(val || arg, (k, v) => {
 						if (typeof v !== 'undefined' && v !== null) {
 							if ('FileSize' in v && 'Length' in v && 'Path' in v && 'RawPath' in v && 'SubSong' in v) {
 								return 'FbMetadbHandle ' + JSON.stringify({ FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
@@ -98,28 +93,60 @@ console.formatArg = (arg) => {
 								return 'FbMetadbHandleList ' + JSON.stringify({ Count: v.Count }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '');
 							} else if ('Handle' in v && 'PlaylistIndex' in v && 'PlaylistItemIndex' in v) {
 								return 'FbMetadbHandleList ' + JSON.stringify({ Handle: { Path: v.Handle.Path, SubSong: v.Handle.SubSong }, PlaylistIndex: v.PlaylistIndex, PlaylistItemIndex: v.PlaylistItemIndex }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
+							} else if (typeof GdiFont !== 'undefined' && v instanceof GdiFont) {
+								return 'GdiFont ' + clean(JSON.stringify({ name: v.Name, height: v.Height, size: v.Size, style: v.Style }));
+							} else if (typeof D2DFont !== 'undefined' && v instanceof D2DFont) {
+								return 'D2DFont ' + clean(JSON.stringify({ name: v.Name, height: v.Height, size: v.Size, style: v.Style }));
+							} else if (typeof GdiBitmap !== 'undefined' && v instanceof GdiBitmap) {
+								return 'GdiBitmap ' + clean(JSON.stringify({ height: v.Height, width: v.Width }));
+							} else if (typeof D2DBitmap !== 'undefined' && v instanceof D2DBitmap) {
+								return 'D2DBitmap ' + clean(JSON.stringify({ height: v.Height, width: v.Width }));
+							} else if (typeof GdiBrush !== 'undefined' && v instanceof GdiBrush) {
+								return 'GdiBrush ' + clean(JSON.stringify({ type: v.Type, wrapMode: v.WrapMode }));
+							} else if (typeof D2DBrush !== 'undefined' && v instanceof D2DBrush) {
+								return 'D2DBrush ' + clean(JSON.stringify({ type: v.Type, wrapMode: v.WrapMode }));
+							} else if (typeof D2DCompileInfo !== 'undefined' && v instanceof D2DCompileInfo) {
+								return 'D2DCompileInfo ' + clean(JSON.stringify({ code: clean(JSON.stringify(v.Code)), error: v.Error }));
+							} else if (typeof D2DEffect !== 'undefined' && v instanceof D2DEffect) {
+								return 'D2DEffect ' + clean(JSON.stringify({ clsid: v.CLSID, description: v.Description, inputCount: v.InputCount, name: v.Name }));
+							} else if ('EraseBackground' in v && 'ShowCaption' in v) {
+								return 'PanelObject ' + clean('{ ' + Object.entries(v).filter(([, sv]) => typeof sv !== 'function').map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + ' }');
+							} else if ('AppendMenuItem' in v && 'AppendMenuSeparator' in v) {
+								return 'MenuObject { }';
+							} else if ('CalcTextHeight' in v && 'CalcTextWidth' in v) {
+								let width, height;
+								try { width = v.Width; height = v.Height; } catch (e) { /* Do nothing */ } // eslint-disable-line no-unused-vars
+								return (window.DrawMode === 1 ? 'D2DGraphics ' : 'GdiGraphics ') + clean(JSON.stringify({ width, height }));
+							} else if ('innerHTML' in v && 'innerText' in v && 'outerHTML' in v && 'textContent' in v) {
+								return 'childNodes' in v
+									? 'HtmlNode ' + clean(JSON.stringify({ className: v.className, tagName: v.tagName, childNodes: v.childNodes.length, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length, textContent: v.textContent.length }))
+									: 'HtmlDocument ' + clean(JSON.stringify({ head: !!v.head, body: !!v.body, documentElement: !!v.documentElement, root: !!v.root, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length, textContent: v.textContent.length }));
+							} else if (v instanceof ActiveXObject) {
+								return 'ActiveXObject ' + clean('{ ' + Object.entries(v).map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + '}');
+							} else if (Array.isArray(v)) {
+								return clean(JSON.stringify(v.map((sv) => console.formatArg(sv)), null, ''));
 							} else if (v instanceof Set) {
-								return 'Set ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+								return 'Set ' + clean(JSON.stringify([...v].map((sv) => console.formatArg(sv))));
 							} else if (v instanceof Map) {
-								return 'Map ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+								return 'Map ' + clean(JSON.stringify([...v].map((sv) => console.formatArg(sv))));
 							} else if (v instanceof WeakMap) {
-								return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+								return 'WeakMap ' + clean(JSON.stringify([...v].map((sv) => console.formatArg(sv))));
 							} else if (v instanceof WeakSet) {
-								return 'WeakMap ' + JSON.stringify([...v]).replace(/["\n]/g, '');
+								return 'WeakMap ' + clean(JSON.stringify([...v].map((sv) => console.formatArg(sv))));
 							} else if (v instanceof Error) {
-								return 'Error ' + arg.toString().replace(/["\n]/g, '');
+								return 'Error ' + clean(arg.toString());
 							} else if (typeof v === 'function') {
 								return 'Function ' + v.name || 'anonymous';
-							} else if (v === Infinity) {
-								return 'INFINITY';
-							} else if (v === -Infinity) {
-								return '-INFINITY';
-							} else if (v instanceof GdiFont) {
-								return 'GdiFont ' + JSON.stringify({ name: v.Name, height: v.Height, size: v.Size, style: v.Style }).replace(/["\n]/g, '');
+							} else if (v instanceof Uint8Array) {
+								return 'Uint8Array ' + clean(JSON.stringify(v));
+							} else if (typeof v === 'object') {
+								return clean('{ ' + Object.entries(v).map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + ' }');
+							} else {
+								return clean(console.formatArg(v));
 							}
 						}
 						return v;
-					}).replace(/"(-)?INFINITY"/g, '$1\u221E');
+					}));
 				} catch (e) {
 					if (e.message === 'can\'t access dead object') {
 						console.logUI('Console.log: ' + e.message + ': ', type);
@@ -133,10 +160,9 @@ console.formatArg = (arg) => {
 					}
 				}
 			}
-			break;
+			return val;
 		}
 	}
-	return val;
 };
 
 // Check file size doesn't exceed threshold or reset it
