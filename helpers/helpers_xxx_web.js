@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/26
+//16/06/26
 
 /* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate*/
 
@@ -248,22 +248,22 @@ function encodeUrlParams(params) {
 	}).join('&');
 }
 
-function downloadFileV2(url, path) {
+function downloadFileV2(url, path, referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '') {
 	const curl = getCurl();
 	if (!curl) { return Promise.resolve(null); }
-	return _exec(_q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10 -L -o ' + _q(_resolvePath(path)) + ' ' + url)
+	return _exec(_q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10'  + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path)) + ' ' + _q(url))
 		.catch(() => void (0))
 		.then(() => _isFile(path) ? path : null);
 
 }
 
-function downloadFile(url, path) {
+function downloadFile(url, path, referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '') {
 	const curl = getCurl();
 	if (!curl) { return Promise.resolve(null); }
 	return new Promise((resolve) => {
 		let id = setInterval(() => { if (_isFile(path)) { clearInterval(id); id = null; resolve(path); } }, 50);
 		setTimeout(() => { if (id) { clearInterval(id); id = null; resolve(null); } }, 10000);
-		_runCmd('CMD /C ' + _q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10 -L -o ' + _q(_resolvePath(path)) + ' ' + url, false);
+		_runCmd('CMD /C ' + _q(_q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10'  + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url)  + ' & MOVE ' + _q(_resolvePath(path) + '_') + ' ' +  _q(path)), false);
 	})
 		.catch(() => void (0))
 		.then((path) => path || null);
