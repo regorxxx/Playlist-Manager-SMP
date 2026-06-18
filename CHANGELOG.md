@@ -78,7 +78,7 @@
 	* 'Playlist-Manager-SMP: switch enable panel'		-> { window: string[] }
 	* 'Playlist-Manager-SMP: enable panel'				-> { window: string[] }
 	* 'Playlist-Manager-SMP: disable panel'				-> { window: string[] }
-- Configuration: added new "userAgent" (Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36) and "curlImpersonate" (curl_chrome146.bat) at global settings (globSettings.json) for arbitrary downloads using curl and/or JS-host methods.
+- Configuration: added new "userAgent" (Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36) and "curlImpersonate" (curl_firefox147.bat) at global settings (globSettings.json) for arbitrary downloads using curl and/or JS-host methods.
 - Helpers: added curl-impersonate.exe v1.5.6. See [here](https://github.com/lexiforest/curl-impersonate).
 ### Changed
 - Quick-search: foobar2000 shortcuts are now skipped while quick-searching if JS-host supports it (for ex. to bypass play/pause when pressing space bar).

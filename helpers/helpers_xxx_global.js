@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/06/26
+//16/06/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -340,7 +340,7 @@ const globSettings = {
 	instanceManager: 'v1',
 	binariesPath: _foldPath(folders.binaries),
 	userAgent: 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36',
-	curlImpersonate: 'curl_chrome146.bat'
+	curlImpersonate: 'curl_firefox147.bat'
 };
 
 // No-Split Artist: user replaceable with a presets file at folders.data

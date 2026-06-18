@@ -1,21 +1,91 @@
 ﻿'use strict';
-//16/06/26
+//17/06/26
 
-/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate*/
+/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg */
 
 include('helpers_xxx.js');
 /* global folders:readable, compareVersions:readable, globSettings:readable */
 include('helpers_xxx_prototypes.js');
-/* global _q:readable */
+/* global _q:readable, doOnce:readable */
 include('helpers_xxx_file.js');
 /* global _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable */
 
-function downloadText(URL) {
-	return URL.includes('http://') || URL.includes('https://')
-		? send({ method: 'GET', URL, bypassCache: true })
-		: Promise.reject(new Error('Input is not a link.'));
+// Http Requests when utils.HTTPRequestAsync is available. Properties are duplicated
+// with different casing so it works as 1:1 replacement for XMLHttp and
+// WinHttp.WinHttpRequest.5.1 ActiveX objects.
+function XMLHttpRequest(bBuiltIn = true) { // eslint-disable-line no-redeclare
+	return utils.HTTPRequestAsync && bBuiltIn
+		? {
+			url: void (0), type: void (0), onreadystatechange: void (0), headers: void (0),
+			id: null, readyState: 0, status: 0, responseText: null,
+			get Status() { return this.status; },
+			get ResponseText() { return this.responseText; },
+			get ReadyState() { return this.readyState; },
+			open: function (type, url) {
+				this.url = url;
+				this.type = type.toUpperCase() === 'GET' ? 0 : 1;
+				this.readyState = 1;
+			},
+			get Open() { return this.open; },
+			setRequestHeader: function (key, value) {
+				if (!this.headers) { this.headers = {}; }
+				this.headers[key] = value;
+			},
+			get SetRequestHeader() { return this.setRequestHeader; },
+			abort: function () {
+				this.readyState = 0;
+				this.status = 0;
+				this.id = null;
+				this.responseText = null;
+				window.WebRequests.delete(this);
+			},
+			get Abort() { return this.abort; },
+			send: function (body) {
+				window.WebRequests.add(this);
+				this.id = utils.HTTPRequestAsync(
+					this.type,
+					this.url,
+					this.headers ? JSON.stringify(this.headers) : '',
+					this.type === 1 ? body : ''
+				);
+				this.readyState = 2;
+			},
+			get Send() { return this.send; },
+			SetTimeouts: () => void (0),
+			WaitForResponse: () => void (0),
+		}
+		: new ActiveXObject('Microsoft.XMLHTTP');
 }
 
+// Add handling to terminate activeX objects on foobar shutdown to avoid crashes
+// If a panel error is thrown while a web request is active, the entire foobar2000
+// instance may also crash; also the activeX object seems to be dispatched a few ms
+// later than abort() is called
+function addWebCallbacks() {
+	if (typeof addEventListener !== 'undefined') {
+		doOnce('addWebCallbacks', () => {
+			addEventListener('on_script_unload', () => {
+				window.IsUnload = true;
+				abortWebRequests();
+			});
+			if (utils.HTTPRequestAsync) {
+				addEventListener('on_http_request_done', (task_id, success, response_text, status) => {
+					window.WebRequests.forEach((request) => {
+						if (request.id === task_id) {
+							request.readyState = 4;
+							request.status = status;
+							request.responseText = response_text;
+							request.onreadystatechange();
+							request.abort();
+						}
+					});
+				});
+			}
+		})();
+	}
+}
+
+// Helpers
 function onStateChange(timer, resolve, reject, func = null, type = null) {
 	if (this !== null && timer !== null) { // this is xmlhttp bound
 		if (this.readyState === 4) {
@@ -79,10 +149,11 @@ function onStateChangeV2(resolve, reject, func = null, type = null) {
 
 // May be used to async run a func for the response or as promise
 function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
+	addWebCallbacks();
 	const p = new Promise((resolve, reject) => {
 		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; } // NOSONAR
 		let timer = null;
-		const xmlhttp = new ActiveXObject('Microsoft.XMLHTTP');
+		const xmlhttp = new XMLHttpRequest();
 		if (window.WebRequests) { window.WebRequests.add(xmlhttp); }
 		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
 		// Add ('&' + new Date().getTime()) to URLS to avoid caching
@@ -117,6 +188,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 }
 
 function sendV2({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
+	addWebCallbacks();
 	const p = new Promise((resolve, reject) => {
 		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; }  // NOSONAR
 		const winHttp = new ActiveXObject('WinHttp.WinHttpRequest.5.1');
@@ -248,32 +320,6 @@ function encodeUrlParams(params) {
 	}).join('&');
 }
 
-function downloadFileV2(url, path, referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '') {
-	const curl = getCurl();
-	if (!curl) { return Promise.resolve(null); }
-	return _exec(_q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10'  + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path)) + ' ' + _q(url))
-		.catch(() => void (0))
-		.then(() => _isFile(path) ? path : null);
-
-}
-
-function downloadFile(url, path, referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '') {
-	const curl = getCurl();
-	if (!curl) { return Promise.resolve(null); }
-	return new Promise((resolve) => {
-		let id = setInterval(() => { if (_isFile(path)) { clearInterval(id); id = null; resolve(path); } }, 50);
-		setTimeout(() => { if (id) { clearInterval(id); id = null; resolve(null); } }, 10000);
-		_runCmd('CMD /C ' + _q(_q(curl) + ' --connect-timeout 10 --max-time 10 --retry 3 --retry-max-time 10'  + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url)  + ' & MOVE ' + _q(_resolvePath(path) + '_') + ' ' +  _q(path)), false);
-	})
-		.catch(() => void (0))
-		.then((path) => path || null);
-}
-
-function downloadImg(url, path, method = 'v1') {
-	return (method.toLowerCase() === 'v1' ? downloadFile : downloadFileV2)(url, path)
-		.then((path) => path ? gdi.LoadImageAsyncV2(window.IDBCursor, path) : Promise.resolve(null));
-}
-
 function getCurl(impersonate = globSettings.curlImpersonate) {
 	const curl = [
 		fb.ProfilePath + 'binaries\\',
@@ -299,6 +345,66 @@ function getCurl(impersonate = globSettings.curlImpersonate) {
 	}
 	return curl.path;
 }
+
+// Methods
+function downloadFile(url, path, { referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '', timeout = 10, retry = 3 } = {}) {
+	if (!url) { return Promise.resolve(null); }
+	const curl = getCurl();
+	if (!curl) { return Promise.resolve(null); }
+	return new Promise((resolve) => {
+		let id = setInterval(() => { if (_isFile(path)) { clearInterval(id); id = null; resolve(path); } }, 50);
+		setTimeout(() => { if (id) { clearInterval(id); id = null; resolve(null); } }, 10000);
+		_runCmd('CMD /C ' + _q(_q(curl) + (timeout ? ' --connect-timeout ' + timeout + ' --max-time ' + timeout : '') + (retry ? ' --retry ' + retry + ' --retry-max-time ' + (timeout || 5) : '') + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url) + ' & MOVE ' + _q(_resolvePath(path) + '_') + ' ' + _q(path)), false);
+	})
+		.catch(() => void (0))
+		.then((path) => path || null);
+}
+
+function downloadImg(url, path, method = 'v1') {
+	if (!url) { return Promise.resolve(null); }
+	return (method.toLowerCase() === 'v1' ? downloadFile : downloadFileV2)(url, path)
+		.then((path) => path ? gdi.LoadImageAsyncV2(window.IDBCursor, path) : Promise.resolve(null));
+}
+
+
+function downloadFileV2(url, path, { referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '', timeout = 10, retry = 3 } = {}) {
+	if (!url) { return Promise.resolve(null); }
+	const curl = getCurl();
+	if (!curl) { return Promise.resolve(null); }
+	return _exec(_q(curl) + (timeout ? ' --connect-timeout ' + timeout + ' --max-time ' + timeout : '') + (retry ? ' --retry ' + retry + ' --retry-max-time ' + (timeout || 5) : '') + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url))
+		.catch(() => void (0))
+		.then(() => _isFile(path) ? path : null);
+
+}
+
+function downloadText(URL) {
+	return URL.includes('http://') || URL.includes('https://')
+		? send({ method: 'GET', URL, bypassCache: true })
+		: Promise.reject(new Error('Input is not a link.'));
+}
+
+function getWikiImg(value, { fileType = '', assessment = '' } = {}) {
+	const url = 'https://commons.wikimedia.org/w/index.php?search=' + encodeURIComponent(value) + '&title=Special:MediaSearch&go=Go&type=image' + (fileType ? '&filemime=' + fileType : '') + (assessment ? '&assessment=' + assessment : '');
+	return send({
+		method: 'GET',
+		bypassCache: true,
+		requestHeader: [
+			['user-agent', globSettings.userAgent]
+		],
+		URL: url
+	})
+		.then((response) => {
+			const match = (response.match(/data-src="(https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/thumb\/.+?\.(jpg|png|webp))"/mi) || [null, null, null]);
+			if (!match[1] || !match[2]) { throw new Error('No image match');}
+			const url = match[1].replace('thumb/', '').split('/').slice(0, -1).join('/');
+			const file = url.split('/').at(-1);
+			return { url, file , ext: '.' + match[2] };
+		})
+		.catch((reject) => {
+			console.log('getWikiImg(): ' + (reject.message || reject.status + ' - ' + reject.responseText) + '\n\t' + url);
+			return null;
+		});
+};
 
 function checkUpdate({
 	scriptName = window.ScriptInfo.Name,
@@ -349,14 +455,5 @@ function checkUpdate({
 		});
 }
 
-// Add handling to terminate activeX objects on foobar shutdown to avoid crashes
-// If a panel error is thrown while a web request is active, the entire foobar2000
-// instance may also crash; also the activeX object seems to be dispatched a few ms
-// later than abort() is called
-if (typeof addEventListener !== 'undefined') {
-	window.WebRequests = new Set();
-	addEventListener('on_script_unload', () => {
-		window.IsUnload = true;
-		abortWebRequests();
-	});
-}
+window.WebRequests = new Set();
+if (typeof addEventListener !== 'undefined') { addWebCallbacks(); }
