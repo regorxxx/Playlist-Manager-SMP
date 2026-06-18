@@ -130,13 +130,17 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menu.newSeparator(subMenuSecond);
 			menu.newEntry({
 				menuName: subMenuSecond, entryText: 'Edit art types...', func: () => {
-					const input = Input.json('array strings', this.coverModePriority, 'Enter art types:\n(array of strings)\n\nAllowed: ' + this.getCoverModes(false).join(', ') + '\nSuffix \'_stub\' or \'_embedded\' can also be added.\n\ne.g. ["front", "back_stub", "artist"]' , window.Name + ' (' + window.ScriptInfo.Name + '): Y-axis margin', 2);
+					const input = Input.json('array strings', this.coverModePriority, 'Enter art types:\n(array of strings)\n\nAllowed: ' + this.getCoverModes(false).join(', ') + '\nSuffix \'_stub\' or \'_embedded\' can also be added.\n\ne.g. ["front", "back_stub", "artist"]', window.Name + ' (' + window.ScriptInfo.Name + '): Y-axis margin', 2);
 					if (input === null) { return; }
 					this.changeConfig({ config: { coverModePriority: [...new Set(input)] }, callbackArgs: { bSaveProperties: true } });
 				},
 			});
 		}
 		if (['path', 'folder'].includes(this.coverMode.toLowerCase())) {
+			menu.newSeparator(subMenu);
+			[
+				{ isEq: null, key: this.coverModeOptions.bFallbackFront, value: null, newValue: !this.coverModeOptions.bFallbackFront, entryText: 'Use front as fallback' }
+			].forEach(createMenuOption('coverModeOptions', 'bFallbackFront', subMenu, true));
 			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Open folder...', func: () => {

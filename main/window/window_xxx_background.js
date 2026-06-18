@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/26
+//17/06/26
 
 /* exported _background */
 
@@ -76,6 +76,7 @@ function _background({
 		const bFoundPath = bPath && path.length;
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
+		if (bPath && !bFoundPath && !this.coverModeOptions.bFallbackFront) { this.resetArt(); }
 		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return false; }
 		let id = null;
 		if (this.coverModeOptions.bCacheAlbum && handle) {
@@ -90,7 +91,7 @@ function _background({
 		if (this.logging.bProfile) { profiler = new FbProfiler('Background - loadImg'); }
 		const promise = bFoundPath
 			? gdi.LoadImageAsyncV2('', path)
-			: handle
+			: (!bPath || this.coverModeOptions.bFallbackFront) && handle
 				? this.getHandleArt(handle, this.coverMode)
 				: Promise.reject(new Error('No handle/art'));
 		promise.then((result) => {
@@ -959,13 +960,13 @@ function _background({
 	/**
 	 * Gets current art path which may link to a static file or file within folder set
 	 * @property
-	 * @name getArtPath
+	 * @name getPanelArtPath
 	 * @kind method
 	 * @memberof _background
-	 * @param {1|-1|void} next - Use next image for folder path
+	 * @param {FbMetadbHandle?} handle - Handle to evaluate path. If not provided, uses the panel handle according to settings
 	 * @returns {string}
 	 */
-	this.getArtPath = (next, handle) => {
+	this.getPanelArtPath = (handle) => {
 		let path = _resolvePath(this.coverModeOptions.path);
 		if (path.includes('$') || path.includes('%')) {
 			if (!handle) { handle = this.getHandle(); }
@@ -973,6 +974,22 @@ function _background({
 				? fb.TitleFormat(path).EvalWithMetadb(handle)
 				: fb.TitleFormat(path).Eval();
 		}
+		if (this.coverMode === 'folder' && path.length && !path.endsWith('\\')) { path += '\\'; }
+		if (this.logging.bDebug) { console.log('Background - getArtPath - art TF: ' + path + ' (TF)'); }
+		return path;
+	};
+	/**
+	 * Gets current art path which may link to a static file or file within folder set
+	 * @property
+	 * @name getArtPath
+	 * @kind method
+	 * @memberof _background
+	 * @param {1|-1|void} next - Use next image for folder path
+	 * @param {FbMetadbHandle?} handle - Handle to evaluate path. If not provided, uses the panel handle according to settings
+	 * @returns {string}
+	 */
+	this.getArtPath = (next, handle) => {
+		const path = this.getPanelArtPath(handle);
 		if (this.coverMode === 'folder' && path.length) {
 			if (artFiles.root !== path) { this.resetArtFiles(path); next = 1; }
 			if (typeof next === 'number') {
@@ -988,6 +1005,7 @@ function _background({
 					: getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
 						.sort((a, b) => strNumCollator.compare(a, b));
 				artFiles.num = files.length;
+				if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + artFiles.num + ' (#)'); }
 				if (next === -1) {
 					files.reverse();
 					for (let file of files) {
@@ -1139,9 +1157,11 @@ function _background({
 	 * @name resetArt
 	 * @kind method
 	 * @memberof _background
-	 * @returns {void}
+	 * @param {Boolean?} bRepaint - [=false] Repaint panel on reset if it already had an image cached
+	 * @returns {Boolean} True if panel had an image cached and was reset
 	 */
-	this.resetArt = () => {
+	this.resetArt = (bRepaint = false) => {
+		const bHadImage = !!this.coverImg.art.image;
 		this.coverImg.art.path = null;
 		this.coverImg.art.image = null;
 		this.coverImg.art.colors = null;
@@ -1149,6 +1169,8 @@ function _background({
 		this.coverImg.art.blendImage = null;
 		this.coverImg.handle = null;
 		this.coverImg.id = null;
+		if (bRepaint && bHadImage) { this.repaint(); }
+		return !bHadImage;
 	};
 	/**
 		 * Reset blend stub image
@@ -1567,6 +1589,7 @@ function _background({
 	 * @property {boolean} bFlipX - Flip X-axis
 	 * @property {boolean} bFlipY - Flip Y-axis
 	 * @property {boolean} bCacheAlbum - Cache art from same album/folder
+	 * @property {boolean} bFallbackFront - Fallback to front art if TF art is not found
 	 * @property {boolean} bProcessColors - Process art colors (required as color server)
 	 */
 	/** @type {CoverModeOptions} - Panel art settings */
@@ -1618,7 +1641,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true },
+		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		...(bCallbacks
