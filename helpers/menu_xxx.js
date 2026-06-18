@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//18/06/26
 
 /* exported _menu */
 
@@ -556,6 +556,35 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			}
 		});
 		return tip;
+	};
+	/**
+	 * Runs the function of a given menu entry (without menu mapping running first)
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name runEntry
+	 * @param {stringLike|() => String} entryText - Entry name.
+	 * @param {stringLike|() => String} menuName - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
+	 * @returns {{ entry: MenuEntry, result: any|null }} If not found returns null as result and entry, otherwise runs the associated function and returns its result
+	 */
+	this.runEntry = (entryText, menuName = this.getMainMenuName()) => {
+		const entry = this.findEntry(entryText, menuName);
+		return { entry, result: entry && entry.func ? entry.func() : null };
+	};
+	/**
+	 * Finds a menu entry (without menu mapping running first). Note invisible ids will not be matched, so it will not work with duplicated entres with a same submenu
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name findEntry
+	 * @param {stringLike|() => String} entryText - Entry name.
+	 * @param {stringLike|() => String} menuName - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
+	 * @returns {any|void(0)} If not found returns undefined, otherwise runs the associated function and returns its result
+	 */
+	this.findEntry = (entryText, menuName = this.getMainMenuName()) => {
+		menuName = this.cleanEntryName(menuName);
+		entryText = this.cleanEntryName(entryText);
+		return entryArr.find((entry) => entry.entryText === entryText && entry.menuName === menuName) || null;
 	};
 	/**
 	 * Adds a tip to last entry, joining multiple strings prefixed by a tab (\t).
