@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/26
+//19/06/26
 
 /* exported _listStatistics */
 
@@ -87,7 +87,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
 				menu.newEntry({
 					menuName, entryText: option.entryText, func: () => {
-						if (addFunc) { addFunc(option); }
+						if (addFunc && !addFunc(option)) { return; }
 						if (subKey) {
 							if (Array.isArray(subKey)) {
 								const len = subKey.length - 1;
@@ -203,6 +203,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 						title: window.PanelName + ' - ' + this.axis.y.key + ' per ' + option.entryText
 					}
 				);
+				return true;
 			}));
 		}
 		menu.newSeparator();
@@ -240,11 +241,12 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				if (Object.hasOwn(option.args.data, 'sourceArg')) {
 					if (option.args.data.sourceArg === null) {
 						const input = Input.string('string', parent.sourceArg || '', 'Enter playlist name(s):\n(separated by ;)', window.FullPanelName, 'My Playlist;Other Playlist', void (0), true) || Input.lastInput;
-						if (input === null) { return; }
+						if (input === null) { return false; }
 						parent.sourceArg = input.split(';');
 					} else {
 						parent.sourceArg = option.args.data.sourceArg;
 					}
+					return true;
 				}
 				option.newValue = new Array(1).fill(...parent.getData({ source: option.args.data.source, sourceArg: parent.sourceArg, option: parent.option, arg: parent.arg }));
 				parent.source = option.args.data.source;

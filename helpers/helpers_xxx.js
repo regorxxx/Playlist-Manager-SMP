@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/03/26
+//19/06/26
 
 /**
  * Global folders setting
@@ -96,6 +96,29 @@ folders.userPresets = folders.data + 'presets\\';
  * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\presets\\global\\
  */
 folders.userPresetsGlobal = folders.userPresets + 'global\\';
+/**
+ * Path to Biography artist folder
+ * @type {string} - Ex: [FB2K_PROFILE]\\yttm\\art_img\\$lower($cut($meta(ARTIST,0),1))\\$cut($meta(ARTIST,0),40)\\
+ */
+folders.bioArtistArtPathTf = '.\\profile\\yttm\\art_img\\$lower($cut($meta(ARTIST,0),1))\\$cut($meta(ARTIST,0),40)\\';
+/**
+ * Retrieves path to Biography artist folder, with substitutions for artist, album artist or root. If no artist or album artist is provided, the result will be a TF which needs to be evaluated against a handle first to get an actual path. Don't forget to use {@link _resolvePath} to expand the root.
+ * @property
+ * @name getBioArtistArtPath
+ * @kind method
+ * @memberof folders
+ * @param {string?} artist
+ * @param {string?} albumArtist
+ * @param {string?} root
+ * @returns {string}
+ */
+folders.getBioArtistArtPath = ({artist = '', albumArtist = '', root = ''} = {}) => {
+	let folder = folders.bioArtistArtPathTf;
+	if (typeof artist === 'string' && artist) { folder = folder.replaceAll('$meta(ARTIST,0)', artist); }
+	if (typeof albumArtist === 'string' && albumArtist) { folder = folder.replaceAll('$meta(ARTIST,0)', albumArtist).replaceAll('$meta(ALBUM ARTIST,0)', albumArtist); }
+	if (typeof root === 'string' && root) { folder = folder.replaceAll('.\\profile\\yttm\\art_img\\', root); }
+	return folder;
+};
 
 /*
 	Global files

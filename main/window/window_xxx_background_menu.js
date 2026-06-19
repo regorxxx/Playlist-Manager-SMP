@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/26
+//19/06/26
 
 /* exported createBackgroundMenu */
 
@@ -44,7 +44,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
 				menu.newEntry({
 					menuName, entryText: option.entryText, func: () => {
-						if (addFunc) { addFunc(option); }
+						if (addFunc && !addFunc(option)) { return; }
 						if (subKey) {
 							if (Array.isArray(subKey)) {
 								const len = subKey.length - 1;
@@ -105,12 +105,17 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		].forEach(createMenuOption('coverMode', void (0), subMenu, true, (option) => {
 			if (option.newValue === 'path' || option.newValue === 'folder') {
 				const bLoadXXX = typeof folders !== 'undefined' && Object.hasOwn(folders, 'xxxRootName');
-				const input = option.newValue === 'path'
-					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n$directory_path(%PATH%)\\art\\artist.jpg', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', '$directory_path(%PATH%)\\art\\artist.jpg')
-					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n%PROFILE%\\yttm\\art_img\\$lower($cut(%ARTIST%,1))\\$meta(ARTIST,0)\\', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', '%PROFILE%\\yttm\\art_img\\$lower($cut(%ARTIST%,1))\\$meta(ARTIST,0)\\');
-				if (input === null) { return; }
+				const defTf = option.newValue === 'path'
+					? '$directory_path(%PATH%)\\art\\artist.jpg'
+					: folders.getBioArtistArtPath();
+				let input = option.newValue === 'path'
+					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', defTf)
+					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf);
+				if (input === null) { return false; }
+				input = input.replace('DEFAULT', defTf);
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}
+			return true;
 		}));
 		menu.newSeparator(subMenu);
 		{
@@ -170,6 +175,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		].forEach((opt) => {
 			createMenuOption('coverModeOptions', 'fillCrop', subMenu, false, () => {
 				this.changeConfig({ config: { coverModeOptions: { bFill: true } }, callbackArgs: { bSaveProperties: true } });
+				return true;
 			})(opt);
 			menu.newCheckMenuLast(() => this.coverModeOptions.bFill && this.coverModeOptions.bProportions && this.coverModeOptions.fillCrop === opt.newValue);
 			menu.getLastEntry().flags = this.coverModeOptions.bProportions ? MF_STRING : MF_GRAYED;
@@ -192,6 +198,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 20000, entryText: '20' },
 		].forEach(createMenuOption('coverModeOptions', 'pathCycleTimer', subMenu, true, (option) => {
 			if (option.newValue === 0 || !this.coverModeOptions.pathCycleTimer) { this.resetArtFiles(); }
+			return true;
 		}));
 		menu.newSeparator(subMenu);
 		[
@@ -279,6 +286,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			if (!this.useCover) {
 				this.changeConfig({ config: { coverMode: this.getDefaultCoverMode() }, callbackArgs: { bSaveProperties: true } });
 			}
+			return true;
 		}));
 		[
 			{ isEq: null, key: this.coverModeOptions.bNowPlaying, value: null, newValue: false, entryText: 'Follow selection' }
@@ -286,6 +294,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			if (!this.useCover) {
 				this.changeConfig({ config: { coverMode: this.getDefaultCoverMode() }, callbackArgs: { bSaveProperties: true } });
 			}
+			return true;
 		}));
 		menu.getLastEntry().flags = this.useCover ? MF_STRING : MF_GRAYED;
 		menu.newCheckMenuLast(() => this.coverMode === 'none' ? 0 : (this.coverModeOptions.bNowPlaying ? 1 : 2), 4);
@@ -315,6 +324,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				}
 				this.changeConfig({ config: { colorModeOptions: { color: input } }, callbackArgs: { bSaveProperties: true } });
 			}
+			return true;
 		}));
 		[
 			{ isEq: null, key: this.colorMode, value: null, newValue: 'blend', entryText: 'Blend\t[from art]' },

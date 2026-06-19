@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/04/26
+//19/06/26
 
 /* exported createStatisticsMenu */
 
@@ -41,7 +41,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
 				menu.newEntry({
 					menuName, entryText: option.entryText, func: () => {
-						if (addFunc) { addFunc(option); }
+						if (addFunc && !addFunc(option)) { return; }
 						if (subKey) {
 							if (Array.isArray(subKey)) {
 								const len = subKey.length - 1;
@@ -447,7 +447,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			{ isEq: null, key: this.chroma.scheme, value: null, newValue: 'sequential', entryText: 'Sequential', flags: bUsesDynColor ? MF_GRAYED : MF_STRING },
 			{ entryText: 'sep' },
 			{ isEq: null, key: this.chroma.scheme, value: null, newValue: 'random', entryText: 'Random', flags: bUsesDynColor ? MF_GRAYED : MF_STRING },
-		].forEach(createMenuOption('chroma', 'scheme', subMenu, true, () => { this.colors = []; })); // Remove colors to force new palette
+		].forEach(createMenuOption('chroma', 'scheme', subMenu, true, () => { this.colors = []; return true; })); // Remove colors to force new palette
 		menu.newSeparator(subMenu);
 		{
 			const subMenuTwo = menu.newMenu('By scheme', subMenu, bUsesDynColor ? MF_GRAYED : MF_STRING);
@@ -462,7 +462,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 					if (this.chroma.colorBlindSafe && !colorbrewer.colorBlind[key].includes(scheme)) { return; }
 					[
 						{ isEq: null, key: this.chroma.scheme, value: null, newValue: scheme, entryText: scheme },
-					].forEach(createMenuOption('chroma', 'scheme', subMenuTwo, true, () => { this.colors = []; })); // Remove colors to force new palette
+					].forEach(createMenuOption('chroma', 'scheme', subMenuTwo, true, () => { this.colors = []; return true; })); // Remove colors to force new palette
 				});
 				j++;
 			}
