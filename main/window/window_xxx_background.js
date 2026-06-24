@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/06/26
+//22/06/26
 
 /* exported _background */
 
@@ -879,13 +879,15 @@ function _background({
 			const key = pair[0];
 			const value = pair[1];
 			if (typeof value !== 'undefined') {
-				if (value && Array.isArray(value)) {
-					this[key] = [...value];
-				} else if (value && typeof value === 'object') {
-					this[key] = { ...this[key], ...value };
-				} else {
-					this[key] = value;
-				}
+				if (Object.hasOwn(this, key)) {
+					if (value && Array.isArray(value)) {
+						this[key] = [...value];
+					} else if (value && typeof value === 'object') {
+						this[key] = { ...this[key], ...value };
+					} else {
+						this[key] = value;
+					}
+				} else { console.log('_background: invalid config key ' + key); }
 			}
 		});
 		this.checkConfig();

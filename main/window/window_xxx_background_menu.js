@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/26
+//23/06/26
 
 /* exported createBackgroundMenu */
 
@@ -191,11 +191,13 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 	}
 	{
 		const subMenu = menu.newMenu('Art cycle', mainMenuName, ['path', 'folder'].includes(this.coverMode.toLowerCase()) ? MF_STRING : MF_GRAYED);
+		menu.newEntry({	menuName: subMenu, entryText: 'Ctrl + Shift + Mouse Wheel:',flags: MF_GRAYED });
+		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 0, entryText: 'Disabled' },
-			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 5000, entryText: '5' },
-			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 10000, entryText: '10' },
-			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 20000, entryText: '20' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 5000, entryText: '5 seconds' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 10000, entryText: '10 seconds' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 20000, entryText: '20 seconds' },
 		].forEach(createMenuOption('coverModeOptions', 'pathCycleTimer', subMenu, true, (option) => {
 			if (option.newValue === 0 || !this.coverModeOptions.pathCycleTimer) { this.resetArtFiles(); }
 			return true;
