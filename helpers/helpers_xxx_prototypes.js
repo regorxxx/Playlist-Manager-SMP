@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/06/26
+//23/06/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime */
 
@@ -262,7 +262,7 @@ function toType(a) {
 }
 
 function isFbMetadbHandle(a) {
-	if (typeof a === 'object') {
+	if (a && typeof a === 'object') {
 		if (toType(a) === 'FbMetadbHandle') { return true; }
 		else {
 			// Jsplitter doesn't report proper type: https://hydrogenaudio.org/index.php/topic,126743.msg1073615.html#msg1073615

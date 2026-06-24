@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/26
+//23/06/26
 
 /* exported createStatisticsMenu */
 
@@ -239,7 +239,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 				menu.newSeparator(subMenuGreat);
 				menu.newEntry({
 					menuName: subMenuGreat, entryText: 'Custom value...', func: () => {
-						let val = Input.number('real', -Infinity, 'Input real number:', 'Allow only Y-Value greater than', 40);
+						let val = Input.number('real inf', -Infinity, 'Input real number:', 'Allow only Y-Value greater than', 40);
 						if (val === null) {
 							if (!Input.isLastEqual) { return; }
 							val = Input.previousInput;
@@ -271,7 +271,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 				menu.newSeparator(subMenuLow);
 				menu.newEntry({
 					menuName: subMenuLow, entryText: 'Custom value...', func: () => {
-						let val = Input.number('real', Infinity, 'Input real number:', 'Allow only Y-Value lower than', 40);
+						let val = Input.number('real inf', Infinity, 'Input real number:', 'Allow only Y-Value lower than', 40);
 						if (val === null) {
 							if (!Input.isLastEqual) { return; }
 							val = Input.previousInput;
@@ -294,12 +294,12 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 				menu.newEntry({
 					menuName: subMenu, entryText: 'Between 2 values...', func: () => {
 						const limits = [-Infinity, Infinity];
-						limits[0] = Input.number('real', -Infinity, 'Input real number:', 'Allow only Y-Value greater than', 40);
+						limits[0] = Input.number('real inf', -Infinity, 'Input real number:', 'Allow only Y-Value greater than', 40);
 						if (limits[0] === null) {
 							if (!Input.isLastEqual) { return; }
 							limits[0] = Input.previousInput;
 						}
-						limits[1] = Input.number('real', Infinity, 'Input real number:', 'Allow only Y-Value lower than', 40);
+						limits[1] = Input.number('real inf', Infinity, 'Input real number:', 'Allow only Y-Value lower than', 40);
 						if (limits[1] === null) {
 							if (!Input.isLastEqual) { return; }
 							limits[1] = Input.previousInput;

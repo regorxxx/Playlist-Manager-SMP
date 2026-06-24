@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/26
+//23/06/26
 
 /* exported extendGR, checkCompatible */
 
@@ -67,6 +67,25 @@ FbTitleFormat.prototype.EvalWithMetadbsAsync = function EvalWithMetadbsAsync(han
 		}
 		resolve(tags);
 	});
+};
+
+// Add Stream support
+FbTitleFormat.prototype.EvalWithMetadbsDynamic = function EvalWithMetadbsDynamic(handleList) {
+	const tags = this.EvalWithMetadbs(handleList);
+	if (fb.IsPlaying) {
+		const np = fb.GetNowPlaying();
+		if (np) {
+			const handleArr = handleList.Convert();
+			let npTag = null;
+			for (let i = handleArr.length -1; i >= 0; i--) {
+				if (handleList[i].Compare(np)) {
+					if (npTag === null) { npTag = this.Eval(); }
+					tags[i] = npTag;
+				}
+			}
+		}
+	}
+	return tags;
 };
 
 // Add caching

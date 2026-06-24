@@ -1,5 +1,5 @@
 'use strict';
-//17/04/26
+//23/06/26
 
 /* exported Input */
 
@@ -145,7 +145,7 @@ const Input = Object.freeze({
 	 * @name number
 	 * @kind method
 	 * @memberof Input
-	 * @param {'int'|'int positive'|'int negative'|'float'|'float positive'|'float negative'|'real'|'real positive'|'real negative'} type
+	 * @param {'int'|'int inf'|'int positive'|'int positive inf'|'int negative'|'int negative inf'|'float'|'float positive'|'float negative'|'real'|'real inf'|'real positive'|'real positive inf'|'real negative'|'real negative inf'} type
 	 * @param {Number} oldVal
 	 * @param {String} message
 	 * @param {String} title
@@ -154,18 +154,26 @@ const Input = Object.freeze({
 	 * @returns {null|Number}
 	 */
 	number: function (type, oldVal, message, title, example, checks = []) {
-		const types = new Set(['int', 'int positive', 'int negative', 'float', 'float positive', 'float negative', 'real', 'real positive', 'real negative']);
+		const types = new Set(['int', 'int inf', 'int positive', 'int positive inf', 'int negative', 'int negative inf', 'float', 'float positive', 'float negative', 'real', 'real inf', 'real positive', 'real positive inf', 'real negative', 'real negative inf']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (type && type.length) { type = type.replace('/integer/gi', 'int'); }
+		if (type && type.length) { type = type.replace('/infinite/gi', 'inf'); }
 		if (!types.has(type)) { throw new Error('Invalid type: ' + type); }
 		let input, newVal;
 		try {
 			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? oldVal : '', true);
 			if (input === null || typeof input === 'undefined' || typeof input === 'string' && !input.length) { throw new Error('Invalid type'); }
-			else { newVal = Number(input); }
+			else {
+				if (typeof input === 'string') {
+					if (input === '\u221E') { input = 'Infinity'; }
+					else if (input === '-\u221E') { input = '-Infinity'; }
+				}
+				newVal = Number(input);
+			}
 			if (newVal.toString() !== input) { throw new Error('Invalid type'); } // No fancy number checks, just allow proper input
-			if (type.startsWith('int') && Number.isFinite(newVal) && !Number.isInteger(newVal)) { throw new Error('Invalid type'); }
+			if (type.startsWith('int') && (Number.isFinite(newVal) && !Number.isInteger(newVal) || !Number.isFinite(newVal) && !type.endsWith('inf'))) { throw new Error('Invalid type'); }
 			else if (type.startsWith('float') && Number.isFinite(newVal) && Number.isInteger(newVal)) { throw new Error('Invalid type'); } // NOSONAR[more clear errors]
+			else if (type.startsWith('real') && !Number.isFinite(newVal) && !type.endsWith('inf')) { throw new Error('Invalid type'); } // NOSONAR[more clear errors]
 			switch (type) {
 				case 'float':
 				case 'real':
