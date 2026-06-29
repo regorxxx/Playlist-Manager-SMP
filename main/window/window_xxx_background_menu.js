@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/26
+//25/06/26
 
 /* exported createBackgroundMenu */
 
@@ -111,7 +111,10 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				let input = option.newValue === 'path'
 					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', defTf)
 					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf);
-				if (input === null) { return false; }
+				if (input === null) {
+					if (this.coverMode === option.newValue) { return false; }
+					else if (Input.isLastEqual) { input = Input.lastInput ; }
+				}
 				input = input.replace('DEFAULT', defTf);
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
 			}

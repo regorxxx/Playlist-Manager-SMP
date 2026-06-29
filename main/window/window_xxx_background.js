@@ -1,10 +1,13 @@
 ﻿'use strict';
-//22/06/26
+//25/06/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global debounce:readable, InterpolationMode:readable, RGBA:readable, toRGB:readable , isFunction:readable , _scale:readable, _resolvePath:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, getNested:readable, addNested:readable, RotateFlipType:readable, getBrightness:readable, Effects:readable, BorderMode:readable, BlendMode:readable, invert:readable, SmoothingMode:readable, blendColors:readable, applyManipulation:readable, tintColor:readable */
+/* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable */
+/* global _resolvePath:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, _isFolder:readable */
+/* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable */
+/* global InterpolationMode:readable, RotateFlipType:readable, Effects:readable, BorderMode:readable, BlendMode:readable, SmoothingMode:readable */
 
 /**
  * Background for panel with different cover options
@@ -682,7 +685,7 @@ function _background({
 		limits = { x, y, w, h },
 		alpha = this.colorModeOptions.blendAlpha
 	} = {}) => {
-		if (this.useColorsBlend && limits.h > 1 && limits.w > 1) {
+		if (limits.h > 1 && limits.w > 1) {
 			let img;
 			const intensity = 91.05 - Math.min(Math.max(this.colorModeOptions.blendIntensity, 1.05), 90);
 			if (this.coverImg.art.image) {
@@ -737,8 +740,10 @@ function _background({
 		if (this.w <= 1 || this.h <= 1) { return; }
 		let profiler;
 		if (this.logging.bProfile) { profiler = fb.CreateProfiler('paint'); }
-		this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
-		if (this.logging.bProfile) { profiler.Print('blend'); profiler.Reset(); }
+		if (this.useColorsBlend) {
+			this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+			if (this.logging.bProfile) { profiler.Print('blend'); profiler.Reset(); }
+		}
 		this.paintColors({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
 		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
 		switch (this.coverMode) {
@@ -771,8 +776,10 @@ function _background({
 				break;
 		}
 		if (this.logging.bProfile) { profiler.Print('image'); }
-		this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
-		if (this.logging.bProfile) { profiler.Print('histogram'); }
+		if (this.coverImg.art.histogram) {
+			this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+			if (this.logging.bProfile) { profiler.Print('histogram'); }
+		}
 	};
 	/**
 	 * Color image dithering
@@ -995,45 +1002,75 @@ function _background({
 		if (this.coverMode === 'folder' && path.length) {
 			if (artFiles.root !== path) { this.resetArtFiles(path); next = 1; }
 			if (typeof next === 'number') {
-				next = Math.sign(next);
-				if (this.coverModeOptions.pathCycleTimer > 0) {
-					if (artFiles.timer !== null) { clearTimeout(artFiles.timer); }
-					artFiles.timer = setTimeout(() => this.cycleArtFolder(), this.coverModeOptions.pathCycleTimer);
-				}
-				const files = this.coverModeOptions.pathCycleSort === 'date'
-					? getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
-						.map((file) => { return { file, date: lastModified(file, true) }; })
-						.sort((a, b) => b.date - a.date).map((o) => o.file)
-					: getFiles(path, new Set(['.png', '.jpg', '.jpeg', '.gif']))
-						.sort((a, b) => strNumCollator.compare(a, b));
-				artFiles.num = files.length;
-				if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + artFiles.num + ' (#)'); }
-				if (next === -1) {
-					files.reverse();
-					for (let file of files) {
-						if (file && file.length && artFiles.shown.has(file)) {
-							artFiles.shown.delete(file);
-							return file;
-						}
-					}
-				} else {
-					for (let file of files) {
-						if (file && file.length && !artFiles.shown.has(file)) {
-							artFiles.shown.add(file);
-							return file;
-						}
-					}
-				}
-				if (files[0] && files[0].length) {
-					artFiles.shown.clear();
-					artFiles.shown.add(files[0]);
-					return files[0];
-				}
+				this.setArtCycleTimer();
+				const files = this.getArtFilePaths(path);
+				if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
+				return this.traverseArtFiles(files, Math.sign(next));
 			} else {
-				return [...artFiles.shown].pop() || '';
+				return this.traverseArtFiles();
 			}
 		}
 		return path;
+	};
+	/**
+	 * Retrieves matched file list within given folder
+	 * @property
+	 * @name getArtFilePaths
+	 * @kind method
+	 * @memberof _background
+	 * @param {string} path - Folder path
+	 * @param {string[]} extArr - [=['.png', '.jpg', '.jpeg', '.gif']]
+	 * @returns {string}
+	 */
+	this.getArtFilePaths = (path, extArr = ['.png', '.jpg', '.jpeg', '.gif']) => {
+		if (!_isFolder(path)) { return []; }
+		return this.coverModeOptions.pathCycleSort === 'date'
+			? getFiles(path, new Set(extArr))
+				.map((file) => { return { file, date: lastModified(file, true) }; })
+				.sort((a, b) => b.date - a.date).map((o) => o.file)
+			: getFiles(path, new Set(extArr))
+				.sort((a, b) => strNumCollator.compare(a, b));
+	};
+	/**
+	 * Cycles files within set art folder
+	 * @property
+	 * @name traverseArtFiles
+	 * @kind method
+	 * @memberof _background
+	 * @param {string[]} files - Paths array
+	 * @param {1|-1|void} delta - [=1] Cycle steps
+	 * @returns {string} New image path
+	 */
+	this.traverseArtFiles = (files, delta) => {
+		if (typeof delta === 'number') {
+			artFiles.num = files.length;
+			if (delta < 0) {
+				files.reverse();
+				for (let file of files) {
+					if (file && file.length && artFiles.shown.has(file)) {
+						artFiles.shown.delete(file);
+						delta++;
+						if (delta === 0) { return file; }
+					}
+				}
+			} else {
+				for (let file of files) {
+					if (file && file.length && !artFiles.shown.has(file)) {
+						artFiles.shown.add(file);
+						delta--;
+						if (delta === 0) { return file; }
+					}
+				}
+			}
+			if (files[0] && files[0].length) {
+				artFiles.shown.clear();
+				artFiles.shown.add(files[0]);
+				return files[0];
+			}
+			return '';
+		} else {
+			return [...artFiles.shown].pop() || '';
+		}
 	};
 	/**
 	 * Cycles files within set art folder
@@ -1120,6 +1157,21 @@ function _background({
 	this.cycleArtAsync = (next = 1, callbackArgs = null) => {
 		if (this.coverMode === 'folder') { return Promise.resolve(this.cycleArtFolder(next)); }
 		else if (trackCoverModes.includes(this.coverMode)) { return this.cycleArtModeAsync(next, callbackArgs); }
+	};
+	/**
+	 * Sets art cycling timer
+	 * @property
+	 * @name setArtCycleTimer
+	 * @kind method
+	 * @memberof _background
+	 * @returns {number} Timer id
+	 */
+	this.setArtCycleTimer = () => {
+		if (this.coverModeOptions.pathCycleTimer > 0) {
+			if (artFiles.timer !== null) { clearTimeout(artFiles.timer); }
+			artFiles.timer = setTimeout(() => this.cycleArtFolder(), this.coverModeOptions.pathCycleTimer);
+		}
+		return artFiles.timer;
 	};
 	/**
 	 * Resets visited art files history
@@ -1347,7 +1399,7 @@ function _background({
 		return this.getUiColors()[0];
 	};
 	/**
-	 * Gets average color of panel, taking into consideration actual art and color settings
+	 * Gets average color of panel, taking into consideration actual art, color and transparency settings, and the composition of background art and different color modes.
 	 * @property
 	 * @name getAvgColor
 	 * @kind method
@@ -1356,10 +1408,15 @@ function _background({
 	 * @returns {number|null}
 	 */
 	this.getAvgPanelColor = (extraColors = []) => {
+		const artAlpha = this.useCover && this.useColorsBlend
+			? this.coverModeOptions.alpha + this.colorModeOptions.blendAlpha * (1 - this.coverModeOptions.alpha / 255)
+			:  this.useCover
+				? this.coverModeOptions.alpha
+				: 0;
 		const bgColors = [
-			{ col: this.getAvgArtColor(), freq: this.useCover ? this.coverModeOptions.alpha / 255 : 0 },
-			{ col: this.getAvgDrawColor(), freq: this.useCover && this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (this.useColors ? 1 : 0) },
-			{ col: this.getAvgUiColor(), freq: this.useCover && !this.useColors ? (255 - this.coverModeOptions.alpha) / 255 : (!this.useCover && !this.useColors ? 1 : 0) }
+			{ col: this.getAvgArtColor(), freq: artAlpha / 255 },
+			{ col: this.getAvgDrawColor(), freq: this.useCover && !this.useColorsBlend && this.useColors ? (255 - artAlpha) / 255 : (this.useColors ? 1 : 0) },
+			{ col: this.getAvgUiColor(), freq: this.useCover && !this.useColorsBlend && !this.useColors ? (255 - artAlpha) / 255 : (!this.useCover && !this.useColors ? 1 : 0) }
 		].filter((c) => c.col !== null);
 		if (extraColors) {
 			const len = extraColors.length;
