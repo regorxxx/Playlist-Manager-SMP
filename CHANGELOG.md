@@ -73,7 +73,8 @@
 ### Added
 - UI: added playlist revive tool to playlist contextual menu (within 'Other tools' submenu).
 - UI: added loaded status icon setting for UI-only playlists on non-lite mode; disabled by default. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
-- UI: added fallback to front art setting for Art by TF, if no file was found.
+- UI: added fallback to front art setting for Art by TF (background setting), if no file was found.
+- UI: added new mask effect setting to background. See [here](https://hydrogenaudio.org/index.php/topic,112914.msg1084108.html#msg1084108).
 - Exporting Playlist: added new Namida 'Export and convert' preset.
 - External integration: new callbacks.
 	* 'Playlist-Manager-SMP: switch enable panel'		-> { window: string[] }
@@ -97,6 +98,7 @@
 - Helpers: updated curl.exe to v8.20.0-slim. See [here](https://github.com/lordmulder/cURL-build-win32).
 - Helpers: updated 7za.exe to v26.01. See [here](https://www.7-zip.org/download.html).
 - Helpers: code cleanup.
+- Helpers: updated helpers.
 ### Removed
 - UI: loaded status icon being shown for UI-only playlists on lite mode despite such info being totally useless. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
 ### Fixed

@@ -223,6 +223,7 @@ CALL :copy_file images\hires\MC_WorldMap_No_Ant.jpg
 CALL :copy_file images\hires\MC_WorldMap_No_Ant.png
 CALL :copy_file images\hires\MC_WorldMap_Shapes.png
 CALL :copy_file images\hires\MC_WorldMap_Shapes_No_Ant.png
+CALL :copy_folder images\masks
 CALL :check_folder presets
 CALL :check_folder presets\AutoHotkey
 CALL :copy_file presets\AutoHotkey\foobar_preview_play.ahk
@@ -368,6 +369,7 @@ CALL :copy_file examples\playlist_xsp_exampleTwo.xsp
 CALL :copy_file examples\playlist_xspf_example.xspf
 CALL :copy_file examples\playlist_codepages.zip
 CALL :copy_file examples\track_list_to_import.txt
+CALL :copy_folder images\masks
 CALL :check_folder presets
 CALL :copy_folder presets\Network
 REM package info, zip and report
@@ -445,6 +447,8 @@ CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
 CALL :copy_folder helpers-external\namethatcolor
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :copy_folder images\masks
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -553,6 +557,8 @@ CALL :copy_file helpers-external\ngraph\README_xxx.txt
 CALL :copy_file helpers-external\ngraph\README.md
 CALL :copy_file helpers-external\ngraph\ngraph.graph.js
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :copy_folder images\masks
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -627,6 +633,8 @@ CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :copy_folder images\masks
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -817,6 +825,7 @@ CALL :copy_folder presets\UI\DUI
 CALL :delete_file "presets\Playlist Tools\pools\default.json"
 REM others
 CALL :copy_folder images\icons
+CALL :copy_folder images\masks
 CALL :copy_folder images\wrapped\bg
 CALL :copy_folder images\wrapped\burger
 CALL :copy_folder images\wrapped\char
@@ -990,6 +999,8 @@ CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+REM others
+CALL :copy_folder images\masks
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
