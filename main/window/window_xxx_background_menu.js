@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/07/26
+//21/07/26
 
 /* exported createBackgroundMenu */
 
@@ -114,6 +114,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				if (input === null) {
 					if (this.coverMode === option.newValue) { return false; }
 					else if (Input.isLastEqual) { input = Input.lastInput; }
+					else { return false; }
 				}
 				input = input.replace('DEFAULT', defTf);
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
@@ -193,7 +194,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		});
 	}
 	{
-		const subMenu = menu.newMenu('Art cycle', mainMenuName, ['path', 'folder'].includes(this.coverMode.toLowerCase()) ? MF_STRING : MF_GRAYED);
+		const subMenu = menu.newMenu('Art cycle', mainMenuName, ['folder'].includes(this.coverMode.toLowerCase()) ? MF_STRING : MF_GRAYED);
 		menu.newEntry({ menuName: subMenu, entryText: 'Ctrl + Shift + Mouse Wheel:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);
 		[
@@ -210,6 +211,14 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'name', entryText: 'By name' },
 			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'date', entryText: 'By date (last modified)' },
 		].forEach(createMenuOption('coverModeOptions', 'pathCycleSort', subMenu, true));
+		menu.newSeparator(subMenu);
+		menu.newEntry({
+			menuName: subMenu, entryText: 'Counter size' + '\t[' + (this.coverModeOptions.pathCycleCount || '-N/A-') + ']', func: () => {
+				const input = Input.number('int positive', this.coverModeOptions.pathCycleCount, 'Enter number:\n(integer number ≥0)\n\nSet 0 to disable it.', window.Name + ' (' + window.ScriptInfo.Name + '): Image counter', 2);
+				if (input === null) { return; }
+				this.changeConfig({ config: { coverModeOptions: {pathCycleCount: input }}, callbackArgs: { bSaveProperties: true } });
+			}, checkFunc: () => this.coverModeOptions.pathCycleCount > 0
+		});
 	}
 	{
 		const bAvailable = this.useCover && this.coverModeOptions.bProportions && !this.coverModeOptions.bFill;

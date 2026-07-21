@@ -75,6 +75,7 @@
 - UI: added loaded status icon setting for UI-only playlists on non-lite mode; disabled by default. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
 - UI: added fallback to front art setting for Art by TF (background setting), if no file was found.
 - UI: added new mask effect setting to background. See [here](https://hydrogenaudio.org/index.php/topic,112914.msg1084108.html#msg1084108).
+- UI: added new img counter setting to background while using Art by TF mode. See [here]https://hydrogenaudio.org/index.php/topic,116669.msg1083339.html#msg1083339).
 - Exporting Playlist: added new Namida 'Export and convert' preset.
 - External integration: new callbacks.
 	* 'Playlist-Manager-SMP: switch enable panel'		-> { window: string[] }

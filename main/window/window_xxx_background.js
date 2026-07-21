@@ -1,5 +1,5 @@
-﻿'use strict';
-//16/07/26
+'use strict';
+//21/07/26
 
 /* exported _background */
 
@@ -7,9 +7,10 @@ include('window_xxx_helpers.js');
 /* global folders:readable */
 /* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable */
 /* global _resolvePath:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, _isFolder:readable */
-/* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable */
+/* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable, _gdiFont:readable */
 /* global IDC_HAND:readable, IDC_ARROW:readable */
 /* global InterpolationMode:readable, RotateFlipType:readable, Effects:readable, BorderMode:readable, BlendMode:readable, SmoothingMode:readable */
+/* global DT_RIGHT:readable, DT_TOP:readable */
 
 /**
  * Background for panel with different cover options
@@ -118,7 +119,7 @@ function _background({
 			this.processArtEffects();
 			return true;
 		}).catch((error) => {
-			if (this.logging.bDebug || this.logging.bError) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
+			if (this.logging.bDebug || this.logging.bError && (!bPath || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
 			this.resetArt();
 			return false;
 		}).finally(() => {
@@ -429,54 +430,44 @@ function _background({
 			const zoomY = options.zoom > 0
 				? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Height / 2
 				: 0;
+			let x, y, w, h, bFilled;
 			if (options.bFill && options.bProportions) {
+				bFilled = true;
 				const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
 				const imgProp = img.Width / img.Height;
 				if (fill !== null) { gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, fill); }
 				if (imgProp > prop) {
-					gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-						img.Width * (1 - prop / imgProp) / 2 + zoomX * prop / imgProp,
-						zoomY,
-						(img.Width - zoomX * 2) * prop / imgProp,
-						img.Height - zoomY * 2,
-						options.angle, options.alpha
-					);
+					x = img.Width * (1 - prop / imgProp) / 2 + zoomX * prop / imgProp;
+					y = zoomY;
+					w = (img.Width - zoomX * 2) * prop / imgProp;
+					h = img.Height - zoomY * 2;
 				} else {
 					switch (options.fillCrop) {
 						case 'top': {
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-								zoomX,
-								zoomY / prop,
-								img.Width - zoomX * 2,
-								(img.Width - zoomY * 2) / prop,
-								options.angle, options.alpha
-							);
+							x = zoomX;
+							y = zoomY / prop;
+							w = img.Width - zoomX * 2;
+							h = (img.Width - zoomY * 2) / prop;
 							break;
 						}
 						case 'bottom': {
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-								zoomX,
-								(img.Height - img.Width / prop) + zoomY / prop,
-								img.Width - zoomX * 2,
-								(img.Width - zoomY * 2) / prop,
-								options.angle, options.alpha
-							);
+							x = zoomX;
+							y = (img.Height - img.Width / prop) + zoomY / prop;
+							w = img.Width - zoomX * 2;
+							h = (img.Width - zoomY * 2) / prop;
 							break;
 						}
 						case 'center':
 						default: {
-							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-								zoomX,
-								(img.Height - img.Width / prop) / 2 + zoomY / prop,
-								img.Width - zoomX * 2,
-								(img.Width - zoomY * 2) / prop,
-								options.angle, options.alpha
-							);
+							x = zoomX;
+							y = (img.Height - img.Width / prop) / 2 + zoomY / prop;
+							w = img.Width - zoomX * 2;
+							h = (img.Width - zoomY * 2) / prop;
 						}
 					}
 				}
+				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, x, y, w, h, options.angle, options.alpha);
 			} else {
-				let w, h;
 				if (options.bProportions) {
 					const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
 					const imgProp = img.Width / img.Height;
@@ -488,14 +479,14 @@ function _background({
 						h = (limits.h - limits.offsetH);
 					}
 				} else { [w, h] = [limits.w, limits.h]; }
-				if (fill !== null) { gr.FillSolidRect(limits.x + (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w - 6, h - 6, fill); }
-				gr.DrawImage(img,
-					limits.x + (limits.w - w) / 2,
-					Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
-					w,
-					h,
-					zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, options.angle, options.alpha
-				);
+				x = limits.x + (limits.w - w) / 2;
+				y = Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y);
+				if (fill !== null) { gr.FillSolidRect(x, y, w - 6, h - 6, fill); }
+				gr.DrawImage(img, x, y, w, h, zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, options.angle, options.alpha);
+			}
+			if (options.pathCycleCount && this.coverMode === 'folder' && artFiles.num > 0) {
+				if (bFilled) { this.paintImageCounter({ gr, limits: { x: limits.x, y: limits.y, w: limits.w, h: limits.h }, size: options.pathCycleCount }); }
+				else { this.paintImageCounter({ gr, limits: { x, y, w: w, h }, size: options.pathCycleCount }); }
 			}
 			gr.SetInterpolationMode();
 		}
@@ -680,6 +671,7 @@ function _background({
 	 * @param {Object} o - Arguments
 	 * @param {GdiGraphics} o.gr - From on_paint
 	 * @param {{x?:number, y?:number, w?:number, h?:number}} o.limits - Drawing coordinates
+	 * @param {number} o.alpha
 	 * @returns {boolean}
 	 */
 	this.paintBlend = ({
@@ -708,8 +700,8 @@ function _background({
 						grImg.FillSolidRect(0, 0, w, h, textCol);
 						grImg.FillGradRect(-1, 0, w + 5, h, 90, bgCol & 0xbbffffff, bgCol, 1);
 						grImg.SetSmoothingMode();
-						const font = gdi.Font('Segoe UI', 90, 1);
-						grImg.DrawString('       NO       \n SELECTION', font, textCol & 0x25ffffff, 0, 100, w, h, 0);
+						if (!this.fonts.noSel) { this.fonts.noSel = _gdiFont('Segoe UI', _scale(90, true), 1); }
+						grImg.DrawString('       NO       \n SELECTION', this.fonts.noSel, textCol & 0x25ffffff, 0, 100, w, h, 0);
 						grImg.FillSolidRect(60, 388, 380, 50, textCol & 0x15ffffff);
 					})
 						.Resize(Math.max(limits.w * intensity / 100, 1), Math.max(limits.h * intensity / 100, 1), InterpolationMode.HighQuality)
@@ -772,6 +764,32 @@ function _background({
 				});
 				return true;
 			}
+		}
+		return false;
+	};
+	/**
+	 * Paints image counter for art folder
+	 * @property
+	 * @name paintImageCounter
+	 * @kind method
+	 * @memberof _background
+	 * @param {Object} o - Arguments
+	 * @param {GdiGraphics} o.gr - From on_paint
+	 * @param {{x?:number, y?:number, w?:number, h?:number}} o.limits - Drawing coordinates
+	 * @param {number} o.size - Font size
+	 * @returns {boolean}
+	 */
+	this.paintImageCounter = ({
+		gr,
+		limits = { x, y, w, h },
+		size = this.CoverModeOptions.pathCycleCount
+	} = {}) => {
+		if (limits.h > 1 && limits.w > 1) {
+			const textCol = invert(this.getAvgArtColor(), true);
+			if (!this.fonts.artCounter) { this.fonts.artCounter = _gdiFont('Segoe UI', _scale(size, true), 1); }
+			const offsetW = gr.CalcTextHeight('test', this.fonts.artCounter) / 3;
+			gr.GdiDrawText(artFiles.shown.size + '\\' + artFiles.num, this.fonts.artCounter, invert(textCol), limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
+			gr.GdiDrawText(artFiles.shown.size + '\\' + artFiles.num, this.fonts.artCounter, textCol, limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
 		}
 		return false;
 	};
@@ -1052,6 +1070,7 @@ function _background({
 			}
 		});
 		this.checkConfig();
+		if (config.coverModeOptions.pathCycleCount) { this.fonts.artCounter = null; }
 		if (config.coverMode || config.coverModeOptions || config.coverModePriority) { this.updateImageBg(true); }
 		if (config.colorMode || config.colorModeOptions) {
 			this.colorImg = null;
@@ -1981,6 +2000,7 @@ function _background({
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
 	 * @property {'name'|'date'} pathCycleSort - Art sorting when using 'folder' coverMode
+	 * @property {number} pathCycleCount - Art counter size when using 'folder' coverMode (0-Inf)
 	 * @property {boolean} bNowPlaying - Follow now playing
 	 * @property {boolean} bNoSelection - Skip updates on selection changes
 	 * @property {boolean} bProportions - Maintain art proportions
@@ -2012,6 +2032,8 @@ function _background({
 	 */
 	/** @type {ColorModeOptions} - Color settings */
 	this.colorModeOptions = {};
+	/** @type {{artCounter?: GdiFont, noSel?: GdiFont}} - Font objects. Init when needed */
+	this.fonts = { artCounter: null, noSel: null };
 	/** @type {Number} - Repainting max refresh rate */
 	this.timer = 0;
 	/**
@@ -2044,7 +2066,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
+		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', pathCycleCount: 30, bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		filmStripOptions: { bShow: false, columnW: 75, alpha: 255, bezelColor: RGBA(0, 0, 0), bezelAlpha: 200 },
