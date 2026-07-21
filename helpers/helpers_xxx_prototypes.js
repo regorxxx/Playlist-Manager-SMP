@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/26
+//21/07/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime */
 
@@ -697,7 +697,7 @@ if (!Array.prototype.average) {
 }
 
 // Fisher-Yates algorithm on multiple arrays at the same time
-if (!Array.prototype.shuffle) {
+if (!Array.shuffle) {
 	Array.shuffle = function () {
 		let last = 0;
 		const argsLength = arguments.length;

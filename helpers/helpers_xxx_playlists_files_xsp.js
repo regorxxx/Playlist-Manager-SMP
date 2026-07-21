@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//21/07/26
 
 include('helpers_xxx.js');
 include('..\\helpers-external\\xsp-to-jsp-parser\\xsp_parser.js');
@@ -566,7 +566,7 @@ XSP.queryJoin = typeof queryJoin === 'undefined'
 	? function (queryArray, setLogic = 'AND') {
 		const logicDic = ['AND', 'OR', 'AND NOT', 'OR NOT'];
 		setLogic = (setLogic || '').toUpperCase();
-		if (!logicDic.includes(setLogic)) {
+		if (!logicDic.has(setLogic)) {
 			console.log('queryJoin(): setLogic (' + setLogic + ') is wrong.');
 			return '';
 		}
