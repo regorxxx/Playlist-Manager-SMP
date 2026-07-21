@@ -329,14 +329,14 @@ XSP.getOrder = function (queryOrSort) {
 	let order = [];
 	let direction = '';
 	let fbTag = '';
-	if (queryOrSort.match(/ *SORT.*$/)) {
-		if (queryOrSort.match(/ *SORT BY .*$/)) { direction = 'ascending'; fbTag = queryOrSort.match(/(?: *SORT BY )(.*$)/)[1]; }
-		else if (queryOrSort.match(/ *SORT DESCENDING BY .*$/)) { direction = 'descending'; fbTag = queryOrSort.match(/(?: *SORT DESCENDING BY )(.*$)/)[1]; }
-		else if (queryOrSort.match(/ *SORT ASCENDING BY .*$/)) { direction = 'ascending'; fbTag = queryOrSort.match(/(?: *SORT ASCENDING BY )(.*$)/)[1]; }
+	if (queryOrSort.includes(' SORT ')) {
+		if (queryOrSort.match(/ SORT BY .+$/)) { direction = 'ascending'; fbTag = queryOrSort.match(/(?: SORT BY )(.*$)/)[1]; }
+		else if (queryOrSort.match(/ SORT DESCENDING BY .+$/)) { direction = 'descending'; fbTag = queryOrSort.match(/(?: SORT DESCENDING BY )(.*$)/)[1]; }
+		else if (queryOrSort.match(/ SORT ASCENDING BY .+$/)) { direction = 'ascending'; fbTag = queryOrSort.match(/(?: SORT ASCENDING BY )(.*$)/)[1]; }
 		else { console.log('Sorting not recognized: ' + queryOrSort); }
 	}
 	if (direction.length && fbTag.length) {
-		let tag = this.getTag(fbTag);
+		let tag = this.getTag(fbTag.trim());
 		if (tag.length) { order.push({ [direction]: tag }); }
 	}
 	return order;
@@ -593,13 +593,13 @@ XSP.queryJoin = typeof queryJoin === 'undefined'
 XSP.stripSort = typeof stripSort === 'undefined'
 	? function (query) { // NOSONAR
 		let queryNoSort = query;
-		if (new RegExp(/ *SORT .*$/).exec(query)) {
-			if (new RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
-			else if (new RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
-			else if (new RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
+		if (query.includes(' SORT ')) {
+			if (new RegExp(/ SORT BY .+$/).exec(query)) { queryNoSort = query.split(/( SORT BY ).+$/)[0]; }
+			else if (new RegExp(/ SORT DESCENDING BY .+$/).exec(query)) { queryNoSort = query.split(/( SORT DESCENDING BY ).+$/)[0]; }
+			else if (new RegExp(/ SORT ASCENDING BY .+$/).exec(query)) { queryNoSort = query.split(/( SORT ASCENDING BY ).+$/)[0]; }
 			else { queryNoSort = ''; }
 		}
-		return queryNoSort;
+		return queryNoSort.trim();
 	}
 	: stripSort; // eslint-disable-line no-undef
 

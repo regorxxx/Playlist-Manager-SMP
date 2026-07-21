@@ -258,7 +258,7 @@ function deepAssign({ nonEnum = false, symbols = false, descriptors = false, pro
 
 function toType(a) {
 	// Get fine type (object, array, function, null, error, date ...)
-	return Object.prototype.toString.call(a).match(/([a-z]+)(:?\])/i)[1];
+	return Object.prototype.toString.call(a).match(/(?:^\[\w*) ([a-z]+)(?:\]$)/i)[1];
 }
 
 function isFbMetadbHandle(a) {
@@ -360,9 +360,8 @@ Function.prototype.applyInChunks = function applyInChunks() { // NOSONAR
 // JSON.stringify($args(this.updatePlaylist).map((a, i) => a + ': ' + arguments[i]))
 function $args(func) {
 	return (func + '')
-		.replace(/\/\/.*$/mg, '') // strip single-line comments
+		.replace(/(?:\/\*[\s\S]*?\*\/|([^\\:]|^)\/\/.*$)/mg, '$1') // strip single and multi-line comments
 		.replace(/\s+/g, '') // strip white space
-		.replace(/\/\*[^/*]*\*\//g, '') // strip multi-line comments
 		.split('){', 1)[0].replace(/^[^(]*[(]/, '') // extract the parameters
 		.replace(/=[^,]+/g, '') // strip any ES6 defaults
 		.split(',').filter(Boolean); // split & filter [""]
@@ -561,7 +560,7 @@ function _bt(tag, bSpace) {
 
 function _qCond(tag, bUnquote = false) {
 	return bUnquote //NOSONAR
-		? tag.replace(/(^")(.*\$+.*)("$)/g, '$2')
+		? tag.replace(/(?:^")(.*\$\w+\(.*\))(?:"$)/gi, '$1')
 		: tag.includes('$')
 			? _q(tag)
 			: tag;

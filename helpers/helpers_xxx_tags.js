@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/06/26
+//21/07/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
@@ -615,7 +615,7 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 			catch (e) { bPass = false; } // eslint-disable-line no-unused-vars
 		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
 	}
-	if (!bAllowPlaylist && queryNoSort && new RegExp(/.*#(PLAYLIST|playlist)# IS.*/).exec(queryNoSort)) { bPass = false; }
+	if (!bAllowPlaylist && queryNoSort && new RegExp(/#(?:PLAYLIST|playlist)# IS/).test(queryNoSort)) { bPass = false; }
 	return bPass;
 }
 
@@ -662,14 +662,14 @@ function checkSort(queryOrSort) {
  */
 function stripSort(query) {
 	let queryNoSort = query;
-	if (new RegExp(/ *SORT .*$/).exec(query)) {
-		if (new RegExp(/ *SORT BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT BY ).*$/)[0]; }
-		else if (new RegExp(/ *SORT DESCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT DESCENDING BY ).*$/)[0]; }
-		else if (new RegExp(/ *SORT ASCENDING BY .*$/).exec(query)) { queryNoSort = query.split(/( *SORT ASCENDING BY ).*$/)[0]; }
-		else { queryNoSort = ''; }
+	if (query.includes(' SORT ')) {
+		stripSort.re.some((re) => {
+			if (re.test(query)) { queryNoSort = query.split(re)[0]; return true; }
+		}) || (queryNoSort = '');
 	}
-	return queryNoSort;
+	return queryNoSort.trim();
 }
+stripSort.re = [new RegExp(/ SORT\s+BY\s+$/), new RegExp(/ SORT\s+DESCENDING\s+BY\s+/), new RegExp(/ SORT\s+ASCENDING\s+BY\s+/)];
 
 /**
  * Process a sort or query string and outputs a sort object with direction, TF and tags
@@ -687,10 +687,10 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	let sortObj = null;
 	if (sort.length) {
 		sortObj = {};
-		[sortObj.direction, sortObj.tag] = sort.split(/(?: BY )(.*$)/i);
-		if (!sortObj.tag || !sortObj.tag.length || !new RegExp(/\w+$/).exec(sortObj.tag) && !new RegExp(/"*\$.+\(.*\)"*$|%.+%$/).exec(sortObj.tag)) { sortObj = null; }
-		else if (new RegExp(/SORT$|SORT ASCENDING$/).exec(sortObj.direction)) { sortObj.direction = 1; }
-		else if (new RegExp(/SORT DESCENDING$/).exec(sortObj.direction)) { sortObj.direction = -1; }
+		[sortObj.direction, sortObj.tag] = sort.split(' BY ').map((s) => s.trim());
+		if (!sortObj.tag || !sortObj.tag.length || !new RegExp(/"*\$.+\(.*\)"*$|%.+%$/).exec(sortObj.tag)) { sortObj = null; }
+		else if (new RegExp(/SORT$|SORT\s+ASCENDING$/).test(sortObj.direction)) { sortObj.direction = 1; }
+		else if (new RegExp(/SORT\s+DESCENDING$/).test(sortObj.direction)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
 	}
 	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
