@@ -1,12 +1,14 @@
 ﻿'use strict';
-//25/06/26
+//16/07/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
+/* global folders:readable */
 /* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable */
 /* global _resolvePath:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, _isFolder:readable */
 /* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable */
+/* global IDC_HAND:readable, IDC_ARROW:readable */
 /* global InterpolationMode:readable, RotateFlipType:readable, Effects:readable, BorderMode:readable, BlendMode:readable, SmoothingMode:readable */
 
 /**
@@ -76,7 +78,7 @@ function _background({
 		if (!handle) { handle = this.getHandle(); }
 		const bPath = ['path', 'folder'].includes(this.coverMode);
 		const path = bPath ? this.getArtPath(void (0), handle) : '';
-		const bFoundPath = bPath && path.length;
+		const bFoundPath = bPath && path.length !== 0;
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
 		if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
 		if (bPath && !bFoundPath && !this.coverModeOptions.bFallbackFront) { this.resetArt(); }
@@ -101,10 +103,11 @@ function _background({
 			if (this.logging.bProfile) { profiler.Print(); }
 			this.resetArt();
 			if (bFoundPath) {
+				if (!result) { throw new Error('Corrupt image file'); }
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = path;
 			} else {
-				if (!result.image) { throw new Error('Image not available'); }
+				if (!result || !result.image) { throw new Error('Image not available'); }
 				this.coverImg.art.image = result.image;
 				this.coverImg.art.path = result.path;
 				this.coverImg.handle = handle.RawPath;
@@ -115,7 +118,7 @@ function _background({
 			this.processArtEffects();
 			return true;
 		}).catch((error) => {
-			if (this.logging.bDebug) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
+			if (this.logging.bDebug || this.logging.bError) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
 			this.resetArt();
 			return false;
 		}).finally(() => {
@@ -395,6 +398,7 @@ function _background({
 	 */
 	this.paintImage = ({
 		gr,
+		img = this.coverImg.art.image,
 		limits = { x, y, w, h, offsetH },
 		rotateFlip = RotateFlipType.RotateNoneFlipNone,
 		fadeMask = null,
@@ -402,15 +406,15 @@ function _background({
 		options
 	} = {}) => {
 		options = { ... this.coverModeOptions, ...options };
-		if (this.coverImg.art.image && options.alpha > 0) {
+		if (img && options.alpha > 0) {
 			// No need for fancy interpolation if image will be already blurred in some way
-			const interpolation = options.blur !== 0 && Number.isInteger(options.blur) || options.bloom !== 0 && Number.isInteger(options.bloom)
+			const interpolation = (options.blur !== 0 && Number.isInteger(options.blur) || options.bloom !== 0 && Number.isInteger(options.bloom)) && fill !== null
 				? InterpolationMode.LowQuality
 				: InterpolationMode.HighQualityBicubic;
 			gr.SetInterpolationMode(interpolation);
-			const img = fadeMask || rotateFlip !== RotateFlipType.RotateNoneFlipNone
-				? this.coverImg.art.image.Clone(0, 0, this.coverImg.art.image.Width, this.coverImg.art.image.Height)
-				: this.coverImg.art.image;
+			img = fadeMask || rotateFlip !== RotateFlipType.RotateNoneFlipNone
+				? img.Clone(0, 0, img.Width, img.Height)
+				: img;
 			if (rotateFlip !== RotateFlipType.RotateNoneFlipNone) { img.RotateFlip(rotateFlip); }
 			if (fadeMask) {
 				applyMask(
@@ -419,81 +423,79 @@ function _background({
 					true
 				);
 			}
-			if (fill) {
-				gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h, 0, img.Height / 2, Math.min(img.Width, limits.w), Math.min(img.Height, limits.h), options.angle, fill.opacity);
+			const zoomX = options.zoom > 0
+				? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Width / 2
+				: 0;
+			const zoomY = options.zoom > 0
+				? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Height / 2
+				: 0;
+			if (options.bFill && options.bProportions) {
+				const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
+				const imgProp = img.Width / img.Height;
+				if (fill !== null) { gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, fill); }
+				if (imgProp > prop) {
+					gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+						img.Width * (1 - prop / imgProp) / 2 + zoomX * prop / imgProp,
+						zoomY,
+						(img.Width - zoomX * 2) * prop / imgProp,
+						img.Height - zoomY * 2,
+						options.angle, options.alpha
+					);
+				} else {
+					switch (options.fillCrop) {
+						case 'top': {
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+								zoomX,
+								zoomY / prop,
+								img.Width - zoomX * 2,
+								(img.Width - zoomY * 2) / prop,
+								options.angle, options.alpha
+							);
+							break;
+						}
+						case 'bottom': {
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+								zoomX,
+								(img.Height - img.Width / prop) + zoomY / prop,
+								img.Width - zoomX * 2,
+								(img.Width - zoomY * 2) / prop,
+								options.angle, options.alpha
+							);
+							break;
+						}
+						case 'center':
+						default: {
+							gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
+								zoomX,
+								(img.Height - img.Width / prop) / 2 + zoomY / prop,
+								img.Width - zoomX * 2,
+								(img.Width - zoomY * 2) / prop,
+								options.angle, options.alpha
+							);
+						}
+					}
+				}
 			} else {
-				const zoomX = options.zoom > 0
-					? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Width / 2
-					: 0;
-				const zoomY = options.zoom > 0
-					? Math.max(Math.min(options.zoom / 100, 0.99), 0) * img.Height / 2
-					: 0;
-				if (options.bFill && options.bProportions) {
+				let w, h;
+				if (options.bProportions) {
 					const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
 					const imgProp = img.Width / img.Height;
 					if (imgProp > prop) {
-						gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-							img.Width * (1 - prop / imgProp) / 2 + zoomX * prop / imgProp,
-							zoomY,
-							(img.Width - zoomX * 2) * prop / imgProp,
-							img.Height - zoomY * 2,
-							options.angle, options.alpha
-						);
+						w = limits.w;
+						h = (limits.h - limits.offsetH) / imgProp * prop;
 					} else {
-						switch (options.fillCrop) {
-							case 'top': {
-								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-									zoomX,
-									zoomY / prop,
-									img.Width - zoomX * 2,
-									(img.Width - zoomY * 2) / prop,
-									options.angle, options.alpha
-								);
-								break;
-							}
-							case 'bottom': {
-								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-									zoomX,
-									(img.Height - img.Width / prop) + zoomY / prop,
-									img.Width - zoomX * 2,
-									(img.Width - zoomY * 2) / prop,
-									options.angle, options.alpha
-								);
-								break;
-							}
-							case 'center':
-							default: {
-								gr.DrawImage(img, limits.x, limits.y, limits.w, limits.h,
-									zoomX,
-									(img.Height - img.Width / prop) / 2 + zoomY / prop,
-									img.Width - zoomX * 2,
-									(img.Width - zoomY * 2) / prop,
-									options.angle, options.alpha
-								);
-							}
-						}
+						w = limits.w * imgProp / prop;
+						h = (limits.h - limits.offsetH);
 					}
-				} else {
-					let w, h;
-					if (options.bProportions) {
-						const prop = (limits.w / ((limits.h - limits.offsetH) || 1)) || 1;
-						const imgProp = img.Width / img.Height;
-						if (imgProp > prop) {
-							w = limits.w;
-							h = (limits.h - limits.offsetH) / imgProp * prop;
-						} else {
-							w = limits.w * imgProp / prop;
-							h = (limits.h - limits.offsetH);
-						}
-					} else { [w, h] = [limits.w, limits.h]; }
-					gr.DrawImage(img,
-						limits.x + (limits.w - w) / 2,
-						Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
-						w,
-						h,
-						zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, options.angle, options.alpha
-					);
-				}
+				} else { [w, h] = [limits.w, limits.h]; }
+				if (fill !== null) { gr.FillSolidRect(limits.x + (limits.w - w) / 2, Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y), w - 6, h - 6, fill); }
+				gr.DrawImage(img,
+					limits.x + (limits.w - w) / 2,
+					Math.max((limits.h - limits.y - h) / 2 + limits.y, limits.y),
+					w,
+					h,
+					zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, options.angle, options.alpha
+				);
 			}
 			gr.SetInterpolationMode();
 		}
@@ -728,6 +730,52 @@ function _background({
 		return false;
 	};
 	/**
+	 * Paints film strip from art folder
+	 * @property
+	 * @name paintFilmStrip
+	 * @kind method
+	 * @memberof _background
+	 * @param {Object} o - Arguments
+	 * @param {GdiGraphics} o.gr - From on_paint
+	 * @param {{x?:number, y?:number, w?:number, h?:number}} o.limits - Drawing coordinates
+	 * @returns {boolean}
+	 */
+	this.paintFilmStrip = ({
+		gr,
+		limits = { x, y, w, h },
+		columnW,
+		alpha = this.filmStripOptions.alpha,
+		path
+	} = {}) => {
+		if (limits.h > 1 && limits.w > 1) {
+			const files = this.getArtFilePaths(path);
+			const imgCount = this.filmStrip.images.length;
+			if (this.filmStrip.id !== path || imgCount === 0 && files.length !== 0) {
+				// Background
+				gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, RGBA(...toRGB(this.getAvgArtColor()), alpha));
+				this.loadFilmStripImages({ files, path });
+				return true;
+			} else if (imgCount !== 0) {
+				// Background
+				const columns = this.w / (this.filmStripOptions.columnW || 1);
+				if (imgCount <= columns) {
+					gr.FillSolidRect(limits.x, limits.y, limits.w, limits.h, RGBA(...toRGB(this.getAvgArtColor()), alpha));
+				}
+				let x = limits.x;
+				const currentImg = [...artFiles.shown].at(-1);
+				// Image columns
+				this.filmStrip.images.slice(this.filmStrip.offset, this.filmStrip.offset + columns + 1).forEach((img, i) => {
+					gr.DrawImage(img, x, limits.y, columnW, limits.h, 0, 0, img.Width, img.Height, 0, alpha);
+					// Bezel
+					if (this.filmStripOptions.bezelAlpha && this.filmStrip.paths[i] === currentImg) { gr.DrawRect(x, limits.y + 1, columnW - 1, limits.h - 2, 2, RGBA(...toRGB(this.filmStripOptions.bezelColor), this.filmStripOptions.bezelAlpha)); }
+					x += columnW;
+				});
+				return true;
+			}
+		}
+		return false;
+	};
+	/**
 	 * Panel painting
 	 * @property
 	 * @name paint
@@ -740,46 +788,67 @@ function _background({
 		if (this.w <= 1 || this.h <= 1) { return; }
 		let profiler;
 		if (this.logging.bProfile) { profiler = fb.CreateProfiler('paint'); }
-		if (this.useColorsBlend) {
-			this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
-			if (this.logging.bProfile) { profiler.Print('blend'); profiler.Reset(); }
-		}
-		this.paintColors({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
-		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
-		switch (this.coverMode) {
-			case 'front':
-			case 'front_stub':
-			case 'front_embedded':
-			case 'back':
-			case 'back_stub':
-			case 'back_embedded':
-			case 'disc':
-			case 'disc_stub':
-			case 'disc_embedded':
-			case 'icon':
-			case 'icon_stub':
-			case 'icon_embedded':
-			case 'artist':
-			case 'artist_stub':
-			case 'artist_embedded':
-			case 'path':
-			case 'folder': {
-				if (this.coverModeOptions.reflection !== 'none' && !this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
-					this.paintReflection({ gr, mode: this.coverModeOptions.reflection });
-				} else {
-					this.paintImage({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
-				}
-				break;
+		if (repaintElements.colors) {
+			if (this.useColorsBlend) {
+				this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+				if (this.logging.bProfile) { profiler.Print('blend'); profiler.Reset(); }
 			}
-			case 'none':
-			default:
-				break;
+			this.paintColors({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
 		}
-		if (this.logging.bProfile) { profiler.Print('image'); }
-		if (this.coverImg.art.histogram) {
-			this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
-			if (this.logging.bProfile) { profiler.Print('histogram'); }
+		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
+		if (repaintElements.image) {
+			switch (this.coverMode) {
+				case 'front':
+				case 'front_stub':
+				case 'front_embedded':
+				case 'back':
+				case 'back_stub':
+				case 'back_embedded':
+				case 'disc':
+				case 'disc_stub':
+				case 'disc_embedded':
+				case 'icon':
+				case 'icon_stub':
+				case 'icon_embedded':
+				case 'artist':
+				case 'artist_stub':
+				case 'artist_embedded':
+				case 'path':
+				case 'folder': {
+					if (this.coverModeOptions.fadeMask > 0 && this.coverMasks.images.length === 0) { this.loadImgMasks(); }
+					if (this.coverModeOptions.reflection !== 'none' && !this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
+						this.paintReflection({ gr, mode: this.coverModeOptions.reflection });
+					} else {
+						this.paintImage({
+							gr,
+							limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH },
+							fadeMask: this.coverModeOptions.fadeMask > 0 ? this.getFadeMask() : null,
+						});
+					}
+					break;
+				}
+				case 'none':
+				default:
+					break;
+			}
+			if (this.logging.bProfile) { profiler.Print('image'); }
 		}
+		if (repaintElements.histogram) {
+			if (this.coverImg.art.histogram) {
+				this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+				if (this.logging.bProfile) { profiler.Print('histogram'); }
+			}
+		}
+		if (repaintElements.filmStrip) {
+			if (this.filmStripOptions.bShow && this.coverMode === 'folder') {
+				const path = this.getPanelArtPath();
+				if (_isFolder(path)) {
+					const columnW = this.filmStripOptions.columnW;
+					this.paintFilmStrip({ gr, limits: { x: this.x, y: this.h - columnW, w: this.w, h: columnW, offsetH: this.offsetH }, columnW, path });
+				}
+			}
+		}
+		this.resetRepaintElement();
 	};
 	/**
 	 * Color image dithering
@@ -822,6 +891,22 @@ function _background({
 		[this.timer]: debounce(window.RepaintRect, this.timer, false, window)
 	};
 	/**
+	 * Helper for optimizing repainting
+	 *
+	 * @constant
+	 * @name repaintElements
+	 * @kind variable
+	 * @private
+	 * @memberof _background.constructor
+	 * @type {{ filmStrip: true, image: true, colors: true, histogram: true }}
+	 */
+	const repaintElements = {
+		filmStrip: true,
+		image: true,
+		colors: true,
+		histogram: true
+	};
+	/**
 	 * Panel repainting (debounced)
 	 * @property
 	 * @name repaint
@@ -838,6 +923,62 @@ function _background({
 		}
 	};
 	/**
+	 * Specifies elements which should be painted on next repaint call
+	 * @property
+	 * @name setRepaintElement
+	 * @kind method
+	 * @memberof _background
+	 * @param {string|string[]} element
+	 * @returns {void}
+	 */
+	this.setRepaintElement = (element) => {
+		if (!Array.isArray(element)) { element = [element]; }
+		for (let key in repaintElements) { repaintElements[key] = false; }
+		element.forEach((key) => repaintElements[key] = true);
+	};
+	/**
+	 * Specifies elements which should be painted on next repaint call
+	 * @property
+	 * @name setRepaintElement
+	 * @kind method
+	 * @memberof _background
+	 * @param {string|string[]} element
+	 * @returns {void}
+	 */
+	this.resetRepaintElement = () => {
+		for (let key in repaintElements) { repaintElements[key] = true; }
+	};
+	/**
+	 * Helper for debounced repainting
+	 *
+	 * @constant
+	 * @name debouncedFilmStrip
+	 * @kind variable
+	 * @private
+	 * @memberof _background.constructor
+	 * @type {{ [key:number]: (x:number, y:number, w:number, h:number, bForce:boolean) => void }}
+	 */
+	const debouncedFilmStrip = {
+		[this.timer]: debounce(window.RepaintRect, this.timer, false, window)
+	};
+	/**
+	 * Panel film strip repainting (debounced)
+	 * @property
+	 * @name repaint
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} timeout - [=0] If >0 it's debounced
+	 * @returns {void}
+	 */
+	this.repaintFilmStrip = (timeout = 0) => {
+		this.setRepaintElement('filmStrip');
+		if (timeout === 0) { window.RepaintRect(this.x, this.h - this.filmStripOptions.columnW, this.x + this.w, this.filmStripOptions.columnW); }
+		else {
+			if (!Object.hasOwn(debouncedFilmStrip, timeout)) { debouncedFilmStrip[timeout] = debounce(window.RepaintRect, timeout, false, window); }
+			debouncedFilmStrip[timeout](this.x, this.h - this.filmStripOptions.columnW, this.x + this.w, this.filmStripOptions.columnW, true);
+		}
+	};
+	/**
 	 * Panel mouse tracing
 	 * @property
 	 * @name trace
@@ -849,6 +990,19 @@ function _background({
 	 */
 	this.trace = (x, y) => {
 		return x > this.x && x < this.x + this.w && y > this.y && y < this.y + this.h;
+	};
+	/**
+	 * Panel film strip mouse tracing
+	 * @property
+	 * @name trace
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} x
+	 * @param {number} y
+	 * @returns {Boolean}
+	 */
+	this.traceFilmStrip = (x, y) => {
+		return this.filmStripOptions.bShow && x > this.x && x < this.x + this.w && y > this.h - this.filmStripOptions.columnW && y < this.y + this.h;
 	};
 	/**
 	 * Panel resizing
@@ -941,6 +1095,7 @@ function _background({
 			coverModeOptions: { ...this.coverModeOptions },
 			colorMode: this.colorMode,
 			colorModeOptions: { ...this.colorModeOptions },
+			filmStripOptions: { ...this.filmStripOptions },
 			...(bPosition ? { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } : {}),
 			timer: this.timer,
 			logging: this.logging
@@ -1238,6 +1393,20 @@ function _background({
 		this.coverImg.art.blendUiImage = null;
 	};
 	/**
+	 * Reset film strip
+	 * @property
+	 * @name resetFilmStrip
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
+	this.resetFilmStrip = () => {
+		this.filmStrip.images = [];
+		this.filmStrip.paths = [];
+		this.filmStrip.offset = 0;
+		this.filmStrip.id = null;
+	};
+	/**
 	 * Returns available cover modes plus 'none' as first value
 	 * @property
 	 * @name getCoverModes
@@ -1272,6 +1441,105 @@ function _background({
 	 */
 	this.getHandle = () => {
 		return (this.coverModeOptions.bNowPlaying ? fb.GetNowPlaying() : null) || (this.coverModeOptions.bNowPlaying && this.coverModeOptions.bNoSelection ? null : fb.GetFocusItem(true));
+	};
+	/**
+	 * Retrieves and loads (if not previously cached) filmstrip images for given path
+	 * @property
+	 * @name getFilmStripImages
+	 * @kind method
+	 * @memberof _background
+	 * @param {Object} o - Arguments
+	 * @param {string[]} o.files - List of image files. If not provided, retrieves current list from path.
+	 * @param {string} o.path - Root
+	 * @returns {Promise.<{ images: GdiBitmap[], paths: string[] offset: number, id: string|null }>}
+	 */
+	this.getFilmStripImages = ({
+		files,
+		path
+	} = {}) => {
+		if (!files) { files = this.getArtFilePaths(path); }
+		return this.filmStrip.id !== path || this.filmStrip.images.length === 0 && files.length
+			? this.loadFilmStripImages({ files, path })
+			: Promise.resolve(this.filmStrip);
+	};
+	/**
+	 * Loads filmstrip images for given path, overriding any current ones
+	 * @property
+	 * @name loadFilmStripImages
+	 * @kind method
+	 * @memberof _background
+	 * @param {Object} o - Arguments
+	 * @param {string[]} o.files - List of image files. If not provided, retrieves current list from path.
+	 * @param {string} o.path - Root
+	 * @returns {Promise.<{ images: GdiBitmap[], paths: string[] offset: number, id: string|null }>}
+	 */
+	this.loadFilmStripImages = ({
+		files,
+		path
+	} = {}) => {
+		if (!files) { files = this.getArtFilePaths(path); }
+		return Promise.parallel(files, (p) => gdi.LoadImageAsyncV2(window.ID, p).then((img) => { return { img, path: p }; }))
+			.then((result) => {
+				const imgArr = result.map((r) => r.status === 'fulfilled' ? r.value : null)
+					.filter((v) => v && v.img && v.img.Width && v.img.Height);
+				this.filmStrip.images = imgArr.map((v) => v.img);
+				this.filmStrip.paths = imgArr.map((v) => v.path);
+				this.filmStrip.id = path;
+				this.repaint(this.timer);
+				return this.filmStrip;
+			});
+	};
+	/**
+	 * Loads all available mask files (png)
+	 * @property
+	 * @name loadImgMasks
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} max - [=50] Limit of files to load
+	 * @returns {Boolean}
+	 */
+	this.loadImgMasks = (max = 50) => {
+		this.coverMasks.paths = [];
+		this.coverMasks.images = [];
+		let count = 0;
+		getFiles(folders.xxx + 'images\\masks\\', new Set(['.png']))
+			.some((path) => {
+				try {
+					const img = gdi.Image(path);
+					if (img) {
+						this.coverMasks.paths.push(path);
+						this.coverMasks.images.push(img);
+						count++;
+					}
+				} catch (e) {
+					if (this.logging.bError) { console.log('Background - loadImgMasks: img loading error ' + path + '\n\t' + e.message); }
+				}
+				if (count === max) { return true; }
+			});
+		return this.coverMasks.images.length !== 0;
+	};
+	/**
+	 * Retrieves mask function to be used on this.paintImage
+	 * @property
+	 * @name getFadeMask
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} idx - [=this.coverModeOptions.fadeMask - 1] Image mask idx
+	 * @returns {((mask, gr, w, h) => void)|null}
+	 */
+	this.getFadeMask = (idx = this.coverModeOptions.fadeMask - 1) => {
+		return this.coverMasks.images.length // Paint the mask with the same logic than main img
+			? (mask, gr, w, h) => {
+				this.paintImage({
+					gr,
+					limits: { x: 0, y: 0, w, h, offsetH: this.offsetH },
+					img: this.coverMasks.images[idx],
+					fill: RGBA(0, 0, 0),
+					options: { alpha: 255 }
+				});
+				mask.StackBlur(3);
+			}
+			: null;
 	};
 	/**
 	 * Gets all art colors from panel if available
@@ -1348,7 +1616,7 @@ function _background({
 	 * @name getAvgColor
 	 * @kind method
 	 * @memberof _background
-	 * @param {{col:number, freq:number}[]|number[]}
+	 * @param {{col:number, freq:number}[]|number[]} colorScheme
 	 * @returns {number|null}
 	 */
 	this.getAvgColor = (colorScheme) => {
@@ -1410,7 +1678,7 @@ function _background({
 	this.getAvgPanelColor = (extraColors = []) => {
 		const artAlpha = this.useCover && this.useColorsBlend
 			? this.coverModeOptions.alpha + this.colorModeOptions.blendAlpha * (1 - this.coverModeOptions.alpha / 255)
-			:  this.useCover
+			: this.useCover
 				? this.coverModeOptions.alpha
 				: 0;
 		const bgColors = [
@@ -1518,6 +1786,10 @@ function _background({
 		if (this.trace(x, y)) {
 			this.mX = x;
 			this.mY = y;
+			if (this.filmStripOptions.bShow) {
+				if (this.traceFilmStrip(x, y)) { window.SetCursor(IDC_HAND); }
+				else { window.SetCursor(IDC_ARROW); }
+			}
 			return true;
 		}
 		this.leave();
@@ -1568,6 +1840,62 @@ function _background({
 		return false;
 	};
 	/**
+	 * Called on on_mouse_wheel. Scrolls through film strip.
+	 *
+	 * @property
+	 * @name wheelFilmStrip
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} step
+	 * @param {boolean} bForce
+	 * @returns {boolean}
+	*/
+	this.wheelFilmStrip = (step, bForce, callbackArgs) => {
+		if (this.filmStripOptions.bShow && (this.traceFilmStrip(this.mX, this.mY) || bForce) && step !== 0) {
+			const imgCount = this.filmStrip.images.length;
+			const columns = this.w / (this.filmStripOptions.columnW || 1);
+			if (imgCount < columns) { return false; }
+			const offset = Math.max(
+				Math.min(
+					this.filmStrip.offset - step,
+					imgCount - 1,
+					imgCount - Math.ceil(columns)
+				),
+				0
+			);
+			this.changeConfig({ config: { filmStrip: { offset } }, bRepaint: false, callbackArgs });
+			this.repaintFilmStrip();
+			return true;
+		}
+		return false;
+	};
+	/**
+	 * Called on on_mouse_lbtn_up. Displays selected image and resets art cycling to start from such index.
+	 *
+	 * @property
+	 * @name wheelFilmStrip
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} step
+	 * @param {boolean} bForce
+	 * @returns {boolean}
+	*/
+	this.lbtnUpFilmStrip = (x, y) => {
+		if (this.filmStripOptions.bShow && this.traceFilmStrip(x, y)) {
+			const idx = Math.floor((x - this.x) / (this.filmStripOptions.columnW || 1));
+			if (idx >= 0 && idx < this.filmStrip.paths.length) {
+				artFiles.shown.clear();
+				const path = this.traverseArtFiles(this.filmStrip.paths, this.filmStrip.offset + idx + 1);
+				console.log(this.filmStrip.offset + idx + 1, path);
+				this.setArtCycleTimer();
+				this.updateImageBg(!!path);
+				this.repaint(this.timer);
+				return true;
+			}
+		}
+		return false;
+	};
+	/**
 	 * Called on on_colors_changed.
 	 *
 	 * @property
@@ -1607,8 +1935,22 @@ function _background({
 	};
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
-	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null, blendUiImage: GdiBitmap|null }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
-	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null, blendImage: null, blendUiImage: null }, handle: null, id: null };
+	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null, blendUiImage: GdiBitmap|null, filmStrip: GdiBitmap[] }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
+	this.coverImg = { art: { path: '', image: null, colors: null, histogram: null, blendImage: null, blendUiImage: null, filmStrip: [] }, handle: null, id: null };
+	/** @type {{ images: GdiBitmap[], paths: string[]}} - Image masks */
+	this.coverMasks = { images: [], paths: [] };
+	/** @type {{ images: GdiBitmap[], paths: string[], offset: number, id: string|null }} - Film strip properties */
+	this.filmStrip = { images: [], paths: [], offset: 0, id: null };
+	/**
+	 * @typedef {object} filmStripOptions - Film strip settings
+	 * @property {Boolean} bShow - Flag to show the film strip
+	 * @property {number} columnW - Column img size
+	 * @property {number} alpha - Blend effect alpha (0-255)
+	 * @property {number} bezelColor - Current image bezel color
+	 * @property {number} bezelAlpha - Current image bezel alpha (0-255)
+	 */
+	/** @type {filmStripOptions} - Film strip settings */
+	this.filmStripOptions = {};
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} - Height margin for image drawing */
@@ -1633,6 +1975,7 @@ function _background({
 	 * @property {number} vignette - Image vignette effect (0-100)
 	 * @property {number} vignetteColor - Image vignette color
 	 * @property {number} histogram - Image histogram display (0-1024)
+	 * @property {number} fadeMask - Image mask file idx
 	 * @property {boolean} bGrayScale - GrayScale effect
 	 * @property {boolean} bGdiEffects - Force GDI effects while using D2D rendering
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
@@ -1684,9 +2027,10 @@ function _background({
 	/** @type {number} - Cached Y position */
 	this.mY = -1;
 	/**
-	 * @typedef {object} Logging - Panel logging related settings.
-	 * @property {boolean} [bProfile] - Profiling logging flag.
-	 * @property {boolean} [bDebug] - Debug logging flag.
+	 * @typedef {object} Logging - Panel logging related settings
+	 * @property {boolean} [bProfile] - Profiling logging flag
+	 * @property {boolean} [bDebug] - Debug logging flag
+	 * @property {boolean} [bError] - Error logging flag
 	 */
 	/** @type {Logging} - Panel logging related settings */
 	this.logging = {};
@@ -1700,9 +2044,10 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
+		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
+		filmStripOptions: { bShow: false, columnW: 75, alpha: 255, bezelColor: RGBA(0, 0, 0), bezelAlpha: 200 },
 		...(bCallbacks
 			? {
 				callbacks: {
@@ -1713,6 +2058,6 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 			}
 			: {}
 		),
-		logging: { bProfile: false, bDebug: false }
+		logging: { bProfile: false, bDebug: false, bError: true }
 	};
 };

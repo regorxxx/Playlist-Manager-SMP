@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/06/26
+//16/07/26
 
 /* exported createBackgroundMenu */
 
@@ -113,7 +113,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf);
 				if (input === null) {
 					if (this.coverMode === option.newValue) { return false; }
-					else if (Input.isLastEqual) { input = Input.lastInput ; }
+					else if (Input.isLastEqual) { input = Input.lastInput; }
 				}
 				input = input.replace('DEFAULT', defTf);
 				this.changeConfig({ config: { coverModeOptions: { path: input } }, callbackArgs: { bSaveProperties: true } });
@@ -194,7 +194,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 	}
 	{
 		const subMenu = menu.newMenu('Art cycle', mainMenuName, ['path', 'folder'].includes(this.coverMode.toLowerCase()) ? MF_STRING : MF_GRAYED);
-		menu.newEntry({	menuName: subMenu, entryText: 'Ctrl + Shift + Mouse Wheel:',flags: MF_GRAYED });
+		menu.newEntry({ menuName: subMenu, entryText: 'Ctrl + Shift + Mouse Wheel:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.coverModeOptions.pathCycleTimer, value: null, newValue: 0, entryText: 'Disabled' },
@@ -233,24 +233,26 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menu.getLastEntry().flags = this.coverModeOptions.blur === 0 || !this.showCover ? MF_GRAYED : MF_STRING;
 		}
 		[
-			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)' },
+			{ key: 'blur', entryText: 'Blur...', checks: [(num) => num >= 0 && num < Infinity], inputHint: '\n(0 to ∞)', char: 'px' },
 			{ entryText: menu.separator },
-			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)' },
-			{ key: 'zoom', entryText: 'Zoom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is full image, 100 is fully zoomed.\n(0 to 100)' },
+			{ key: 'angle', entryText: 'Angle...', checks: [(num) => num >= 0 && num <= 360], inputHint: '\nClockwise.\n(0 to 360)', char: 'º' },
+			{ key: 'zoom', entryText: 'Zoom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is full image, 100 is fully zoomed.\n(0 to 100)', char: '%' },
 			{ entryText: menu.separator },
-			{ key: 'mute', entryText: 'Mute...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
-			{ key: 'bloom', entryText: 'Bloom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
-			{ key: 'edgeGlow', entryText: 'Edge...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
-			{ key: 'vignette', entryText: 'Vignette...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)' },
+			{ key: 'mute', entryText: 'Mute...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)', char: '%' },
+			{ key: 'bloom', entryText: 'Bloom...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)', char: '%' },
+			{ key: 'edgeGlow', entryText: 'Edge...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)', char: '%' },
+			{ key: 'vignette', entryText: 'Vignette...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is disabled, 100 is max effect.\n(0 to 100)', char: '%' },
 			{ entryText: menu.separator },
-			{ key: 'alpha', entryText: 'Opacity...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
-			{ key: 'histogram', entryText: 'Histogram...', checks: [(num) => num >= 0 && num <= 1024], inputHint: '\n0 is disabled, otherwise sets the number of bins.\n(0 to 1024)', bD2D: true },
+			{ key: 'alpha', entryText: 'Opacity...', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)', char: '%' },
+			{ key: 'fadeMask', entryText: 'Mask...', checks: [(num) => num >= 0 && num <= 50], inputHint: '\n0 to disable, any other value to use the associated mask file.\nMask images can be found at:\n' + folders.xxx + 'images\\masks\\', char: '#' },
+			{ entryText: menu.separator, bD2D: true },
+			{ key: 'histogram', entryText: 'Histogram...', checks: [(num) => num >= 0 && num <= 1024], inputHint: '\n0 is disabled, otherwise sets the number of bins.\n(0 to 1024)', bD2D: true, char: '#' },
 		].forEach((option) => {
 			if (option.bD2D && !this.useD2D) { return; }
 			if (menu.isSeparator(option)) { menu.newSeparator(subMenu); return; }
 			const prevVal = option.key === 'alpha' ? Math.round(this.coverModeOptions[option.key] * 100 / 255) : this.coverModeOptions[option.key];
 			menu.newEntry({
-				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + ']', func: () => {
+				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + (option.char || '') + ']', func: () => {
 					const input = Input.number('int positive', prevVal, 'Enter number:' + option.inputHint, window.Name + ' (' + window.ScriptInfo.Name + ')', 100, option.checks);
 					if (input === null) { return; }
 					const newVal = option.key === 'alpha' ? Math.round(input * 255 / 100) : input;
@@ -277,6 +279,54 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				{ isEq: null, key: this.coverModeOptions.bGdiEffects, value: null, newValue: !this.coverModeOptions.bGdiEffects, entryText: 'Force GDI+ effects' }
 			].forEach(createMenuOption('coverModeOptions', 'bGdiEffects', subMenu, true));
 		}
+	}
+	menu.newSeparator(mainMenuName);
+	{
+		const subMenu = menu.newMenu('Filmstrip' + (this.coverMode === 'folder' ? '' : '\t[folder mode]'), mainMenuName, this.coverMode === 'folder' ? MF_STRING : MF_GRAYED);
+		[
+			{ isEq: null, key: this.filmStripOptions.bShow, value: null, newValue: !this.filmStripOptions.bShow, entryText: 'Enable filmstrip' },
+		].forEach(createMenuOption('filmStripOptions', 'bShow', subMenu));
+		menu.newSeparator(subMenu);
+		[
+			{ key: 'columnW', entryText: 'Column size...', type: 'int positive', checks: [(num) => num > 0], inputHint: '\n(> 0)' },
+			{ key: 'alpha', entryText: 'Opacity...', type: 'int positive', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
+		].forEach((option) => {
+			const prevVal = option.key === 'alpha'
+				? Math.round(this.filmStripOptions[option.key] * 100 / 255)
+				: this.filmStripOptions[option.key];
+			menu.newEntry({
+				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + ']', func: () => {
+					const input = Input.number('int positive', prevVal, 'Enter number:' + option.inputHint, window.Name + ' (' + window.ScriptInfo.Name + ')', 100, option.checks);
+					if (input === null) { return; }
+					const newVal = option.key === 'alpha' ? Math.round(input * 255 / 100) : input;
+					this.changeConfig({ config: { filmStripOptions: { [option.key]: newVal } }, callbackArgs: { bSaveProperties: true } });
+				}, flags: this.filmStripOptions.bShow ? MF_STRING : MF_GRAYED
+			});
+		});
+		menu.newSeparator(subMenu);
+		[
+			{ isEq: null, key: this.filmStripOptions.bezelColor, value: null, newValue: null, entryText: 'Bezel color...' + (options.nameColors ? '\t[' + getColorName(this.filmStripOptions.bezelColor) + ']' : ''), flags: this.filmStripOptions.bShow ? MF_STRING : MF_GRAYED },
+		].forEach(createMenuOption('colorMode', void (0), subMenu, true, () => {
+			const input = utils.ColourPicker(0, this.filmStripOptions.bezelColor);
+			console.log('Background (' + window.Name + ' (' + window.ScriptInfo.Name + ')' + '): Selected color ->\n\t Android: ' + input + ' - RGB: ' + Chroma(input).rgb());
+			this.changeConfig({ config: { filmStripOptions: { bezelColor: input } }, callbackArgs: { bSaveProperties: true } });
+			return true;
+		}));
+		[
+			{ key: 'bezelAlpha', entryText: 'Bezel opacity...', type: 'int positive', checks: [(num) => num >= 0 && num <= 100], inputHint: '\n0 is transparent, 100 is opaque.\n(0 to 100)' },
+		].forEach((option) => {
+			const prevVal = option.key === 'bezelAlpha'
+				? Math.round(this.filmStripOptions[option.key] * 100 / 255)
+				: this.filmStripOptions[option.key];
+			menu.newEntry({
+				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + ']', func: () => {
+					const input = Input.number('int positive', prevVal, 'Enter number:' + option.inputHint, window.Name + ' (' + window.ScriptInfo.Name + ')', 100, option.checks);
+					if (input === null) { return; }
+					const newVal = option.key === 'bezelAlpha' ? Math.round(input * 255 / 100) : input;
+					this.changeConfig({ config: { filmStripOptions: { [option.key]: newVal } }, callbackArgs: { bSaveProperties: true } });
+				}, flags: this.filmStripOptions.bShow ? MF_STRING : MF_GRAYED
+			});
+		});
 	}
 	menu.newSeparator(mainMenuName);
 	{
