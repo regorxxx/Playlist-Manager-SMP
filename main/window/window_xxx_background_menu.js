@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/07/26
+//22/07/26
 
 /* exported createBackgroundMenu */
 
@@ -216,9 +216,13 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menuName: subMenu, entryText: 'Counter size' + '\t[' + (this.coverModeOptions.pathCycleCount || '-N/A-') + ']', func: () => {
 				const input = Input.number('int positive', this.coverModeOptions.pathCycleCount, 'Enter number:\n(integer number ≥0)\n\nSet 0 to disable it.', window.Name + ' (' + window.ScriptInfo.Name + '): Image counter', 2);
 				if (input === null) { return; }
-				this.changeConfig({ config: { coverModeOptions: {pathCycleCount: input }}, callbackArgs: { bSaveProperties: true } });
+				this.changeConfig({ config: { coverModeOptions: { pathCycleCount: input } }, callbackArgs: { bSaveProperties: true } });
 			}, checkFunc: () => this.coverModeOptions.pathCycleCount > 0
 		});
+		[
+			{ isEq: null, key: this.coverModeOptions.bPathCycleCountBg, value: null, newValue: !this.coverModeOptions.bPathCycleCountBg, entryText: 'Counter background' }
+		].forEach(createMenuOption('coverModeOptions', 'bPathCycleCountBg', subMenu, true));
+		menu.getLastEntry().flags = this.coverModeOptions.pathCycleCount === 0 ? MF_GRAYED : MF_STRING;
 	}
 	{
 		const bAvailable = this.useCover && this.coverModeOptions.bProportions && !this.coverModeOptions.bFill;

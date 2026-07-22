@@ -1,5 +1,5 @@
 'use strict';
-//21/07/26
+//22/07/26
 
 /* exported _background */
 
@@ -484,9 +484,12 @@ function _background({
 				if (fill !== null) { gr.FillSolidRect(x, y, w - 6, h - 6, fill); }
 				gr.DrawImage(img, x, y, w, h, zoomX, zoomY, img.Width - zoomX * 2, img.Height - zoomY * 2, options.angle, options.alpha);
 			}
-			if (options.pathCycleCount && this.coverMode === 'folder' && artFiles.num > 0) {
-				if (bFilled) { this.paintImageCounter({ gr, limits: { x: limits.x, y: limits.y, w: limits.w, h: limits.h }, size: options.pathCycleCount }); }
-				else { this.paintImageCounter({ gr, limits: { x, y, w: w, h }, size: options.pathCycleCount }); }
+			if (options.pathCycleCount > 0 && this.coverMode === 'folder' && artFiles.num > 0) {
+				if (bFilled) {
+					this.paintImageCounter({ gr, limits: { x: limits.x, y: limits.y, w: limits.w, h: limits.h }, options: { size: options.pathCycleCount } });
+				} else {
+					this.paintImageCounter({ gr, limits: { x, y, w: w, h }, options: { size: options.pathCycleCount } });
+				}
 			}
 			gr.SetInterpolationMode();
 		}
@@ -776,20 +779,40 @@ function _background({
 	 * @param {Object} o - Arguments
 	 * @param {GdiGraphics} o.gr - From on_paint
 	 * @param {{x?:number, y?:number, w?:number, h?:number}} o.limits - Drawing coordinates
-	 * @param {number} o.size - Font size
+	 * @param {CoverModeOptions} o.options
 	 * @returns {boolean}
 	 */
 	this.paintImageCounter = ({
 		gr,
 		limits = { x, y, w, h },
-		size = this.CoverModeOptions.pathCycleCount
+		options
 	} = {}) => {
+		options = { ... this.coverModeOptions, ...options };
 		if (limits.h > 1 && limits.w > 1) {
-			const textCol = invert(this.getAvgArtColor(), true);
-			if (!this.fonts.artCounter) { this.fonts.artCounter = _gdiFont('Segoe UI', _scale(size, true), 1); }
-			const offsetW = gr.CalcTextHeight('test', this.fonts.artCounter) / 3;
-			gr.GdiDrawText(artFiles.shown.size + '\\' + artFiles.num, this.fonts.artCounter, invert(textCol), limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
-			gr.GdiDrawText(artFiles.shown.size + '\\' + artFiles.num, this.fonts.artCounter, textCol, limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
+			const bgCol = RGBA(
+				...toRGB(blendColors(
+					RGBA(0, 0, 0),
+					getBrightness(this.coverImg.art.colors[0].col) > 100
+						? this.coverImg.art.colors[0].col
+						: getBrightness(this.coverImg.art.colors[1].col) > 100
+							? this.coverImg.art.colors[1].col
+							: invert(this.coverImg.art.colors[0].col, true),
+					0.3
+				))
+				, 200
+			);
+			const textCol = getBrightness(bgCol) > 186 ? RGBA(22, 22, 22) : RGBA(233, 233, 233);
+			if (!this.fonts.artCounter) { this.fonts.artCounter = _gdiFont('Segoe UI', _scale(options.size, true), 1); }
+			const text = artFiles.shown.size + '\\' + artFiles.num;
+			const textW = gr.CalcTextWidth(text, this.fonts.artCounter);
+			const textH = gr.CalcTextHeight(text, this.fonts.artCounter);
+			const offsetW = textH / 3;
+			if (options.bPathCycleCountBg) {
+				gr.FillSolidRect(limits.w - offsetW - textW - _scale(3), limits.y + textH / 6, textW + _scale(6), textH * 5 / 6, bgCol);
+			} else {
+				gr.GdiDrawText(text, this.fonts.artCounter, invert(textCol), limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
+			}
+			gr.GdiDrawText(text, this.fonts.artCounter, textCol, limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
 		}
 		return false;
 	};
@@ -1070,7 +1093,7 @@ function _background({
 			}
 		});
 		this.checkConfig();
-		if (config.coverModeOptions.pathCycleCount) { this.fonts.artCounter = null; }
+		if (config.coverModeOptions && Object.hasOwn(config.coverModeOptions, 'pathCycleCount')) { this.fonts.artCounter = null; }
 		if (config.coverMode || config.coverModeOptions || config.coverModePriority) { this.updateImageBg(true); }
 		if (config.colorMode || config.colorModeOptions) {
 			this.colorImg = null;
@@ -1173,15 +1196,34 @@ function _background({
 	 */
 	this.getArtPath = (next, handle) => {
 		const path = this.getPanelArtPath(handle);
-		if (this.coverMode === 'folder' && path.length) {
-			if (artFiles.root !== path) { this.resetArtFiles(path); next = 1; }
-			if (typeof next === 'number') {
-				this.setArtCycleTimer();
-				const files = this.getArtFilePaths(path);
+		if (path.length) {
+			if (this.coverMode === 'folder') {
+				if (artFiles.root !== path) { this.resetArtFiles(path); next = 1; }
+				if (typeof next === 'number') {
+					this.setArtCycleTimer();
+					const files = this.getArtFilePaths(path);
+					if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
+					return this.traverseArtFiles(files, Math.sign(next));
+				} else {
+					return this.traverseArtFiles();
+				}
+			} else if (path.endsWith('*.*') || path.endsWith('.*')) {
+				const [folder, mask] = path.split(/([^\\]+\.\*|\*\.\*)$/i);
+				const files = this.getArtFilePaths(folder, void(0), mask);
 				if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
-				return this.traverseArtFiles(files, Math.sign(next));
+				return files[0] || path;
 			} else {
-				return this.traverseArtFiles();
+				let file;
+				['.png', '.jpg', '.jpeg', '.gif'].some((ext) => {
+					if (path.endsWith('*' + ext)) {
+						const [folder, mask] = path.split(/([^\\]+\.\*|\*\.\*)$/i);
+						const files = this.getArtFilePaths(folder, [ext], mask);
+						if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
+						file = files[0];
+						return true;
+					}
+				});
+				return file || path;
 			}
 		}
 		return path;
@@ -1194,12 +1236,13 @@ function _background({
 	 * @memberof _background
 	 * @param {string} path - Folder path
 	 * @param {string[]} extArr - [=['.png', '.jpg', '.jpeg', '.gif']]
-	 * @returns {string}
+	 * @param {string} mask - [='']
+	 * @returns {string[]}
 	 */
-	this.getArtFilePaths = (path, extArr = ['.png', '.jpg', '.jpeg', '.gif']) => {
+	this.getArtFilePaths = (path, extArr = ['.png', '.jpg', '.jpeg', '.gif'], mask = '') => {
 		if (!_isFolder(path)) { return []; }
 		return this.coverModeOptions.pathCycleSort === 'date'
-			? getFiles(path, new Set(extArr))
+			? getFiles(path, new Set(extArr), mask)
 				.map((file) => { return { file, date: lastModified(file, true) }; })
 				.sort((a, b) => b.date - a.date).map((o) => o.file)
 			: getFiles(path, new Set(extArr))
@@ -2001,6 +2044,7 @@ function _background({
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
 	 * @property {'name'|'date'} pathCycleSort - Art sorting when using 'folder' coverMode
 	 * @property {number} pathCycleCount - Art counter size when using 'folder' coverMode (0-Inf)
+	 * @property {boolean} bPathCycleCountBg - Art counter background
 	 * @property {boolean} bNowPlaying - Follow now playing
 	 * @property {boolean} bNoSelection - Skip updates on selection changes
 	 * @property {boolean} bProportions - Maintain art proportions
@@ -2066,7 +2110,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', pathCycleCount: 30, bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
+		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', pathCycleCount: 30, bPathCycleCountBg: true, bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		filmStripOptions: { bShow: false, columnW: 75, alpha: 255, bezelColor: RGBA(0, 0, 0), bezelAlpha: 200 },
