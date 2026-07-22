@@ -1,5 +1,5 @@
 'use strict';
-//29/05/26
+//22/07/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -339,7 +339,7 @@ function toRGB(color) { // returns an array like [192, 0, 0]
 
 function toRGBA(color) { // returns an array like [192, 0, 0, 25]
 	const a = color | 0xFF000000;
-	return [clampRGB((a >> 16) & 0xff), clampRGB((a >> 8) & 0xFF), clampRGB(a & 0xFF), clampRGB((a >> 24) & 0xff)];
+	return [clampRGB((a >> 16) & 0xff), clampRGB((a >> 8) & 0xFF), clampRGB(a & 0xFF), clampRGB((color >> 24) & 0xff)];
 }
 
 function blendColors(color1, color2, f, bUseAlpha = false) {
