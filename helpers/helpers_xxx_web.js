@@ -1,14 +1,15 @@
 ﻿'use strict';
-//17/06/26
+//29/07/26
 
-/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg */
+/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg, HTMLFile */
 
 include('helpers_xxx.js');
 /* global folders:readable, compareVersions:readable, globSettings:readable */
 include('helpers_xxx_prototypes.js');
-/* global _q:readable, doOnce:readable */
+/* global tryActiveX:readable, doOnce:readable */
+/* global _q:readable */
 include('helpers_xxx_file.js');
-/* global _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable */
+/* global doc:readable, _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable */
 
 // Http Requests when utils.HTTPRequestAsync is available. Properties are duplicated
 // with different casing so it works as 1:1 replacement for XMLHttp and
@@ -57,6 +58,171 @@ function XMLHttpRequest(bBuiltIn = true) { // eslint-disable-line no-redeclare
 		: new ActiveXObject('Microsoft.XMLHTTP');
 }
 
+function HTMLFile(bBuiltIn = true) {
+	const isNativeParser = utils.ParseHtml && bBuiltIn;
+	const htmlDoc = isNativeParser
+		? null
+		: typeof doc !== 'undefined' && doc ? doc : tryActiveX('htmlfile');
+	/**
+	 * Converts an HTML response into an HTML object. If JS-Host provides an {@link utils.ParseHtml} method, that's preferred over ActiveX. Otherwise remember to close htmlDoc. When using ActiveX, don't forget to call  {@link _downloader.close } afterwards.
+	 *
+	 * @method
+	 * @name parseHtml
+	 * @kind method
+	 * @memberof _downloader
+	 * @param {string} response
+	 * @returns {HtmlDocument|ActiveXObject}
+	 */
+	this.parse = (response) => {
+		let div;
+		if (isNativeParser) {
+			div = utils.ParseHtml(response);
+		} else if (htmlDoc) {
+			htmlDoc.open();
+			div = htmlDoc.createElement('div');
+			div.innerHTML = response;
+		}
+		return this.extendPrototype(div);
+	};
+	/**
+	 * Extends ActiveX object prototype to mimic JSplitter html parsing
+	 *
+	 * @method
+	 * @name extendPrototype
+	 * @kind method
+	 * @memberof _downloader
+	 * @param {HtmlDocument|ActiveXObject} div
+	 * @returns {HtmlDocument|ActiveXObject}
+	 */
+	this.extendPrototype = (div) => {
+		if (!isNativeParser) {
+			const wrapper = { ActiveXObject: div };
+			// Convert ActiveX arrays to js Arrays
+			wrapper.getElementsByTagName = function () {
+				return Array.from(this.ActiveXObject.getElementsByTagName(...arguments), (n) => extend(n));
+			};
+			Object.defineProperty(wrapper, 'childNodes', {
+				get: function () {
+					return Array.from(this.ActiveXObject.childNodes, (n) => extend(n));
+				}
+			});
+			// Patch methods
+			wrapper.getAttribute = function (key) {
+				return getAttribute(this.ActiveXObject, key);
+			};
+			// Map properties
+			Object.defineProperty(wrapper, 'innerHTML', {
+				get: function () {
+					return this.ActiveXObject.innerHTML;
+				}
+			});
+			Object.defineProperty(wrapper, 'innerText', {
+				get: function () {
+					return this.tagName === 'script'
+						? this.innerHTML.trim()
+						: this.ActiveXObject.innerText;
+				}
+			});
+			Object.defineProperty(wrapper, 'outerHTML', {
+				get: function () {
+					return this.ActiveXObject.outerHTML;
+				}
+			});
+			if (wrapper.ActiveXObject.href) {
+				Object.defineProperty(wrapper, 'href', {
+					get: function () {
+						return this.ActiveXObject.href;
+					}
+				});
+			}
+			// Format properties
+			Object.defineProperty(wrapper, 'tagName', {
+				get: function () {
+					return this.ActiveXObject.tagName.toLowerCase();
+				}
+			});
+			// Add missing properties
+			Object.defineProperty(wrapper, 'textContent', {
+				get: function () {
+					return this.innerText;
+				}
+			});
+			// New methods
+			wrapper.toString = function () {
+				return 'Object "ActiveXObject HTML node {}';
+			};
+			return wrapper;
+		}
+		return div;
+	};
+	const extend = this.extendPrototype.bind(this);
+	/**
+	 * Closes ActiveX object used for html parsing, if needed. Should always be called after {@link _downloader.parse } usage.
+	 *
+	 * @method
+	 * @name closeHtml
+	 * @kind method
+	 * @memberof _downloader
+	 * @returns {void}
+	 */
+	this.close = () => {
+		if (!isNativeParser) { htmlDoc.close(); }
+	};
+	/**
+	 * Emulates .getAttribute over ActiveX objects or uses native JS-Host methods if available.
+	 *
+	 * @method
+	 * @name getAttribute
+	 * @kind method
+	 * @memberof _downloader
+	 * @param {HtmlNode|Object} node
+	 * @param {string} key
+	 * @returns {HtmlDocument|ActiveXObject}
+	 */
+	this.getAttribute = (node, key) => {
+		return this.isAttributeProperty(key)
+			? node[key].replace('about:', '')
+			: node.getAttribute(this.mapAttribute(key)) || '';
+	};
+	const getAttribute = this.getAttribute.bind(this);
+	/**
+	 * Maps html attributes to ActiveX objects names.
+	 *
+	 * @method
+	 * @name mapAttribute
+	 * @kind method
+	 * @memberof _downloader
+	 * @param {string} key
+	 * @returns {string}
+	 */
+	this.mapAttribute = (key) => {
+		if (!isNativeParser) {
+			switch (key) { // NOSONAR
+				case 'class': return 'className';
+			}
+		}
+		return key;
+	};
+	/**
+	 * Checks wether and ActiveX attribute must be accessed as a property.
+	 *
+	 * @method
+	 * @name isAttributeProperty
+	 * @kind method
+	 * @memberof _downloader
+	 * @param {string} key
+	 * @returns {string}
+	 */
+	this.isAttributeProperty = (key) => {
+		if (!isNativeParser) {
+			switch (key) { // NOSONAR
+				case 'href': return true;
+			}
+		}
+		return false;
+	};
+}
+
 // Add handling to terminate activeX objects on foobar shutdown to avoid crashes
 // If a panel error is thrown while a web request is active, the entire foobar2000
 // instance may also crash; also the activeX object seems to be dispatched a few ms
@@ -86,7 +252,7 @@ function addWebCallbacks() {
 }
 
 // Helpers
-function onStateChange(timer, resolve, reject, func = null, type = null) {
+function onStateChange(timer, resolve, reject, func = null, type = null, request = {}) {
 	if (this !== null && timer !== null) { // this is xmlhttp bound
 		if (this.readyState === 4) {
 			if (window.WebRequests) { window.WebRequests.delete(this); }
@@ -104,9 +270,14 @@ function onStateChange(timer, resolve, reject, func = null, type = null) {
 					resolve(this.responseText);
 				}
 			} else if (!func) {
-				window.IsUnload
-					? reject({ status: 408, responseText: 'Forced shutdown' })
-					: reject({ status: this.status, responseText: this.responseText });
+				if (this.responseText.includes('CRYPT_E_REVOCATION_OFFLINE (0x80092013)') && !(this instanceof ActiveXObject)) {
+					request.bBuiltIn = false;
+					resolve(send(request));
+				} else {
+					window.IsUnload
+						? reject({ status: 408, responseText: 'Forced shutdown' })
+						: reject({ status: this.status, responseText: this.responseText });
+				}
 			}
 		}
 	} else if (!func && this !== null) {
@@ -148,12 +319,12 @@ function onStateChangeV2(resolve, reject, func = null, type = null) {
 }
 
 // May be used to async run a func for the response or as promise
-function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type }) {
+function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type, bBuiltIn = true }) {
 	addWebCallbacks();
 	const p = new Promise((resolve, reject) => {
 		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; } // NOSONAR
 		let timer = null;
-		const xmlhttp = new XMLHttpRequest();
+		const xmlhttp = new XMLHttpRequest(bBuiltIn);
 		if (window.WebRequests) { window.WebRequests.add(xmlhttp); }
 		// https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest#bypassing_the_cache
 		// Add ('&' + new Date().getTime()) to URLS to avoid caching
@@ -181,7 +352,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 				reject({ status, responseText: 'Request Timeout' });  // NOSONAR
 			}
 		}, timeOut, xmlhttp);
-		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type);
+		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type, { ...arguments[0] });
 		xmlhttp.send(method === 'POST' ? body : void (0));
 	});
 	return p;
@@ -395,10 +566,10 @@ function getWikiImg(value, { fileType = '', assessment = '' } = {}) {
 	})
 		.then((response) => {
 			const match = (response.match(/data-src="(https:\/\/upload\.wikimedia\.org\/wikipedia\/commons\/thumb\/.+?\.(jpg|png|webp))"/mi) || [null, null, null]);
-			if (!match[1] || !match[2]) { throw new Error('No image match');}
+			if (!match[1] || !match[2]) { throw new Error('No image match'); }
 			const url = match[1].replace('thumb/', '').split('/').slice(0, -1).join('/');
 			const file = url.split('/').at(-1);
-			return { url, file , ext: '.' + match[2] };
+			return { url, file, ext: '.' + match[2] };
 		})
 		.catch((reject) => {
 			console.log('getWikiImg(): ' + (reject.message || reject.status + ' - ' + reject.responseText) + '\n\t' + url);

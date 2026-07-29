@@ -1,5 +1,5 @@
-﻿'use strict';
-//15/06/26
+'use strict';
+//29/07/26
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -75,6 +75,7 @@ console.formatArg = (arg) => {
 					case arg instanceof WeakMap: { instance = { name: 'WeakMap', type: 'array' }; break; }
 					case arg instanceof WeakSet: { instance = { name: 'WeakSet', type: 'array' }; break; }
 					case arg instanceof Error: { instance = { name: 'Error', type: 'error' }; break; }
+					case arg instanceof Date: { instance = { name: 'Date', type: 'date' }; break; }
 					case Object.prototype.toString.call(arg) === '[object Promise]': { instance = { name: 'Promise', type: 'promise' }; break; }
 					case arg.constructor && arg.constructor.name === 'ReverseIterableMap': { instance = { name: 'Reverse Iterable Map', type: 'array' }; break; }
 				}
@@ -82,11 +83,12 @@ console.formatArg = (arg) => {
 					switch (instance.type) {
 						case 'array': { val = [...arg]; break; }
 						case 'error': { val = arg.toString(); break; }
+						case 'date': { val = '{' + clean(arg.toLocaleDateString()) + '}'; break; }
 					}
 				}
 				try {
 					val = (instance ? instance.name + ' ' : 'Object ') + clean(JSON.stringify(val || arg, (k, v) => {
-						if (typeof v !== 'undefined' && v !== null) {
+						if (typeof v !== 'undefined' && v !== null && typeof v !== 'string') {
 							if ('FileSize' in v && 'Length' in v && 'Path' in v && 'RawPath' in v && 'SubSong' in v) {
 								return 'FbMetadbHandle ' + JSON.stringify({ FileSize: v.FileSize, Length: v.Length, Path: v.Path, RawPath: v.RawPath, SubSong: v.SubSong }, null, ' ').replace(/{\n /, '{').replace(/["\n]/g, '').replace(/\\\\/g, '\\');
 							} else if (v instanceof FbMetadbHandleList) {
@@ -119,10 +121,14 @@ console.formatArg = (arg) => {
 								return (window.DrawMode === 1 ? 'D2DGraphics ' : 'GdiGraphics ') + clean(JSON.stringify({ width, height }));
 							} else if ('innerHTML' in v && 'innerText' in v && 'outerHTML' in v && 'textContent' in v) {
 								return 'childNodes' in v
-									? 'HtmlNode ' + clean(JSON.stringify({ className: v.className, tagName: v.tagName, childNodes: v.childNodes.length, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length, textContent: v.textContent.length }))
-									: 'HtmlDocument ' + clean(JSON.stringify({ head: !!v.head, body: !!v.body, documentElement: !!v.documentElement, root: !!v.root, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length, textContent: v.textContent.length }));
+									? 'HtmlNode ' + ('ActiveXObject' in v ? '(ActiveXObject) ' : '') + clean(JSON.stringify({ className: v.className, tagName: v.tagName, childNodes: v.childNodes.length, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length, textContent: v.textContent.length }))
+									: 'HtmlDocument ' + ('ActiveXObject' in v ? '(ActiveXObject) ' : '') + clean(JSON.stringify({ head: !!v.head, body: !!v.body, documentElement: !!v.documentElement, root: !!v.root, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length, textContent: v.textContent.length }));
 							} else if (v instanceof ActiveXObject) {
-								return 'ActiveXObject ' + clean('{ ' + Object.entries(v).map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + '}');
+								if (v.innerHTML && v.innerText && v.outerHTML) {
+									return 'ActiveXObject HtmlNode ' + clean(JSON.stringify({ className: v.className, tagName: v.tagName, childNodes: v.childNodes.length, innerHTML: v.innerHTML.length, innerText: v.innerText.length, outerHTML: v.outerHTML.length }));
+								} else {
+									return 'ActiveXObject ' + clean('{ ' + Object.entries(v).map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + '}');
+								}
 							} else if (Array.isArray(v)) {
 								return clean(JSON.stringify(v.map((sv) => console.formatArg(sv)), null, ''));
 							} else if (v instanceof Set) {
@@ -139,6 +145,8 @@ console.formatArg = (arg) => {
 								return 'Function ' + v.name || 'anonymous';
 							} else if (v instanceof Uint8Array) {
 								return 'Uint8Array ' + clean(JSON.stringify(v));
+							} else if (v instanceof Date) {
+								return 'Date {' + clean(v.toLocaleDateString()) + '}';
 							} else if (typeof v === 'object') {
 								return clean('{ ' + Object.entries(v).map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + ' }');
 							} else {

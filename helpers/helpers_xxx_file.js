@@ -1,12 +1,12 @@
 ﻿'use strict';
-//09/06/26
+//24/07/26
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
 include('helpers_xxx_basic_js.js');
-/* global tryMethod:readable, dateFormatter:readable, tryActiveX:readable */
+/* global tryMethod:readable, dateFormatter:readable, tryActiveX:readable, strNumCollator:readable */
 include('helpers_xxx_prototypes.js');
 /* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */ /* window.FullPanelName:readable */
 
@@ -21,7 +21,7 @@ const spaces = { desktop: 0, documents: 5, startup: 7, recent: 8, bin: 10, userD
 const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, System: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048 };
 const utf8 = convertCharsetToCodepage('UTF-8');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
-const absPathRegExp = /[A-z]*:\\/;
+const absPathRegExp = /^[a-z]+:\\/i;
 const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR /* cspell:disable-line */
 
 if (utils.MessageBox) {
@@ -1032,6 +1032,28 @@ function created(file, bParse = false) {
 			: fso.GetFile(bLongPath ? _longPath(file) : file).DateCreated;
 	} catch (e) { // eslint-disable-line no-unused-vars
 		return -1;
+	}
+}
+
+function sortFiles(files, method) {
+	switch (method) {
+		case 'name':
+			return files
+				.sort((a, b) => strNumCollator.compare(a, b));
+		case 'cdate':
+			return files
+				.map((file) => { return { file, date: created(file, true) }; })
+				.sort((a, b) => b.date - a.date).map((o) => o.file);
+		case 'mdate':
+			return files
+				.map((file) => { return { file, date: lastModified(file, true) }; })
+				.sort((a, b) => b.date - a.date).map((o) => o.file);
+		case 'random':
+			return files
+				.shuffle();
+		case 'none':
+		default:
+			return files;
 	}
 }
 

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/07/26
+//24/07/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
@@ -92,8 +92,8 @@ function sanitizeQueryVal(val) {
  * @param {boolean} bSpace?
  * @returns {string}
  */
-function sanitizeTagIds(tag, bSpace = true) {
-	return '$ascii($lower($trim($replace(' + tag.toUpperCase() + ',\'\',,`,,’,,´,,-,,\\,,/,,:,,$char(34),' + (bSpace ? ', ,' : '') + '))))';
+function sanitizeTagIds(tag, bSpace = true, replacer = '') {
+	return '$ascii($lower($trim($replace(' + tag.toUpperCase() + ',' + ['\'\'', '\'', '`', '’', '´', '-', '\\', '/', ':', '$char(34)' /* " */, '.', (bSpace ? ' ' : '')].filter(Boolean).reduce((prev, curr) => prev + ',' + curr + ',' + replacer, '') + '))))';
 }
 
 /**
@@ -106,12 +106,12 @@ function sanitizeTagIds(tag, bSpace = true) {
  * @param {?boolean} bSpace
  * @returns {string}
  */
-function sanitizeTagValIds(val, bSpace = true) {
+function sanitizeTagValIds(val, bSpace = true, replacer = '') {
 	return _asciify(val).trim().replace(
 		bSpace
-			? /['`’\-/\\ :"]/g
-			: /['`’\-/\\:"]/g
-		, ''
+			? /['`’´\-/\\ :".]/g
+			: /['`’´\-/\\:".]/g
+		, replacer
 	).toLowerCase();
 }
 
