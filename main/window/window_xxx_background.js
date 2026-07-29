@@ -1,12 +1,12 @@
 'use strict';
-//22/07/26
+//29/07/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global folders:readable */
-/* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable */
-/* global _resolvePath:readable, getFiles:readable, strNumCollator:readable, lastModified:readable, _isFolder:readable */
+/* global folders:readable, isFoobarV2 */
+/* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable, escapeRegExp */
+/* global _resolvePath:readable, getFiles:readable, sortFiles:readable, _isFolder:readable, _isFile:readable */
 /* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable, _gdiFont:readable */
 /* global IDC_HAND:readable, IDC_ARROW:readable */
 /* global InterpolationMode:readable, RotateFlipType:readable, Effects:readable, BorderMode:readable, BlendMode:readable, SmoothingMode:readable */
@@ -104,7 +104,10 @@ function _background({
 			if (this.logging.bProfile) { profiler.Print(); }
 			this.resetArt();
 			if (bFoundPath) {
-				if (!result) { throw new Error('Corrupt image file'); }
+				if (!result) {
+					if (_isFile(path)) { throw new Error('Corrupt image file:\n' + path); }
+					else { throw new Error('Non valid image file:\n' + path); }
+				}
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = path;
 			} else {
@@ -882,7 +885,7 @@ function _background({
 		}
 		if (repaintElements.filmStrip) {
 			if (this.filmStripOptions.bShow && this.coverMode === 'folder') {
-				const path = this.getPanelArtPath();
+				const path = this.getPanelArtPath(void (0), true);
 				if (_isFolder(path)) {
 					const columnW = this.filmStripOptions.columnW;
 					this.paintFilmStrip({ gr, limits: { x: this.x, y: this.h - columnW, w: this.w, h: columnW, offsetH: this.offsetH }, columnW, path });
@@ -1118,7 +1121,9 @@ function _background({
 		this.coverModeOptions.reflection = (this.coverModeOptions.reflection || 'none').toLowerCase();
 		this.coverModeOptions.fillCrop = (this.coverModeOptions.fillCrop || 'center').toLowerCase();
 		this.coverModeOptions.path = this.coverModeOptions.path || '';
-		this.coverModeOptions.pathCycleSort = (this.coverModeOptions.pathCycleSort || 'date').toLowerCase();
+		this.coverModeOptions.pathCycleSort = (this.coverModeOptions.pathCycleSort || 'mdate').toLowerCase();
+		this.coverModeOptions.pathCycleTimer = this.coverModeOptions.pathCycleTimer || 0;
+		this.coverModeOptions.pathCycleCount = this.coverModeOptions.pathCycleCount || 0;
 		if (!this.useCover && this.useColorsBlend) { this.colorMode = 'bigradient'; }
 	};
 	/**
@@ -1170,9 +1175,10 @@ function _background({
 	 * @kind method
 	 * @memberof _background
 	 * @param {FbMetadbHandle?} handle - Handle to evaluate path. If not provided, uses the panel handle according to settings
+	 * @param {Boolean?} bStripWildcard - Flag to strip any wildcard terms
 	 * @returns {string}
 	 */
-	this.getPanelArtPath = (handle) => {
+	this.getPanelArtPath = (handle, bStripWildcard) => {
 		let path = _resolvePath(this.coverModeOptions.path);
 		if (path.includes('$') || path.includes('%')) {
 			if (!handle) { handle = this.getHandle(); }
@@ -1180,12 +1186,14 @@ function _background({
 				? fb.TitleFormat(path).EvalWithMetadb(handle)
 				: fb.TitleFormat(path).Eval();
 		}
-		if (this.coverMode === 'folder' && path.length && !path.endsWith('\\')) { path += '\\'; }
+		if (this.coverMode === 'folder' && path.length && !path.includes('*') && !path.includes('?') && !path.endsWith('\\')) { path += '\\'; }
 		if (this.logging.bDebug) { console.log('Background - getArtPath - art TF: ' + path + ' (TF)'); }
-		return path;
+		return bStripWildcard
+			? this.stripWildcardPath(path)
+			: path;
 	};
 	/**
-	 * Gets current art path which may link to a static file or file within folder set
+	 * Gets current art path which may link to a static file or file within folder set. When linking against a file/folder, a mask may be used to retrieve any image found at path, sorted by date or name. See {@link coverModeOptions.pathCycleSort }
 	 * @property
 	 * @name getArtPath
 	 * @kind method
@@ -1199,34 +1207,72 @@ function _background({
 		if (path.length) {
 			if (this.coverMode === 'folder') {
 				if (artFiles.root !== path) { this.resetArtFiles(path); next = 1; }
-				if (typeof next === 'number') {
-					this.setArtCycleTimer();
-					const files = this.getArtFilePaths(path);
-					if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
-					return this.traverseArtFiles(files, Math.sign(next));
-				} else {
-					return this.traverseArtFiles();
+				if (typeof next === 'number') { this.setArtCycleTimer(); }
+				else { return this.traverseArtFiles(); }
+			}
+			if (path.endsWith('.*')) {
+				const [folder, mask] = path.split(/\\([^\\]+\.\*|\*\.\*)$/i);
+				if (folder && mask) {
+					if (!_isFolder(folder)) { return ''; }
+					const files = this.getArtFilePaths(folder, void (0), '*\\' + mask);
+					if (this.logging.bDebug) { console.log('Background - getArtPath - art found (by full mask): ' + files.length + ' (#)'); }
+					return this.coverMode === 'folder' && typeof next === 'number'
+						? this.traverseArtFiles(files, Math.sign(next))
+						: files[0] || '';
 				}
-			} else if (path.endsWith('*.*') || path.endsWith('.*')) {
-				const [folder, mask] = path.split(/([^\\]+\.\*|\*\.\*)$/i);
-				const files = this.getArtFilePaths(folder, void(0), mask);
-				if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
-				return files[0] || path;
-			} else {
-				let file;
-				['.png', '.jpg', '.jpeg', '.gif'].some((ext) => {
-					if (path.endsWith('*' + ext)) {
-						const [folder, mask] = path.split(/([^\\]+\.\*|\*\.\*)$/i);
-						const files = this.getArtFilePaths(folder, [ext], mask);
-						if (this.logging.bDebug) { console.log('Background - getArtPath - art found: ' + files.length + ' (#)'); }
-						file = files[0];
-						return true;
+			} else if ((path.includes('*') || path.includes('?')) && artAllowedExt.some((e) => path.endsWith(e))) {
+				let files;
+				artAllowedExt.some((ext) => {
+					if (path.endsWith(ext)) {
+						const [folder, mask] = path.split(new RegExp('\\\\([^\\\\]+(?:' + escapeRegExp(ext) + '))$', 'i'));
+						if (folder && mask) {
+							if (!_isFolder(folder)) { return false; }
+							files = this.getArtFilePaths(folder, [ext], '*\\' + mask);
+							if (this.logging.bDebug) { console.log('Background - getArtPath - art found (by name mask): ' + files.length + ' (#)'); }
+							return true;
+						}
 					}
 				});
-				return file || path;
+				if (!files || !files.length) { return ''; }
+				return this.coverMode === 'folder' && typeof next === 'number'
+					? this.traverseArtFiles(files, Math.sign(next))
+					: files[0] || '';
+			} else if (path.includes('*') || path.includes('?')) {
+				if (this.logging.bError) { console.log('Background - getArtPath: invalid art path ' + path); }
+			} else if (this.coverMode === 'folder' && typeof next === 'number') {
+				const files = this.getArtFilePaths(path);
+				if (this.logging.bDebug) { console.log('Background - getArtPath - art found (by path): ' + files.length + ' (#)'); }
+				return this.traverseArtFiles(files, Math.sign(next));
 			}
 		}
 		return path;
+	};
+	/**
+	 * Gets parent folder from a path with wildcards
+	 * @property
+	 * @name stripWildcardPath
+	 * @kind method
+	 * @memberof _background
+	 * @param {string} path
+	 * @returns {string}
+	 */
+	this.stripWildcardPath = (path) => {
+		let folder;
+		if (path.endsWith('.*')) {
+			[folder] = path.split(/\\([^\\]+\.\*|\*\.\*)$/i);
+		} else if ((path.includes('*') || path.includes('?')) && artAllowedExt.some((e) => path.endsWith(e))) {
+			artAllowedExt.some((ext) => {
+				if (path.endsWith(ext)) {
+					[folder] = path.split(new RegExp('\\\\([^\\\\]+(?:' + escapeRegExp(ext) + '))$', 'i'));
+					return true;
+				}
+			});
+		}
+		return folder
+			? folder + '\\'
+			: path.endsWith('\\')
+				? path
+				: path + '\\';
 	};
 	/**
 	 * Retrieves matched file list within given folder
@@ -1235,18 +1281,16 @@ function _background({
 	 * @kind method
 	 * @memberof _background
 	 * @param {string} path - Folder path
-	 * @param {string[]} extArr - [=['.png', '.jpg', '.jpeg', '.gif']]
+	 * @param {string[]} extArr - [={@link artAllowedExt}]
 	 * @param {string} mask - [='']
 	 * @returns {string[]}
 	 */
-	this.getArtFilePaths = (path, extArr = ['.png', '.jpg', '.jpeg', '.gif'], mask = '') => {
+	this.getArtFilePaths = (path, extArr = artAllowedExt, mask = '') => {
 		if (!_isFolder(path)) { return []; }
-		return this.coverModeOptions.pathCycleSort === 'date'
-			? getFiles(path, new Set(extArr), mask)
-				.map((file) => { return { file, date: lastModified(file, true) }; })
-				.sort((a, b) => b.date - a.date).map((o) => o.file)
-			: getFiles(path, new Set(extArr))
-				.sort((a, b) => strNumCollator.compare(a, b));
+		return sortFiles(
+			getFiles(path, new Set(extArr), mask),
+			this.coverModeOptions.pathCycleSort
+		);
 	};
 	/**
 	 * Cycles files within set art folder
@@ -1384,11 +1428,22 @@ function _background({
 	 * @returns {number} Timer id
 	 */
 	this.setArtCycleTimer = () => {
-		if (this.coverModeOptions.pathCycleTimer > 0) {
-			if (artFiles.timer !== null) { clearTimeout(artFiles.timer); }
+		if (this.coverMode === 'folder' && this.coverModeOptions.pathCycleTimer > 0) {
+			this.resetArtCycleTimer();
 			artFiles.timer = setTimeout(() => this.cycleArtFolder(), this.coverModeOptions.pathCycleTimer);
 		}
 		return artFiles.timer;
+	};
+	/**
+	 * Resets art cycling timer
+	 * @property
+	 * @name resetArtCycleTimer
+	 * @kind method
+	 * @memberof _background
+	 * @returns {void}
+	 */
+	this.resetArtCycleTimer = () => {
+		if (artFiles.timer !== null) { clearTimeout(artFiles.timer); }
 	};
 	/**
 	 * Resets visited art files history
@@ -1403,7 +1458,7 @@ function _background({
 		artFiles.root = root || '';
 		artFiles.num = -1;
 		artFiles.shown.clear();
-		clearTimeout(artFiles.timer);
+		this.resetArtCycleTimer();
 		artFiles.timer = null;
 	};
 	/**
@@ -2026,6 +2081,8 @@ function _background({
 	this.coverModePriority = [];
 	/** @type {CoverMode[]} - Art types used by panel */
 	const trackCoverModes = ['front', 'back', 'disc', 'icon', 'artist'];
+	/** @type {string[]} - Art extensions used by panel */
+	const artAllowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp', isFoobarV2 ? '.webp' : null].filter(Boolean);
 	/** @typedef {'symmetric'|'asymmetric'|'none'} ReflectionMode - Available reflection modes */
 	/** @typedef {'top'|'center'|'bottom'} FillCropMode - Available fill panel modes */
 	/**
@@ -2042,7 +2099,7 @@ function _background({
 	 * @property {boolean} bGdiEffects - Force GDI effects while using D2D rendering
 	 * @property {String} path - File or folder path for 'path' and 'folder' coverMode
 	 * @property {number} pathCycleTimer - Art cycling when using 'folder' coverMode (ms)
-	 * @property {'name'|'date'} pathCycleSort - Art sorting when using 'folder' coverMode
+	 * @property {'name'|'cdate'|'mdate'|'random'|'none'} pathCycleSort - Art sorting when using 'folder' coverMode
 	 * @property {number} pathCycleCount - Art counter size when using 'folder' coverMode (0-Inf)
 	 * @property {boolean} bPathCycleCountBg - Art counter background
 	 * @property {boolean} bNowPlaying - Follow now playing
@@ -2110,7 +2167,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		offsetH: _scale(1),
 		timer: 60,
 		coverMode: 'front',
-		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'date', pathCycleCount: 30, bPathCycleCountBg: true, bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
+		coverModeOptions: { blur: 0, bCircularBlur: false, angle: 0, alpha: 0, mute: 0, edgeGlow: 0, bloom: 0, vignette: 0, vignetteColor: RGBA(0, 0, 0), histogram: 0, fadeMask: 0, bGrayScale: false, bGdiEffects: false, path: '', pathCycleTimer: 10000, pathCycleSort: 'mdate', pathCycleCount: 30, bPathCycleCountBg: true, bNowPlaying: true, bNoSelection: false, bProportions: true, bFill: true, fillCrop: 'center', zoom: 0, reflection: 'none', bFlipX: false, bFlipY: false, bCacheAlbum: true, bProcessColors: true, bFallbackFront: false },
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		filmStripOptions: { bShow: false, columnW: 75, alpha: 255, bezelColor: RGBA(0, 0, 0), bezelAlpha: 200 },

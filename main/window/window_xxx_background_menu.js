@@ -1,5 +1,5 @@
 ﻿'use strict';
-//22/07/26
+//28/07/26
 
 /* exported createBackgroundMenu */
 
@@ -9,7 +9,7 @@ include('window_xxx_helpers.js');
 include('..\\..\\helpers\\menu_xxx.js');
 /* global _menu:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _explorer:readable */
+/* global _explorer:readable, _isFolder:readable, _createFolder:readable */
 include('..\\..\\helpers\\helpers_xxx_input.js');
 /* global Input:readable */
 include('..\\..\\helpers-external\\namethatcolor\\ntc.js');
@@ -109,8 +109,8 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 					? '$directory_path(%PATH%)\\art\\artist.jpg'
 					: folders.getBioArtistArtPath();
 				let input = option.newValue === 'path'
-					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', defTf)
-					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf);
+					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nMicrosoft MS-DOS wildcards are also allowed (at end of path), but only a single file will be matched. i.e.\n$directory_path(%PATH%)\\art\\*.jpg\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', defTf)
+					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nMicrosoft MS-DOS wildcards are also allowed (at end of path), and all files matched by expression will be used. Note a folder path is equivalent to using [path]\\*.* i.e.\n$directory_path(%PATH%)\\art\\*.jpg\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf);
 				if (input === null) {
 					if (this.coverMode === option.newValue) { return false; }
 					else if (Input.isLastEqual) { input = Input.lastInput; }
@@ -153,8 +153,11 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Open folder...', func: () => {
-					const path = this.getArtPath();
-					if (path) { _explorer(path); }
+					const path = this.getPanelArtPath(void(0), true);
+					if (path) {
+						if (!_isFolder(path)) { _createFolder(path); }
+						_explorer(path);
+					}
 				},
 			});
 		}
@@ -193,7 +196,18 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			}, flags: this.coverModeOptions.bProportions ? MF_STRING : MF_GRAYED
 		});
 	}
-	{
+	if (this.coverMode.toLowerCase() === 'path' && this.getPanelArtPath().includes('*')) {
+		const subMenu = menu.newMenu('Art matching', mainMenuName, MF_STRING);
+		menu.newEntry({ menuName: subMenu, entryText: 'File wildcard matching:', flags: MF_GRAYED });
+		menu.newSeparator(subMenu);
+		[
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'name', entryText: 'By name' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'mdate', entryText: 'By date (last modified)' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'cdate', entryText: 'By date (created)' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'none', entryText: 'By explorer order' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'random', entryText: 'By random order' }
+		].forEach(createMenuOption('coverModeOptions', 'pathCycleSort', subMenu, true));
+	} else {
 		const subMenu = menu.newMenu('Art cycle', mainMenuName, ['folder'].includes(this.coverMode.toLowerCase()) ? MF_STRING : MF_GRAYED);
 		menu.newEntry({ menuName: subMenu, entryText: 'Ctrl + Shift + Mouse Wheel:', flags: MF_GRAYED });
 		menu.newSeparator(subMenu);
@@ -209,7 +223,10 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		menu.newSeparator(subMenu);
 		[
 			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'name', entryText: 'By name' },
-			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'date', entryText: 'By date (last modified)' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'mdate', entryText: 'By date (last modified)' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'cdate', entryText: 'By date (created)' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'none', entryText: 'By explorer order' },
+			{ isEq: null, key: this.coverModeOptions.pathCycleSort, value: null, newValue: 'random', entryText: 'By random order' }
 		].forEach(createMenuOption('coverModeOptions', 'pathCycleSort', subMenu, true));
 		menu.newSeparator(subMenu);
 		menu.newEntry({
