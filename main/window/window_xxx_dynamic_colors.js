@@ -1,5 +1,5 @@
 'use strict';
-//19/04/26
+//26/07/26
 
 /* exported dynamicColors, mostContrastColors */
 
@@ -99,7 +99,7 @@ function dynamicColors(colorScheme, bgColor, bAdvanced = false) {
 					if (cSec.hsv()[1] < 0.1 && cMain.luminance() > 0.2) {
 						cSec = cSec.luminance(cSec.luminance() - 0.1);
 					} else {
-						cSec = cSec.luminance(cSec.luminance() + 0.1).saturate(20);
+						cSec = cSec.luminance(cSec.luminance() + 0.1).saturate(cSec.lch()[1] < 20 ? 4 : 8);
 					}
 					if (Math.abs(cMain.luminance() - cSec.luminance()) < 0.3) {
 						cMain = cMain.luminance(cMain.luminance() + (cMain.luminance() > 0.3 ? 0.1 : - 0.1));
