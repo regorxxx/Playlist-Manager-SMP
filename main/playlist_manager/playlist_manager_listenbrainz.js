@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//30/07/26
 
 /* exported ListenBrainz */
 
@@ -80,9 +80,19 @@ ListenBrainz.algorithm = {
 	retrieveSimilarArtists: {
 		v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
 		v2: 'session_based_days_7500_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30',
+		v3: 'session_based_days_75_session_300_contribution_5_threshold_10_limit_100_filter_True_skip_30',
+		v4: 'session_based_days_1800_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30',
+		v5: 'session_based_days_1825_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30',
+		v6: 'session_based_days_7500_session_300_contribution_3_threshold_10_limit_100_filter_True_skip_30'
 	},
 	retrieveSimilarRecordings: {
 		v1: 'session_based_days_9000_session_300_contribution_5_threshold_15_limit_50_skip_30',
+		v2: 'session_based_days_180_session_300_contribution_5_threshold_15_limit_50_skip_30',
+		v3: 'session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000',
+		v4: 'session_based_days_7500_session_300_contribution_sqrt_threshold_15_limit_50_skip_30_top_n_listeners_1000',
+		v5: 'session_based_listens_session_300_contribution_5_threshold_15_limit_50_skip_30',
+		v6: 'session_based_days_7500_session_300_contribution_5_threshold_15_limit_50_skip_30',
+		v7: 'session_based_days_1500_session_300_contribution_5_threshold_15_limit_50_skip_30_top_n_listeners_1000',
 	},
 };
 ListenBrainz.jspfExt = 'https://musicbrainz.org/doc/jspf#playlist';
@@ -348,6 +358,7 @@ ListenBrainz.getArtistMBIDs = async function getArtistMBIDs(handleList, token, b
  * @returns {Promise.<{mbid:string, artists:string[]}[]>}
  */
 /**
+ * Creates a dictionary of MBIDs per Artist. Artists in ListenBrainz may not necessarily match the library ones, due to variations, etc. A lookup is used for every MBID and once the canonical name is retrieved, it's matched against the list of artists passed on input if their similarity is high enough (Levenshtein distance > 90%).
  * @name joinArtistMBIDs
  * @kind method
  * @memberof ListenBrainz
@@ -877,7 +888,7 @@ ListenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 				if (Object.hasOwn(response, 'feedback')) {
 					// Add null data to holes, so response respects input length
 					const feedback = mbid.map((m) => {
-						return { ...noData,  recording_mbid: m || null  };
+						return { ...noData, recording_mbid: m || null };
 					});
 					// And insert data, since it doesn't respect original sorting
 					response.feedback.forEach((responseData) => {
@@ -996,7 +1007,7 @@ ListenBrainz.lookupTracks = function lookupTracks(handleList, token, bAlbumArtis
 	});
 	return send({
 		method: 'POST',
-		URL: 'https://labs.api.listenbrainz.org/mbid-mapping/json',
+		URL: 'https://labs.api.listenbrainz.org/mbid-mapping/json', // TODO find alternative
 		requestHeader: [['Content-Type', 'application/json'], ['Authorization', 'Token ' + token]],
 		body: JSON.stringify(data)
 	}).then(
@@ -1486,11 +1497,11 @@ ListenBrainz.getPopularRecordingsByArtist = function getPopularRecordingsByArtis
  * @memberof ListenBrainz
  * @param {string[]} artistMbids - Array of artist MBIDs
  * @param {string} token - ListenBrainz user token
- * @param {('v1'|'v2')} algorithm - [='v1'] see {@link ListenBrainz.algorithm.retrieveSimilarArtists} for further information
+ * @param {('v1'|'v2'|'v3'|'v4'|'v5'|'v6')} algorithm - [='v5'] see {@link ListenBrainz.algorithm.retrieveSimilarArtists} for further information
  * @param {boolean} bRetry - [=true] Tries v2 algorithm is the lookup doesn't return at least 5 results
  * @returns {Promise.<{ {artist_mbid: string, comment:string, gender: string, name: string, reference_mbid: string, score: number, type: string }[]}>}
  */
-ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v1', bRetry = true) {
+ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbids, token, algorithm = 'v5', bRetry = true) {
 	if (!artistMbids || !artistMbids.length) { console.log('retrieveSimilarArtists: no artistMbids provided'); return Promise.resolve([]); }
 	if (Object.hasOwn(this.algorithm.retrieveSimilarArtists, algorithm.toLowerCase())) {
 		algorithm = this.algorithm.retrieveSimilarArtists[algorithm.toLowerCase()];
@@ -1500,6 +1511,7 @@ ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 		'artist_mbids': Array.isArray(artistMbids) ? artistMbids : [artistMbids],
 		'algorithm': algorithm
 	}];
+	const fallback = 'v5';
 	return send({
 		method: 'POST',
 		URL: 'https://labs.api.listenbrainz.org/similar-artists/json',
@@ -1511,9 +1523,9 @@ ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
 				const response = JSON.parse(resolve) || [];
 				if (response) {
 					const count = response.length;
-					if (count < 5 && bRetry && (algorithm !== 'v2' || algorithm !== this.algorithm.retrieveSimilarArtists.v2)) {
-						console.log('retrieveSimilarArtists: not enough items found, retrying with v2 algorithm');
-						return this.retrieveSimilarArtists(artistMbids, token, 'v2', false);
+					if (count < 5 && bRetry && (algorithm !== fallback || algorithm !== this.algorithm.retrieveSimilarArtists[fallback])) {
+						console.log('retrieveSimilarArtists: not enough items found, retrying with ' + fallback + ' algorithm');
+						return this.retrieveSimilarArtists(artistMbids, token, fallback, false);
 					} else if (count) {
 						console.log('retrieveSimilarArtists: found ' + count + ' items');
 						return response; // [{artist_mbid, comment, gender, name, reference_mbid, score, type}, ...]
@@ -1536,7 +1548,7 @@ ListenBrainz.retrieveSimilarArtists = function retrieveSimilarArtists(artistMbid
  * @memberof ListenBrainz
  * @param {string[]} recordingMBIDs - Array of recordings MBIDs
  * @param {string} token - ListenBrainz user token
- * @param {('v1')} algorithm - [='v1'] see {@link ListenBrainz.algorithm.retrieveSimilarRecordings} for further information
+ * @param {('v1'|'v2'|'v3'|'v4'|'v5'|'v6'|'v7')} algorithm - [='v1'] see {@link ListenBrainz.algorithm.retrieveSimilarRecordings} for further information
  * @returns {Promise.<{{recording_mbid:string, recording_name:string, artist_credit_name:string, [artist_credit_mbids]:string[], caa_id:string, caa_release_mbid:string, canonical_recording_mbid:string, score:number, reference_mbid:string }[]}>}
  */
 ListenBrainz.retrieveSimilarRecordings = function retrieveSimilarRecordings(recordingMBIDs, token, algorithm = 'v1') {

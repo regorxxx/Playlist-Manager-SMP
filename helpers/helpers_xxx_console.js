@@ -164,7 +164,7 @@ console.formatArg = (arg) => {
 						// eslint-disable-next-line no-unused-vars
 						catch (e) { /* empty */ } //NOSONAR
 						if (!val) { val = '--unknown type--'; }
-						console.logUI('Console.log: argument type not recognized: ', type, val);
+						console.logUI('Console.log: argument type not recognized: ', type, val, '\n\t' + e);
 					}
 				}
 			}

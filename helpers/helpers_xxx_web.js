@@ -1,5 +1,5 @@
-﻿'use strict';
-//29/07/26
+'use strict';
+//31/07/26
 
 /* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg, HTMLFile */
 
@@ -9,7 +9,7 @@ include('helpers_xxx_prototypes.js');
 /* global tryActiveX:readable, doOnce:readable */
 /* global _q:readable */
 include('helpers_xxx_file.js');
-/* global doc:readable, _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable */
+/* global doc:readable, _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable, _open:readable */
 
 // Http Requests when utils.HTTPRequestAsync is available. Properties are duplicated
 // with different casing so it works as 1:1 replacement for XMLHttp and
@@ -71,18 +71,18 @@ function HTMLFile(bBuiltIn = true) {
 	 * @kind method
 	 * @memberof _downloader
 	 * @param {string} response
-	 * @returns {HtmlDocument|ActiveXObject}
+	 * @returns {HtmlDocument}
 	 */
 	this.parse = (response) => {
-		let div;
+		let doc;
 		if (isNativeParser) {
-			div = utils.ParseHtml(response);
+			doc = utils.ParseHtml(response);
 		} else if (htmlDoc) {
 			htmlDoc.open();
-			div = htmlDoc.createElement('div');
-			div.innerHTML = response;
+			doc = htmlDoc.createElement('div');
+			doc.innerHTML = response;
 		}
-		return this.extendPrototype(div);
+		return this.extendPrototype(doc);
 	};
 	/**
 	 * Extends ActiveX object prototype to mimic JSplitter html parsing
@@ -92,40 +92,89 @@ function HTMLFile(bBuiltIn = true) {
 	 * @kind method
 	 * @memberof _downloader
 	 * @param {HtmlDocument|ActiveXObject} div
-	 * @returns {HtmlDocument|ActiveXObject}
+	 * @returns {HtmlDocument}
 	 */
 	this.extendPrototype = (div) => {
-		if (!isNativeParser) {
-			const wrapper = { ActiveXObject: div };
-			// Convert ActiveX arrays to js Arrays
-			wrapper.getElementsByTagName = function () {
-				return Array.from(this.ActiveXObject.getElementsByTagName(...arguments), (n) => extend(n));
-			};
-			Object.defineProperty(wrapper, 'childNodes', {
-				get: function () {
-					return Array.from(this.ActiveXObject.childNodes, (n) => extend(n));
+		const type = isNativeParser ? 'HtmlDocument' : 'ActiveXObject';
+		const wrapper = { [type]: div };
+		if (isNativeParser) {
+			// Patch methods
+			['getElementsByTagName', 'querySelector', 'querySelectorAll'].forEach((method) => {
+				if (method in wrapper.HtmlDocument) {
+					wrapper[method] = function () {
+						return this.HtmlDocument[method](...arguments).map((n) => extend(n));
+					};
 				}
 			});
+			// Patch getters
+			['childNodes', 'children'].forEach((getter) => {
+				if (getter in wrapper.HtmlDocument) {
+					Object.defineProperty(wrapper, getter, {
+						get: function () {
+							return this.HtmlDocument[getter].map((n) => extend(n));
+						}
+					});
+				}
+			});
+			['firstChild', 'body', 'documentElement', 'head', 'root'].forEach((getter) => {
+				if (getter in wrapper.HtmlDocument) {
+					Object.defineProperty(wrapper, getter, {
+						get: function () {
+							return extend(this.HtmlDocument[getter]);
+						}
+					});
+				}
+			});
+			// Map getters
+			['className', 'innerHTMl', 'innerText', 'outerHTML', 'tagName', 'textContent', 'isElement'].forEach((getter) => {
+				if (getter in wrapper.HtmlDocument) {
+					Object.defineProperty(wrapper, getter, {
+						get: function () {
+							return this.HtmlDocument[getter];
+						}
+					});
+				}
+			});
+			// Map methods
+			['getAttribute', 'hasAttribute', 'hasClass', 'query'].forEach((method) => {
+				if (method in wrapper.HtmlDocument) {
+					wrapper[method] = function () {
+						return this.HtmlDocument[method](...arguments);
+					};
+				}
+			});
+		} else {
 			// Patch methods
+			wrapper.getElementsByTagName = function () { // ActiveX arrays to js Arrays
+				return Array.from(this.ActiveXObject.getElementsByTagName(...arguments), (n) => extend(n))
+					.filter((n) => n.ActiveXObject.getAttribute); // Filter invalid parsed objects
+			};
 			wrapper.getAttribute = function (key) {
 				return getAttribute(this.ActiveXObject, key);
 			};
-			// Map properties
+			// Patch getters
+			Object.defineProperty(wrapper, 'childNodes', { // ActiveX arrays to js Arrays
+				get: function () {
+					return Array.from(this.ActiveXObject.childNodes, (n) => extend(n))
+						.filter((n) => n.ActiveXObject.getAttribute); // Filter invalid parsed objects
+				}
+			});
+			// Map getters
 			Object.defineProperty(wrapper, 'innerHTML', {
 				get: function () {
-					return this.ActiveXObject.innerHTML;
+					return this.ActiveXObject.innerHTML || '';
 				}
 			});
 			Object.defineProperty(wrapper, 'innerText', {
 				get: function () {
 					return this.tagName === 'script'
 						? this.innerHTML.trim()
-						: this.ActiveXObject.innerText;
+						: this.ActiveXObject.innerText || '';
 				}
 			});
 			Object.defineProperty(wrapper, 'outerHTML', {
 				get: function () {
-					return this.ActiveXObject.outerHTML;
+					return this.ActiveXObject.outerHTML || '';
 				}
 			});
 			if (wrapper.ActiveXObject.href) {
@@ -135,25 +184,40 @@ function HTMLFile(bBuiltIn = true) {
 					}
 				});
 			}
-			// Format properties
+			if (wrapper.ActiveXObject.className) {
+				Object.defineProperty(wrapper, 'className', {
+					get: function () {
+						return this.ActiveXObject.className.toLowerCase();
+					}
+				});
+			}
 			Object.defineProperty(wrapper, 'tagName', {
 				get: function () {
-					return this.ActiveXObject.tagName.toLowerCase();
+					return (this.ActiveXObject.tagName || '').toLowerCase();
 				}
 			});
 			// Add missing properties
 			Object.defineProperty(wrapper, 'textContent', {
 				get: function () {
-					return this.innerText;
+					return this.innerText || '';
 				}
 			});
-			// New methods
-			wrapper.toString = function () {
-				return 'Object "ActiveXObject HTML node {}';
-			};
-			return wrapper;
+
 		}
-		return div;
+		// New methods
+		wrapper.toString = function () {
+			return 'Object "' + type + ' HTML node {}';
+		};
+		wrapper.getElementsByClassName = function (className) {
+			return ('root' in this ? this.root.childNodes : this.childNodes)
+				.filter((n) => n.className === className);
+		};
+		wrapper.getElementById = function (id) {
+			return ('root' in this ? this.root : this)
+				.getElementsByTagName('*')
+				.find((n) => n.getAttribute('id') === id) || null;
+		};
+		return wrapper;
 	};
 	const extend = this.extendPrototype.bind(this);
 	/**
@@ -180,9 +244,12 @@ function HTMLFile(bBuiltIn = true) {
 	 * @returns {HtmlDocument|ActiveXObject}
 	 */
 	this.getAttribute = (node, key) => {
-		return this.isAttributeProperty(key)
-			? node[key].replace('about:', '')
-			: node.getAttribute(this.mapAttribute(key)) || '';
+		return this.formatAttribute(
+			key,
+			this.isAttributeProperty(key)
+				? node[key]
+				: node.getAttribute(this.mapAttribute(key)) || ''
+		);
 	};
 	const getAttribute = this.getAttribute.bind(this);
 	/**
@@ -220,6 +287,29 @@ function HTMLFile(bBuiltIn = true) {
 			}
 		}
 		return false;
+	};
+	/**
+	 * Formats attribute values for compatibility with HtmlDocument from JSplitter.
+	 *
+	 * @method
+	 * @name formatAttribute
+	 * @kind method
+	 * @memberof _downloader
+	 * @param {string} key
+	 * @param {any} value
+	 * @returns {any}
+	 */
+	this.formatAttribute = (key, value) => {
+		if (!isNativeParser) {
+			switch (key) { // NOSONAR
+				case 'src':
+				case 'href':
+					return typeof value === 'string'
+						? value.replace('about:', '')
+						: value;
+			}
+		}
+		return value;
 	};
 }
 
@@ -273,6 +363,9 @@ function onStateChange(timer, resolve, reject, func = null, type = null, request
 				if (this.responseText.includes('CRYPT_E_REVOCATION_OFFLINE (0x80092013)') && !(this instanceof ActiveXObject)) {
 					request.bBuiltIn = false;
 					resolve(send(request));
+				} else if (this.status === 403 && request.bCurlFallback) {
+					downloadFile(request.URL, folders.temp + utils.MD5(request.URL))
+						.then((path) => resolve(_open(path) || ''));
 				} else {
 					window.IsUnload
 						? reject({ status: 408, responseText: 'Forced shutdown' })
@@ -319,7 +412,7 @@ function onStateChangeV2(resolve, reject, func = null, type = null) {
 }
 
 // May be used to async run a func for the response or as promise
-function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type, bBuiltIn = true }) {
+function send({ method = 'GET', URL, body = void (0), func = null, requestHeader = [/*[header, type]*/], bypassCache = false, timeOut = 30000, type, bBuiltIn = true, bCurlFallback = true }) { // eslint-disable-line no-unused-vars
 	addWebCallbacks();
 	const p = new Promise((resolve, reject) => {
 		if (window.IsUnload) { reject({ status: 408, responseText: 'Forced shutdown' }); return; } // NOSONAR
@@ -352,7 +445,7 @@ function send({ method = 'GET', URL, body = void (0), func = null, requestHeader
 				reject({ status, responseText: 'Request Timeout' });  // NOSONAR
 			}
 		}, timeOut, xmlhttp);
-		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type, { ...arguments[0] });
+		xmlhttp.onreadystatechange = onStateChange.bind(xmlhttp, timer, resolve, reject, func, type, { method, URL, body, func, requestHeader, bypassCache, timeOut, type, bBuiltIn, bCurlFallback });
 		xmlhttp.send(method === 'POST' ? body : void (0));
 	});
 	return p;

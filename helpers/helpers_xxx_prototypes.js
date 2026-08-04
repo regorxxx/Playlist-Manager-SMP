@@ -1,7 +1,7 @@
 ﻿'use strict';
-//21/07/26
+//04/08/26
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime, smartCut */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable, strNumCollator:readable */
@@ -573,6 +573,19 @@ function _ascii(tag) { // Don't miss quotes on queries!
 function _asciify(value) { // Mimics $ascii() Title Format function
 	return (isStringWeak(value) ? value : String(value)).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\u0142/g, 'l');
 }
+
+function smartCut(value, threshold) {
+	if (value && typeof value === 'string' && threshold > 0 && threshold < Number.MAX_SAFE_INTEGER) {
+		value = value.trim().split('\n\n');
+		const len = value.length;
+		for (let i = 0, currLen = 0; i < len; i++) {
+			currLen += value[i].length;
+			if (currLen >= threshold) { value.length = i + 1; break; }
+		}
+		value = value.join('\n\n');
+	}
+	return value;
+}
 /*
 	Arrays
 */
@@ -677,7 +690,7 @@ if (!Array.prototype.chunkBy) {
 		let j = 0;
 		for (let i = 0; i < len; i++) {
 			if (i > 0 && fn(this[i], this[i - 1])) { R.push(this.slice(j, i)); j = i; }
-			if (i === len -1 ) { R.push(this.slice(j)); }
+			if (i === len - 1) { R.push(this.slice(j)); }
 		}
 		return R;
 	};
