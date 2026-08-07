@@ -1,7 +1,7 @@
 ﻿'use strict';
-//24/07/26
+//07/08/26
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -21,6 +21,7 @@ const spaces = { desktop: 0, documents: 5, startup: 7, recent: 8, bin: 10, userD
 const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, System: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048 };
 const utf8 = convertCharsetToCodepage('UTF-8');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
+const imgAllowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp', '.webp'];
 const absPathRegExp = /^[a-z]+:\\/i;
 const youTubeRegExp = /(?:https?:\/\/)?(?:www\.|m\.)?youtu(?:\.be\/|be.com\/\S*(?:watch|embed)(?:(?:(?=\/[^&\s?]+(?!\S))\/)|(?:\S*v=|v\/)))([^&\s?]+)/; // NOSONAR /* cspell:disable-line */
 
@@ -75,7 +76,7 @@ if (!_isFile(mappedDrivesFile) || lastStartup() !== lastModified(mappedDrivesFil
 		const lines = file.split(/\r\n|\n\r|\n|\r/);
 		lines.forEach((line, i) => {
 			if (i === 0 || !line.length) { return; }
-			const drive = line.match(/(.+?:)/g)[0];
+			const drive = line.match(/^(.+?:)/g)[0];
 			if (drive && drive.length) { mappedDrives.push(drive.toLowerCase()); }
 		});
 	}
@@ -755,9 +756,10 @@ function _explorer(fileOrFolder) {
 // Workaround for bug on win 7 on utils.Glob(), matching extensions with same chars: utils.Glob(*.m3u) returns *.m3u8 files too
 function getFiles(folderPath, extensionSet, mask) {
 	folderPath = _resolvePath(folderPath);
-	if (!folderPath.endsWith('\\')) { folderPath += '\\'; }
+	if (!folderPath.includes('?') && !folderPath.includes('*') && !folderPath.endsWith('\\')) { folderPath += '\\'; }
+	if (folderPath.endsWith('\\')) { folderPath += '*.*'; }
 	const bLongPath = _isLongPath(folderPath);
-	const files = utils.Glob((bLongPath ? _longPath(folderPath) : folderPath) + '*.*').filter((item) => {
+	const files = utils.Glob((bLongPath ? _longPath(folderPath) : folderPath)).filter((item) => {
 		return extensionSet.has('.' + item.split('.').pop().toLowerCase());
 	}).map((path) => path.replace(/^\\\\\?\\/, ''));
 	return mask

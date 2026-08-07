@@ -1,13 +1,13 @@
 'use strict';
-//04/08/26
+//07/08/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
-/* global folders:readable, isFoobarV2 */
+/* global folders:readable */
 /* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable, escapeRegExp */
 /* global _resolvePath:readable, getFiles:readable, sortFiles:readable, _isFolder:readable, _isFile:readable */
-/* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable, _gdiFont:readable */
+/* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable, _gdiFont:readable, imgAllowedExt */
 /* global IDC_HAND:readable, IDC_ARROW:readable */
 /* global InterpolationMode:readable, RotateFlipType:readable, Effects:readable, BorderMode:readable, BlendMode:readable, SmoothingMode:readable */
 /* global DT_RIGHT:readable, DT_TOP:readable */
@@ -122,7 +122,7 @@ function _background({
 			this.processArtEffects();
 			return true;
 		}).catch((error) => {
-			if (this.logging.bDebug || this.logging.bError && (!bPath && handle || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
+			if (this.logging.bDebug || this.logging.bError && (!bPath || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
 			this.resetArt();
 			return false;
 		}).finally(() => {
@@ -2082,7 +2082,9 @@ function _background({
 	/** @type {CoverMode[]} - Art types used by panel */
 	const trackCoverModes = ['front', 'back', 'disc', 'icon', 'artist'];
 	/** @type {string[]} - Art extensions used by panel */
-	const artAllowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp', isFoobarV2 ? '.webp' : null].filter(Boolean);
+	const artAllowedExt = typeof imgAllowedExt === 'undefined'
+		? ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp', '.webp']
+		: imgAllowedExt; // Either defined at helpers_xxx_file.js or by third party file
 	/** @typedef {'symmetric'|'asymmetric'|'none'} ReflectionMode - Available reflection modes */
 	/** @typedef {'top'|'center'|'bottom'} FillCropMode - Available fill panel modes */
 	/**

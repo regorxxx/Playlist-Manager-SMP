@@ -78,6 +78,7 @@
 - UI: added new img counter setting to background while using Art by TF mode. See [here]https://hydrogenaudio.org/index.php/topic,116669.msg1083339.html#msg1083339).
 - UI: file/folder (by TF) modes now allow Microsoft MS-DOS wildcards at end of path. See [here](https://ss64.com/nt/syntax-wildcards.html).
 - UI: new art matching file sorting for file/folder (by TF) modes: creation date, explorer order and random order.
+- UI: added support for .webp images on background. Note it requires codec installation on system, i.e. [this](https://apps.microsoft.com/detail/9pg2dk419drg?hl=en-GB&gl=GB) or [this](https://storage.googleapis.com/downloads.webmproject.org/releases/webp/WebpCodecSetup.exe) and a system restart.
 - Exporting Playlist: added new Namida 'Export and convert' preset.
 - External integration: new callbacks.
 	* 'Playlist-Manager-SMP: switch enable panel'		-> { window: string[] }
