@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //06/06/26
 
 /* exported playlistCountLocked, removeNotSelectedTracks, getPlaylistNames, removePlaylistByName, clearPlaylistByName, arePlaylistNamesDuplicated, findPlaylistNamesDuplicated, sendToPlaylist, getHandlesFromUIPlaylists, getLocks, setLocks, getPlaylistSelectedIndexes, getPlaylistSelectedIndexFirst, getPlaylistSelectedIndexLast, getSource, MAX_QUEUE_ITEMS, focusOnItem, findTracksAtPlaylist, hasAnyLocks, movePlaylistSelection, selectTracksAtPlaylist, selectTracksAtPlaylistAndFocus */

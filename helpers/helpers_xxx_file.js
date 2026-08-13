@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/08/26
+//12/08/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt */
 
@@ -465,7 +465,7 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 		console.log('_copyFile: ' + oldFilePath + ' -> ' + newFilePath + '\n\t Error: Path longer than 260 chars.');
 		return false;
 	}
-	const source = oldFilePath.replace(/(([^\\.]*\.\*)|(\*\.[^.]*)|\*\.\*)$/i, '');
+	const source = oldFilePath.replace(/(\\)(?:[^\\.]+\.\*|\*\.[^\\.]+)$/i, '$1');
 	const bWildCard = !_comparePaths(oldFilePath, source);
 	const bTargetFolder = newFilePath.endsWith('\\');
 	if (_comparePaths(oldFilePath, newFilePath)) { return true; }
@@ -754,13 +754,16 @@ function _explorer(fileOrFolder) {
 }
 
 // Workaround for bug on win 7 on utils.Glob(), matching extensions with same chars: utils.Glob(*.m3u) returns *.m3u8 files too
+// Warning: don't use mask for critical performance tasks, since it will have to match the pattern against every found file (m)
+// which implies a utils.PathWildcardMatch call. If getFiles is called n times, thats n x m calls. Just put the mask at the path
+// and limit files with the extensionSet.
 function getFiles(folderPath, extensionSet, mask) {
 	folderPath = _resolvePath(folderPath);
-	if (!folderPath.includes('?') && !folderPath.includes('*') && !folderPath.endsWith('\\')) { folderPath += '\\'; }
+	if (!folderPath.includes('?') && !folderPath.includes('*') && !folderPath.endsWith('\\') && !/\.[a-z1-9]+$/i.test(folderPath)) { folderPath += '\\'; }
 	if (folderPath.endsWith('\\')) { folderPath += '*.*'; }
 	const bLongPath = _isLongPath(folderPath);
 	const files = utils.Glob((bLongPath ? _longPath(folderPath) : folderPath)).filter((item) => {
-		return extensionSet.has('.' + item.split('.').pop().toLowerCase());
+		return extensionSet.has('.' + item.split('.').at(-1).toLowerCase());
 	}).map((path) => path.replace(/^\\\\\?\\/, ''));
 	return mask
 		? files.map((file) => utils.PathWildcardMatch(mask, file) ? file : null).filter(Boolean)
@@ -991,7 +994,7 @@ function sanitize(value) {
 function sanitizePath(value) { // Sanitize illegal chars but skip drive
 	if (!value || !value.length) { return ''; }
 	const disk = (value.match(/^\w:\\/g) || [''])[0];
-	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/ *\/| +\\/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
+	return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\b *\/|\b +\\/g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
 }
 
 function UUID() {
@@ -1075,13 +1078,14 @@ function getFileMeta(file, bParse = false) {
 }
 
 function formatFileSize(val) {
-	const regexTwoDecs = /^(\d*\.\d{2,3})/;
+	const regexTwoDecs = /^(\d+\.\d{2,3})/;
 	const regexHundreds = /^(\d{3,4})/;
-	const regexUnit = /(^\d*.*\d* )(\w*)/;
+	const regexUnit = /^(\d+\.\d+|\d+) (B|KB|MB|GB)/;
 	val = utils.FormatFileSize(val);  // X.XX bb
 	if (regexHundreds.test(val)) {
-		val = val.replace(regexHundreds, round(Number.parseFloat(val.match(regexHundreds)[0] / 1024), 3));
 		const unit = val.match(regexUnit)[2];
+		if (!unit) { return val; }
+		val = val.replace(regexHundreds, round(Number.parseFloat(val.match(regexHundreds)[0] / 1024), 3));
 		let toUnit = '';
 		switch (unit) {
 			case 'B': toUnit = 'KB'; break;
@@ -1089,7 +1093,7 @@ function formatFileSize(val) {
 			case 'MB': toUnit = 'GB'; break;
 			case 'GB': toUnit = 'TB'; break;
 		}
-		val = val.replace(regexUnit, '$1' + toUnit);
+		val = val.replace(regexUnit, '$1 ' + toUnit);
 	}
 	if (regexTwoDecs.test(val)) {
 		val = val.replace(regexTwoDecs, round(Number.parseFloat(val.match(regexTwoDecs)[0]), 1));

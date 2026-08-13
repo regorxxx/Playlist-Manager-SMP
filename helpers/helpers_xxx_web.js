@@ -1,5 +1,5 @@
 'use strict';
-//31/07/26
+//11/08/26
 
 /* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg, HTMLFile */
 
@@ -586,11 +586,11 @@ function encodeUrlParams(params) {
 
 function getCurl(impersonate = globSettings.curlImpersonate) {
 	const curl = [
-		fb.ProfilePath + 'binaries\\',
-		folders.xxx + 'binaries\\',
+		folders.binaries,
+		folders.xxx + folders.binariesName,
 		folders.xxx + 'helpers-external\\',
-		fb.ComponentPath + 'binaries\\',
-		fb.FoobarPath + 'binaries\\'
+		fb.ComponentPath + folders.binariesName,
+		fb.FoobarPath + folders.binariesName
 	]
 		.map((p) => {
 			return {

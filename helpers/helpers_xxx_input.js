@@ -1,5 +1,5 @@
 'use strict';
-//23/06/26
+//10/08/26
 
 /* exported Input */
 
@@ -332,7 +332,7 @@ const Input = Object.freeze({
 	},
 	// Internal helpers
 	cleanCheck: function (func) {
-		return func.toString().replace(/^[^{]*{\s*/, '').replace(/\s*}[^}]*$/, '').replace(/^.*=> /, '');
+		return func.toString().replace(/^[^{]*{\s*/, '').replace(/(\S)\s*}[^}]*$/, '$1').replace(/^.*=> /, '');
 	},
 	sanitizePath: function (value) { // Sanitize illegal chars but skip drive
 		if (!value || !value.length) { return ''; }

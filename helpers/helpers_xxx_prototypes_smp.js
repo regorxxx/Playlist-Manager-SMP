@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/26
+//09/08/26
 
 /* exported extendGR, checkCompatible */
 
@@ -506,15 +506,19 @@ if (FbProfiler) {
 			}
 			return null;
 		}).bind(that);
-		that.CheckPointPrintInterval = (function CheckPointPrintInterval(interval, name, message, options) {
+		that.CheckPointPrintInterval = (function CheckPointPrintInterval(interval, name, message, options, callback) {
+			if (typeof name !== 'string') { throw new TypeError('name is not string'); }
 			const point = this.CheckPoints.find((check) => check.name.toLowerCase() === name.toLowerCase());
 			if (point) {
 				if (point.report.id !== null) { clearInterval(point.report.id); point.report.id = null; }
 				point.report.interval = interval || 0;
 				if (point.report.interval) {
-					point.report.id = setInterval(() => this.CheckPointPrint(name, message, options), interval);
+					point.report.id = setInterval(() => {
+						if (callback && callback(point)) { return; }
+						this.CheckPointPrint(name, message, options);
+					}, interval);
 				}
-				return true;
+				return point.report.id !== null;
 			}
 			return null;
 		}).bind(that);
