@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/07/26
+//14/08/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
 
@@ -292,35 +292,37 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		weekFirstDay.setDate(date.getDate() - date.getDay() + (date.getDay() == 0 ? -6 : 1));
 		const prevWeekFirstDay = new Date(weekFirstDay);
 		prevWeekFirstDay.setDate(weekFirstDay.getDate() - 7);
-		query = query.replace(/#DECADE#/gi, Math.floor(date.getFullYear() / 10).toString() + '0s');
-		query = query.replace(/#PREVDECADE#/gi, (Math.floor(date.getFullYear() / 10) - 1).toString() + '0s');
-		query = query.replace(/#YEAR#/gi, date.getFullYear().toString());
-		query = query.replace(/#PREVYEAR#/gi, (date.getFullYear() - 1).toString());
-		query = query.replace(/#MONTH#/gi, (date.getMonth() + 1).toString());
-		query = query.replace(/#MMONTH#/gi, ('0' + (date.getMonth() + 1).toString()).slice(-2));
-		query = query.replace(/#PREVMONTH#/gi, (date.getMonth() - 1).toString());
-		query = query.replace(/#PREVMMONTH#/gi, ('0' + (date.getMonth() - 1).toString()).slice(-2));
-		query = query.replace(/#WEEK#/gi, weekFirstDay.getDate().toString());
-		query = query.replace(/#DWEEK#/gi, ('0' + weekFirstDay.getDate().toString()).slice(-2));
-		query = query.replace(/#PREVWEEK#/gi, prevWeekFirstDay.getDate().toString());
-		query = query.replace(/#PREVDWEEK#/gi, ('0' + prevWeekFirstDay.getDate().toString()).slice(-2));
-		query = query.replace(/#DAY#/gi, date.getDate().toString());
-		query = query.replace(/#DDAY#/gi, ('0' + date.getDate().toString()).slice(-2));
-		query = query.replace(/#(NOW|TODAY)#/gi, date.toISOString().split('T')[0]);
-		query = query.replace(/#(NOW|TODAY)_TS#/gi, Math.round(date.getTime() / 1000));
-		query = query.replace(/#(YESTER|PREV)DAY#/gi, yesterday.toISOString().split('T')[0]);
-		query = query.replace(/#(YESTER|PREV)DAY_TS#/gi, Math.round(date.getTime() / 1000));
+		query = query.replace(/#DECADE#/gi, () => Math.floor(date.getFullYear() / 10).toString() + '0s');
+		query = query.replace(/#PREVDECADE#/gi, () => (Math.floor(date.getFullYear() / 10) - 1).toString() + '0s');
+		query = query.replace(/#YEAR#/gi, () => date.getFullYear().toString());
+		query = query.replace(/#PREVYEAR#/gi, () => (date.getFullYear() - 1).toString());
+		query = query.replace(/#MONTH#/gi, () => (date.getMonth() + 1).toString());
+		query = query.replace(/#MMONTH#/gi, () => ('0' + (date.getMonth() + 1).toString()).slice(-2));
+		query = query.replace(/#PREVMONTH#/gi, () => (date.getMonth() - 1).toString());
+		query = query.replace(/#PREVMMONTH#/gi, () => ('0' + (date.getMonth() - 1).toString()).slice(-2));
+		query = query.replace(/#WEEK#/gi, () => weekFirstDay.getDate().toString());
+		query = query.replace(/#DWEEK#/gi, () => ('0' + weekFirstDay.getDate().toString()).slice(-2));
+		query = query.replace(/#PREVWEEK#/gi, () => prevWeekFirstDay.getDate().toString());
+		query = query.replace(/#PREVDWEEK#/gi, () => ('0' + prevWeekFirstDay.getDate().toString()).slice(-2));
+		query = query.replace(/#DAY#/gi, () => date.getDate().toString());
+		query = query.replace(/#DDAY#/gi, () => ('0' + date.getDate().toString()).slice(-2));
+		query = query.replace(/#(NOW|TODAY)#/gi, () => date.toISOString().split('T')[0]);
+		query = query.replace(/#(NOW|TODAY)_TS#/gi, () => Math.round(date.getTime() / 1000));
+		query = query.replace(/#(YESTER|PREV)DAY#/gi, () => yesterday.toISOString().split('T')[0]);
+		query = query.replace(/#(YESTER|PREV)DAY_TS#/gi, () => Math.round(date.getTime() / 1000));
 	}
 	// System
 	if (/#(VOLUME(DB)?|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
-		query = query.replace(/#VOLUME#/gi, Math.round(100 + fb.Volume));
-		query = query.replace(/#VOLUMEDB#/gi, fb.Volume.toFixed(2) + ' dB');
+		query = query.replace(/#VOLUME#/gi, () => Math.round(100 + fb.Volume));
+		query = query.replace(/#VOLUMEDB#/gi, () => fb.Volume.toFixed(2) + ' dB');
 		query = query.replace(/#VERSION#/gi, () => fb.Version);
-		query = query.replace(/#ISPLAYING#/gi, () => fb.IsPlaying ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
-		query = query.replace(/#ISPAUSED#/gi, () => fb.IsPaused ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
-		query = query.replace(/#PLAYSTATE#/gi, fb.IsPlaying ? (fb.IsPaused ? 'Paused' : 'Playing') : 'Stopped');
-		query = query.replace(/#SAC#/gi, () => fb.StopAfterCurrent ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
-		query = query.replace(/#PLSCOUNT#/gi, plman.PlaylistCount);
+		query = query.replace(/#PLAYSTATE#/gi, () => fb.IsPlaying ? (fb.IsPaused ? 'Paused' : 'Playing') : 'Stopped');
+		query = query.replace(/#SAC#/gi, () => () => fb.StopAfterCurrent ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/#PLSCOUNT#/gi, () => plman.PlaylistCount);
+	}
+	if (/[#%](ISPLAYING|ISPAUSED)[#%]/i.test(query)) {
+		query = query.replace(/[#%]ISPLAYING[#%]/gi, () => fb.IsPlaying ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
+		query = query.replace(/[#%]ISPAUSED[#%]/gi, () => fb.IsPaused ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
 	}
 	if (/#(DEVICE(ID)?)#/i.test(query)) {
 		let device;
@@ -335,7 +337,7 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 			'album',
 			'by Playback Order',
 		];
-		query = query.replace(/#RGMODE#/gi, rgModes[fb.ReplaygainMode]);
+		query = query.replace(/#RGMODE#/gi, () => rgModes[fb.ReplaygainMode]);
 	}
 	if (/#(PLAYMODE)#/i.test(query)) {
 		const playModes = [
@@ -347,14 +349,14 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 			'shuffle (albums',
 			'shuffle (folders)'
 		];
-		query = query.replace(/#PLAYMODE#/gi, playModes[plman.PlaybackOrder]);
+		query = query.replace(/#PLAYMODE#/gi, () => playModes[plman.PlaybackOrder]);
 	}
 	// Selection
 	if (/#(SEL(TRACKS|DURATION|SIZE))#/i.test(query)) {
 		const sel = fb.GetSelections(1);
-		query = query.replace(/#SELTRACKS#/gi, sel ? sel.Count : 0);
-		query = query.replace(/#SELDURATION#/gi, sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
-		query = query.replace(/#SELSIZE#/gi, sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
+		query = query.replace(/#SELTRACKS#/gi, () => sel ? sel.Count : 0);
+		query = query.replace(/#SELDURATION#/gi, () => sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#SELSIZE#/gi, () => sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
 	}
 	// Selection (system)
 	if (/#(SELTYPE)#/i.test(query)) {
@@ -384,32 +386,32 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 	// Playlist
 	if (/#(PLS(IDX|NAME|TRACKS|ISAUTOPLS|ISLOCKED|LOCKS|LOCKNAME))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
-		query = query.replace(/#PLSIDX#/gi, pls === -1 ? '?' : pls);
-		query = query.replace(/#PLSNAME#/gi, pls === -1 ? '?' : plman.GetPlaylistName(pls));
-		query = query.replace(/#PLSTRACKS#/gi, pls === -1 ? '0' : plman.PlaylistItemCount(pls));
-		query = query.replace(/#PLSISAUTOPLS#/gi, pls === -1 ? '' : (plman.IsAutoPlaylist(pls) ? 1 + (bBooleanForce ? '$not(0)' : '') : ''));
-		query = query.replace(/#PLSISLOCKED#/gi, pls === -1 ? '' : (plman.IsAutoPlaylist(pls) ? 1 + (bBooleanForce ? '$not(0)' : '') : ''));
-		query = query.replace(/#PLSLOCKS#/gi, pls === -1 ? '' : plman.GetPlaylistLockedActions(pls).sort(strNumCollator.compare).join(', '));
-		query = query.replace(/#PLSLOCKNAME#/gi, pls === -1 ? '' : plman.GetPlaylistLockName(pls) || '');
+		query = query.replace(/#PLSIDX#/gi, () => pls === -1 ? '?' : pls);
+		query = query.replace(/#PLSNAME#/gi, () => pls === -1 ? '?' : plman.GetPlaylistName(pls));
+		query = query.replace(/#PLSTRACKS#/gi, () => pls === -1 ? '0' : plman.PlaylistItemCount(pls));
+		query = query.replace(/#PLSISAUTOPLS#/gi, () => pls === -1 ? '' : (plman.IsAutoPlaylist(pls) ? 1 + (bBooleanForce ? '$not(0)' : '') : ''));
+		query = query.replace(/#PLSISLOCKED#/gi, () => pls === -1 ? '' : (plman.IsAutoPlaylist(pls) ? 1 + (bBooleanForce ? '$not(0)' : '') : ''));
+		query = query.replace(/#PLSLOCKS#/gi, () => pls === -1 ? '' : plman.GetPlaylistLockedActions(pls).sort(strNumCollator.compare).join(', '));
+		query = query.replace(/#PLSLOCKNAME#/gi, () => pls === -1 ? '' : plman.GetPlaylistLockName(pls) || '');
 	}
 	if (/#(PLSPLAY(IDX|NAME|TRACKS))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
-		query = query.replace(/#PLSPLAYIDX#/gi, pls === -1 ? '?' : pls);
-		query = query.replace(/#PLSPLAYNAME#/gi, pls === -1 ? '?' : plman.GetPlaylistName(pls));
-		query = query.replace(/#PLSPLAYTRACKS#/gi, pls === -1 ? '0' : plman.PlaylistItemCount(pls));
+		query = query.replace(/#PLSPLAYIDX#/gi, () => pls === -1 ? '?' : pls);
+		query = query.replace(/#PLSPLAYNAME#/gi, () => pls === -1 ? '?' : plman.GetPlaylistName(pls));
+		query = query.replace(/#PLSPLAYTRACKS#/gi, () => pls === -1 ? '0' : plman.PlaylistItemCount(pls));
 	}
 	// Playlist items
 	if (/#(PLS(DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
 		const plsItems = pls === -1 ? null : plman.GetPlaylistItems(pls);
-		query = query.replace(/#PLSDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
-		query = query.replace(/#PLSSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
+		query = query.replace(/#PLSDURATION#/gi, () => plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#PLSSIZE#/gi, () => plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
 	if (/#(PLSPLAY(DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
 		const plsItems = pls === -1 ? null : plman.GetPlaylistItems(pls);
-		query = query.replace(/#PLSPLAYDURATION#/gi, plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
-		query = query.replace(/#PLSPLAYSIZE#/gi, plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
+		query = query.replace(/#PLSPLAYDURATION#/gi, () => plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
+		query = query.replace(/#PLSPLAYSIZE#/gi, () => plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
 	return query;
 }
@@ -613,7 +615,7 @@ function checkQuery(query, bAllowEmpty = false, bAllowSort = false, bAllowPlayli
 		if (hasQueryExpression(queryNoSort)) {
 			try { fb.GetQueryItems(new FbMetadbHandleList(), '* HAS \'\' AND ' + _p(queryNoSort)); }  // Some expressions only throw inside parentheses!
 			catch (e) { bPass = false; } // eslint-disable-line no-unused-vars
-		} else if (/\$.*\(.*\)/.test(queryNoSort)) { bPass = false; }
+		} else if (/\$\w+\(.*\)/.test(queryNoSort)) { bPass = false; }
 	}
 	if (!bAllowPlaylist && queryNoSort && new RegExp(/#(?:PLAYLIST|playlist)# IS/).test(queryNoSort)) { bPass = false; }
 	return bPass;
@@ -662,14 +664,14 @@ function checkSort(queryOrSort) {
  */
 function stripSort(query) {
 	let queryNoSort = query;
-	if (query.includes(' SORT ')) {
+	if (query.includes(' SORT ') || query.startsWith('SORT ')) {
 		stripSort.re.some((re) => {
 			if (re.test(query)) { queryNoSort = query.split(re)[0]; return true; }
 		}) || (queryNoSort = '');
 	}
 	return queryNoSort.trim();
 }
-stripSort.re = [new RegExp(/ SORT\s+BY\s+$/), new RegExp(/ SORT\s+DESCENDING\s+BY\s+/), new RegExp(/ SORT\s+ASCENDING\s+BY\s+/)];
+stripSort.re = [new RegExp(/ ?SORT\s+BY\s+$/), new RegExp(/ ?SORT\s+DESCENDING\s+BY\s+/), new RegExp(/ ?SORT\s+ASCENDING\s+BY\s+/)];
 
 /**
  * Process a sort or query string and outputs a sort object with direction, TF and tags
@@ -688,8 +690,8 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	if (sort.length) {
 		sortObj = {};
 		[sortObj.direction, sortObj.tag] = sort.split(' BY ').map((s) => s.trim());
-		if (!sortObj.tag || !sortObj.tag.length || !new RegExp(/"*\$.+\(.*\)"*$|%.+%$/).exec(sortObj.tag)) { sortObj = null; }
-		else if (new RegExp(/SORT$|SORT\s+ASCENDING$/).test(sortObj.direction)) { sortObj.direction = 1; }
+		if (!sortObj.tag || !sortObj.tag.length || !new RegExp(/("?\$\w+\(.*\)"?|%\w+%)$/).test(sortObj.tag)) { sortObj = null; }
+		else if (new RegExp(/(SORT|SORT\s+ASCENDING)$/).test(sortObj.direction)) { sortObj.direction = 1; }
 		else if (new RegExp(/SORT\s+DESCENDING$/).test(sortObj.direction)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
 	}
