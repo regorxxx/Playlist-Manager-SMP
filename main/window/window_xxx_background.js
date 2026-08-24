@@ -1,5 +1,5 @@
 'use strict';
-//07/08/26
+//19/08/26
 
 /* exported _background */
 
@@ -1649,7 +1649,7 @@ function _background({
 			? (mask, gr, w, h) => {
 				this.paintImage({
 					gr,
-					limits: { x: 0, y: 0, w, h, offsetH: this.offsetH },
+					limits: { x: 0, y: 0, w: w + 2, h: h + 2, offsetH: this.offsetH },
 					img: this.coverMasks.images[idx],
 					fill: RGBA(0, 0, 0),
 					options: { alpha: 255 }
