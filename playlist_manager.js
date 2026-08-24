@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/06/26
+//17/08/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -8,7 +8,7 @@
 
 /* exported delayAutoUpdate, plsRwLock */
 
-if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist-Manager-SMP', { author: 'regorxxx', version: '1.0.0-beta.9', features: { drag_n_drop: true, grab_focus: true } }); }
+if (!window.ScriptInfo.PackageId) { window.DefineScript('Playlist-Manager-SMP', { author: 'regorxxx', version: '1.0.0-beta.10', features: { drag_n_drop: true, grab_focus: true } }); }
 
 // GDI/D2D draw mode
 window.DrawMode = Math.max(Math.min(window.GetProperty('Draw mode: GDI (0), D2D (1)', 0), 1), 0);

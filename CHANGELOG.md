@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.10](#100-beta10---2026-08-24)
 - [1.0.0-beta.9](#100-beta9---2026-04-28)
 - [1.0.0-beta.8](#100-beta8---2026-01-12)
 - [1.0.0-beta.7](#100-beta7---2025-12-23)
@@ -70,6 +71,12 @@
 - [0.1.0](#010---2021-05-02)
 
 ## [Unreleased][]
+### Added
+### Changed
+### Removed
+### Fixed
+
+## [1.0.0-beta.10] - 2026-08-24
 ### Added
 - UI: added playlist revive tool to playlist contextual menu (within 'Other tools' submenu).
 - UI: added loaded status icon setting for UI-only playlists on non-lite mode; disabled by default. See [here](https://hydrogenaudio.org/index.php/topic,120979.msg1082334.html#msg1082334).
@@ -1633,7 +1640,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.9...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.10...HEAD
+[1.0.0-beta.10]: ../../compare/v1.0.0-beta.9...v1.0.0-beta.10
 [1.0.0-beta.9]: ../../compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: ../../compare/v1.0.0-beta.7...v1.0.0-beta.8
 [1.0.0-beta.7]: ../../compare/v1.0.0-beta.6...v1.0.0-beta.7
