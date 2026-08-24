@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/08/26
+//24/08/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt */
 
@@ -772,7 +772,7 @@ function getFiles(folderPath, extensionSet, mask) {
 
 function _run() {
 	try {
-		WshShell.Run(Array.from(arguments, (arg) => /^(CMD |")/gi.test(arg) ? arg : _q(arg)).join(' '));
+		WshShell.Run(Array.from(arguments, (arg) => /^(?:CMD |")/gi.test(arg) ? arg : _q(arg)).join(' '));
 		return true;
 	} catch (e) { // eslint-disable-line no-unused-vars
 		return false;
@@ -781,7 +781,7 @@ function _run() {
 
 function _runHidden() {
 	try {
-		WshShell.Run(Array.from(arguments, (arg) => /^(CMD |")/gi.test(arg) ? arg : _q(arg)).join(' '), 0, true);
+		WshShell.Run(Array.from(arguments, (arg) => /^(?:CMD |")/gi.test(arg) ? arg : _q(arg)).join(' '), 0, true);
 		return true;
 	} catch (e) { // eslint-disable-line no-unused-vars
 		return false;

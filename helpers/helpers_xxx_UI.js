@@ -1,5 +1,5 @@
 'use strict';
-//22/07/26
+//18/08/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -546,6 +546,7 @@ function applyEffectAsMask(img, effectCallback, maskCallback, bInvertMask) {
  * @returns {D2DEffect}
  */
 function applyEffectAsMaskEffect(img, source, effectCallback, maskCallback, bInvertMask) {
+	if (window.DrawMode !== 1) { throw new Error('Effects can only be used on D2D mode.'); }
 	const effect = effectCallback(img, source);
 	const mask = gdi.CreateImage(img.Width, img.Height);
 	const maskGr = mask.GetGraphics();
@@ -575,6 +576,7 @@ function applyEffectAsMaskEffect(img, source, effectCallback, maskCallback, bInv
  * @returns {D2DBitmap}
  */
 function applyEffect(img, effectCallback, imgDest = d2d.CreateImage(img.Width, img.Height), composite = 0) {
+	if (window.DrawMode !== 1) { throw new Error('Effects can only be used on D2D mode.'); }
 	const effect = effectCallback(img, img.Width, img.Height);
 	if (effect) {
 		const imgGr = (imgDest || img).GetGraphics();

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/06/26
+//24/08/26
 
 /* exported _list */
 
@@ -103,7 +103,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	const regexDay = /^\dd/;
 	const regexTwoDecs = /^(\d*\.\d{2,3})/;
 	const regexHundreds = /^(\d{3,4})/;
-	const regexUnit = /(^\d*.*\d* )(\w*)/;
+	const regexUnit = /^(\d+\.\d+|\d+) (B|KB|MB|GB)/;
 	const quickSearchRe = /[0-z]/; // Equal to [_A-z0-9]
 	const playlistRe = /playlist/gi;
 	const bFplWrite = writablePlaylistFormats.has('.fpl');
@@ -7927,7 +7927,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		} catch (e) { /* empty */ } // eslint-disable-line no-unused-vars
 		if (bRegExp) {
 			const playlists = getPlaylistNames();
-			idx = (playlists.find((pls) => { return name.test(pls.name); }) || { idx: -1 }).idx;
+			idx = (playlists.find((pls) => name.test(pls.name)) || { idx: -1 }).idx;
 		} else {
 			idx = plman.FindPlaylist(name);
 		}

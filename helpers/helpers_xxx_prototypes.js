@@ -1,7 +1,7 @@
-﻿'use strict';
-//04/08/26
+'use strict';
+//21/08/26
 
-/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime, smartCut */
+/* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime, smartCut, NestedHashMap */
 
 include('helpers_xxx_basic_js.js');
 /* global require:readable, strNumCollator:readable */
@@ -703,10 +703,39 @@ if (!Array.prototype.joinLast) {
 }
 
 if (!Array.prototype.average) {
+	// Iterative method to minimize overflow situations
 	Array.prototype.average = function (fn) { // NOSONAR
 		return (fn ? this.map(fn) : this).reduce((prev, curr, i) => prev + (curr - prev) / (i + 1), 0);
 	};
 }
+
+if (!Array.prototype.max) {
+	Array.prototype.max = function (fn) { // NOSONAR
+		let max = -Infinity;
+		for (let val of (fn ? this.map(fn) : this)) {
+			if (val > max) {
+				max = val;
+				if (max === Infinity) { break; }
+			}
+		}
+		return max;
+	};
+}
+
+if (!Array.prototype.min) {
+	Array.prototype.min = function (fn) { // NOSONAR
+		let min = Infinity;
+		for (let val of (fn ? this.map(fn) : this)) {
+			if (val < min) {
+				min = val;
+				if (min === -Infinity) { break; }
+			}
+		}
+		return min;
+	};
+}
+
+//
 
 // Fisher-Yates algorithm on multiple arrays at the same time
 if (!Array.shuffle) {
@@ -1086,3 +1115,83 @@ const regExBool = /^b[A-Z]\w*/;
 */
 // Allows forward and backward iteration
 try { include('..\\helpers-external\\reverse-iterable-map-5.0.0\\reverse-iterable-map.js'); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
+
+function NestedHashMap(levels = 2) {
+	this._map = new Map();
+	this._keys = new Set();
+	this._entries = [];
+	this.findParent = function (key) {
+		let entry = this._map;
+		for (let i = 0; i < levels - 1; i++) {
+			if (!entry) { break; }
+			const subKey = key[i] || '';
+			entry = entry.get(subKey);
+		}
+		return entry;
+	};
+	this.get = function (key) {
+		const parent = this.findParent(key);
+		return parent
+			? parent.get(key)
+			: void (0);
+	};
+	this.set = function (key, value) {
+		let entry = this._map;
+		let temp;
+		for (let i = 0; i < levels - 1; i++) {
+			const subKey = key[i] || '';
+			temp = entry.get(subKey);
+			if (temp) {
+				entry = temp;
+			} else {
+				temp = new Map();
+				entry.set(subKey, temp);
+				entry = temp;
+			}
+		}
+		this._keys.add(key);
+		this._entries.push([key, value]);
+		return entry.set(key, value);
+	};
+	this.keys = function () {
+		return [...this._keys];
+	};
+	this.iterateChildren = function ({ entry }, fn) {
+		return this.iterate({ entry }, fn, 0, levels);
+	};
+	this.iterate = function ({ entry, key }, fn, from = 0, to = levels - 1) {
+		if (from === to) { return fn(entry, key); }
+		const temp = [...entry.entries()];
+		for (let val of temp) { this.iterate({ entry: val[1], key: val[0] }, fn, from + 1, to); }
+	};
+	this.values = function () {
+		const values = [];
+		this.iterateChildren({ entry: this._map }, (v) => values.push(v));
+		return values;
+	};
+	this.clear = function () {
+		for (let i = levels - 1; i >= 0; i--) {
+			this.iterate({ entry: this._map }, (v) => v.clear(), 0, i);
+		}
+		this._keys.clear();
+		this._entries.length = 0;
+	};
+	this.delete = function (key) {
+		const parent = this.findParent(key);
+		if (parent) {
+			this._keys.delete(key);
+			return parent.delete(key);
+		}
+		return false;
+	};
+	this.forEach = function (fn) {
+		this._entries.forEach(([k, v]) => fn(v,k));
+		// this.iterateChildren({ entry: this._map }, (v, k) => fn.call(thisArg, v, k));
+	};
+	this.size; // NOSONAR
+	Object.defineProperty(this, 'size', {
+		enumerable: true,
+		configurable: false,
+		get: () => this._keys.size
+	});
+}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/08/25
+//24/08/26
 
 /* global SimpleCrypto:readable */
 include('..\\..\\helpers\\helpers_xxx_basic_js.js');
@@ -89,7 +89,7 @@ youTube.searchForYoutubeTrack = async function searchForYoutubeTrack({ title, cr
 					const conditions = [
 						{ re: new RegExp('.*' + escapeRegExp(title) + '.*', 'i'), match: true, score: 35 }, // V2 escape sometimes fail...
 						{ re: new RegExp('.*' + escapeRegExp(creator) + '.*', 'i'), match: true, score: 35 },
-						{ re: /.*(live|bootleg|cover|karaoke|performed by).*/i, match: false, score: 30 },
+						{ re: /(live|bootleg|cover|karaoke|performed by)/i, match: false, score: 30 },
 					];
 					videos.forEach((vid) => {
 						conditions.forEach((cond) => {

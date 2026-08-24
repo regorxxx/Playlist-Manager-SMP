@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/05/26
+//24/08/26
 
 /* exported FPL */
 
@@ -54,7 +54,7 @@ const FPL = {
 			hexArr = hexArr.join('').split('\x00').slice(16, -1);
 			playlist.meta.push({ magic: fileMagic.join() });
 		}
-		const fileRegex = /^file(-relative)?:\/+/i;
+		const fileRegex = /^(?:unpack:.*)?file(?:-relative)?:\/+/i;
 		const tracks = hexArr.map((s) => (fileRegex.test(s) ? s : null)).filter(Boolean);
 		const tracksLen = tracks.length;
 		playlist.creator = 'foobar2000';

@@ -1,5 +1,5 @@
-﻿'use strict';
-//17/04/26
+'use strict';
+//24/08/26
 
 /* exported ImportTextPlaylist */
 
@@ -204,7 +204,7 @@ const ImportTextPlaylist = Object.seal(Object.freeze({
 		if (typeof text !== 'undefined' && text.length) {
 			const maskLength = formatMask.length;
 			let lines = text.length;
-			const tagRe = /%(\w|\s)*%|\$\w+?\((\w|\s)*\)/i;
+			const tagRe = /%(?:\w|\s)*%|\$\w+?\((?:\w|\s)*\)/i;
 			const formatTags = formatMask.map((mask) => tagRe.test(mask) ? mask : null);
 			for (let j = 0; j < lines; j++) {
 				const line = text[j];

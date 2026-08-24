@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/07/26
+//24/08/26
 
 /* exported ListenBrainz */
 
@@ -64,7 +64,7 @@ const ListenBrainz = {
 */
 
 /** RegExp to match ListenBrainz related urls */
-ListenBrainz.regEx = /(^https:\/\/(listenbrainz|musicbrainz).org\/)|(recording)|(playlist)|(artist)|\//g;
+ListenBrainz.regEx = /(^https:\/\/(?:listenbrainz|musicbrainz).org\/)(?:recording|playlist|artist|track|release)?\/?/g;
 /** Profiling setting */
 ListenBrainz.bProfile = false;
 /** Cache related settings (during session) */
@@ -903,7 +903,7 @@ ListenBrainz.getFeedback = async function getFeedback(handleList, user, token, b
 		},
 		(reject) => {
 			console.log('getFeedback: ' + reject.status + ' ' + reject.responseText);
-			if (reject.status === 400 && /No valid recording msid or recording mbid found/.test(reject.responseText)) {
+			if (reject.status === 400 && (reject.responseText || '').includes('No valid recording msid or recording mbid found')) {
 				return mbid.map(() => { return { ...noData }; });
 			}
 			return [];

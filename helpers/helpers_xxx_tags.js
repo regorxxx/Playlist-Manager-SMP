@@ -1,7 +1,7 @@
 ﻿'use strict';
-//14/08/26
+//24/08/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets, toFbDateString */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable, globQuery:readable, MF_STRING:readable, MF_GRAYED:readable */
@@ -15,7 +15,7 @@ include('helpers_xxx_cache_volatile.js');
 */
 const tagsVolatileCache = new VolatileCache(1000); // Deleted every 1000 ms
 const subsongRegex = /,\d+$/;
-const fileRegex = /^(unpack:.*)?file(-relative)?:\/+/i;
+const fileRegex = /^(?:unpack:.*)?file(?:-relative)?:\/+/i;
 
 // Tags descriptors:
 // Always use .toLowerCase first before checking if the set has the string. For ex
@@ -165,7 +165,7 @@ function queryReplaceWithCurrent(query, handle, tags = {}, { expansionBy = 'AND'
 			if (!tags) { console.log('queryReplaceWithCurrent(): handle is null'); return null; }
 		} else { return query; }
 	}
-	if (/#NEXTKEY#|#PREVKEY#/i.test(query)) { console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return null; }
+	if (/#(?:NEXTKEY|PREVKEY)#/i.test(query)) { console.log('queryReplaceWithCurrent(): found NEXTKEY|PREVKEY placeholders'); return null; }
 	if (query.includes('#')) {
 		if (/%ALBUM ARTIST% (IS|HAS) #ALBUM ARTIST#/i.test(query) && !/%?ARTIST%? (IS|HAS) #ARTIST#/i.test(query)) {
 			query = query
@@ -284,7 +284,7 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 	if (bDebug) { console.log('Initial query:', query); }
 	if (!query.length) { console.log('queryReplaceWithStatic(): query is empty'); return ''; }
 	// Dates
-	if (/#((PREV)?(DECADE|YEAR|(M)?MONTH|(D)?DAY|(D)?WEEK)|NOW(_TS)?|TODAY(_TS)?|(YESTER|PREV)DAY(_TS)?)#/i.test(query)) {
+	if (/#(?:(?:PREV)?(?:DECADE|YEAR|(?:M)?MONTH|(?:D)?DAY|(?:D)?WEEK))#/i.test(query) || /#(?:NOW(?:_TS)?|TODAY(?:_TS)?|(?:YESTER|PREV)DAY(?:_TS)?)#/i.test(query)) {
 		const date = new Date();
 		const yesterday = new Date(date);
 		yesterday.setDate(date.getDate() - 1);
@@ -306,13 +306,13 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		query = query.replace(/#PREVDWEEK#/gi, () => ('0' + prevWeekFirstDay.getDate().toString()).slice(-2));
 		query = query.replace(/#DAY#/gi, () => date.getDate().toString());
 		query = query.replace(/#DDAY#/gi, () => ('0' + date.getDate().toString()).slice(-2));
-		query = query.replace(/#(NOW|TODAY)#/gi, () => date.toISOString().split('T')[0]);
-		query = query.replace(/#(NOW|TODAY)_TS#/gi, () => Math.round(date.getTime() / 1000));
-		query = query.replace(/#(YESTER|PREV)DAY#/gi, () => yesterday.toISOString().split('T')[0]);
-		query = query.replace(/#(YESTER|PREV)DAY_TS#/gi, () => Math.round(date.getTime() / 1000));
+		query = query.replace(/#(?:NOW|TODAY)#/gi, () => date.toISOString().split('T')[0]);
+		query = query.replace(/#(?:NOW|TODAY)_TS#/gi, () => Math.round(date.getTime() / 1000));
+		query = query.replace(/#(?:YESTER|PREV)DAY#/gi, () => yesterday.toISOString().split('T')[0]);
+		query = query.replace(/#(?:YESTER|PREV)DAY_TS#/gi, () => Math.round(date.getTime() / 1000));
 	}
 	// System
-	if (/#(VOLUME(DB)?|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
+	if (/#(?:VOLUME(?:DB)?|VERSION|ISPLAYING|ISPAUSED|PLAYSTATE|SAC|PLSCOUNT)#/i.test(query)) {
 		query = query.replace(/#VOLUME#/gi, () => Math.round(100 + fb.Volume));
 		query = query.replace(/#VOLUMEDB#/gi, () => fb.Volume.toFixed(2) + ' dB');
 		query = query.replace(/#VERSION#/gi, () => fb.Version);
@@ -320,17 +320,17 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		query = query.replace(/#SAC#/gi, () => () => fb.StopAfterCurrent ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/#PLSCOUNT#/gi, () => plman.PlaylistCount);
 	}
-	if (/[#%](ISPLAYING|ISPAUSED)[#%]/i.test(query)) {
+	if (/[#%](?:ISPLAYING|ISPAUSED)[#%]/i.test(query)) {
 		query = query.replace(/[#%]ISPLAYING[#%]/gi, () => fb.IsPlaying ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
 		query = query.replace(/[#%]ISPAUSED[#%]/gi, () => fb.IsPaused ? '1' + (bBooleanForce ? '$not(0)' : '') : '');
 	}
-	if (/#(DEVICE(ID)?)#/i.test(query)) {
+	if (/#(?:DEVICE(?:ID)?)#/i.test(query)) {
 		let device;
 		try { device = JSON.parse(fb.GetOutputDevices()).find((d) => d.active); } catch { } // eslint-disable-line no-empty
 		query = query.replace(/#DEVICE#/gi, () => device ? device.name : '?');
 		query = query.replace(/#DEVICEID#/gi, () => device ? device.device_id : '?');
 	}
-	if (/#(RGMODE)#/i.test(query)) {
+	if (/#(?:RGMODE)#/i.test(query)) {
 		const rgModes = [
 			'disabled',
 			'track',
@@ -339,7 +339,7 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		];
 		query = query.replace(/#RGMODE#/gi, () => rgModes[fb.ReplaygainMode]);
 	}
-	if (/#(PLAYMODE)#/i.test(query)) {
+	if (/#(?:PLAYMODE)#/i.test(query)) {
 		const playModes = [
 			'default',
 			'repeat (playlist)',
@@ -352,14 +352,14 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		query = query.replace(/#PLAYMODE#/gi, () => playModes[plman.PlaybackOrder]);
 	}
 	// Selection
-	if (/#(SEL(TRACKS|DURATION|SIZE))#/i.test(query)) {
+	if (/#(?:SEL(?:TRACKS|DURATION|SIZE))#/i.test(query)) {
 		const sel = fb.GetSelections(1);
 		query = query.replace(/#SELTRACKS#/gi, () => sel ? sel.Count : 0);
 		query = query.replace(/#SELDURATION#/gi, () => sel ? utils.FormatDuration(sel.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#SELSIZE#/gi, () => sel ? utils.FormatFileSize(sel.CalcTotalSize()) : '0 B');
 	}
 	// Selection (system)
-	if (/#(SELTYPE)#/i.test(query)) {
+	if (/#(?:SELTYPE)#/i.test(query)) {
 		const selTypes = [
 			'undefined $char(40)no item$char(41)',
 			'active playlist',
@@ -372,7 +372,7 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		query = query.replace(/#SELTYPE#/gi, () => selTypes[fb.GetSelectionType()]);
 	}
 	// Selection (focus)
-	if (/#(SEL(PLAYING|INLIBRARY))#/i.test(query)) {
+	if (/#(?:SEL(?:PLAYING|INLIBRARY))#/i.test(query)) {
 		const sel = fb.GetFocusItem(true);
 		query = query.replace(/#SELPLAYING#/gi, sel ? (() => {
 			const np = fb.GetNowPlaying();
@@ -384,7 +384,7 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		query = query.replace(/#SELINLIBRARY#/gi, () => sel ? fb.IsMetadbInMediaLibrary(sel) + (bBooleanForce ? '$not(0)' : '') : '');
 	}
 	// Playlist
-	if (/#(PLS(IDX|NAME|TRACKS|ISAUTOPLS|ISLOCKED|LOCKS|LOCKNAME))#/i.test(query)) {
+	if (/#(?:PLS(?:IDX|NAME|TRACKS|ISAUTOPLS|ISLOCKED|LOCKS|LOCKNAME))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
 		query = query.replace(/#PLSIDX#/gi, () => pls === -1 ? '?' : pls);
 		query = query.replace(/#PLSNAME#/gi, () => pls === -1 ? '?' : plman.GetPlaylistName(pls));
@@ -394,20 +394,20 @@ function queryReplaceWithStatic(query, { bDebug = false, bBooleanForce = true } 
 		query = query.replace(/#PLSLOCKS#/gi, () => pls === -1 ? '' : plman.GetPlaylistLockedActions(pls).sort(strNumCollator.compare).join(', '));
 		query = query.replace(/#PLSLOCKNAME#/gi, () => pls === -1 ? '' : plman.GetPlaylistLockName(pls) || '');
 	}
-	if (/#(PLSPLAY(IDX|NAME|TRACKS))#/i.test(query)) {
+	if (/#(?:PLSPLAY(?:IDX|NAME|TRACKS))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
 		query = query.replace(/#PLSPLAYIDX#/gi, () => pls === -1 ? '?' : pls);
 		query = query.replace(/#PLSPLAYNAME#/gi, () => pls === -1 ? '?' : plman.GetPlaylistName(pls));
 		query = query.replace(/#PLSPLAYTRACKS#/gi, () => pls === -1 ? '0' : plman.PlaylistItemCount(pls));
 	}
 	// Playlist items
-	if (/#(PLS(DURATION|SIZE))#/i.test(query)) {
+	if (/#(?:PLS(?:DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.ActivePlaylist;
 		const plsItems = pls === -1 ? null : plman.GetPlaylistItems(pls);
 		query = query.replace(/#PLSDURATION#/gi, () => plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
 		query = query.replace(/#PLSSIZE#/gi, () => plsItems ? utils.FormatFileSize(plsItems.CalcTotalSize()) : '0');
 	}
-	if (/#(PLSPLAY(DURATION|SIZE))#/i.test(query)) {
+	if (/#(?:PLSPLAY(?:DURATION|SIZE))#/i.test(query)) {
 		const pls = plman.PlayingPlaylist;
 		const plsItems = pls === -1 ? null : plman.GetPlaylistItems(pls);
 		query = query.replace(/#PLSPLAYDURATION#/gi, () => plsItems ? utils.FormatDuration(plsItems.CalcTotalDuration()) : '0:00');
@@ -690,9 +690,9 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 	if (sort.length) {
 		sortObj = {};
 		[sortObj.direction, sortObj.tag] = sort.split(' BY ').map((s) => s.trim());
-		if (!sortObj.tag || !sortObj.tag.length || !new RegExp(/("?\$\w+\(.*\)"?|%\w+%)$/).test(sortObj.tag)) { sortObj = null; }
-		else if (new RegExp(/(SORT|SORT\s+ASCENDING)$/).test(sortObj.direction)) { sortObj.direction = 1; }
-		else if (new RegExp(/SORT\s+DESCENDING$/).test(sortObj.direction)) { sortObj.direction = -1; }
+		if (!sortObj.tag || !sortObj.tag.length || !/(?:"?\$\w+\(.*\)"?|%\w+%)$/.test(sortObj.tag)) { sortObj = null; }
+		else if (/(?:SORT|SORT\s+ASCENDING)$/.test(sortObj.direction)) { sortObj.direction = 1; }
+		else if (/SORT\s+DESCENDING$/.test(sortObj.direction)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
 	}
 	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
@@ -1023,7 +1023,7 @@ function getHandleListTagsTyped(handleList, tagsArray, { bMerged = false, bEmpty
  * Checks if a track references a container with subsongs
  *
  * @function
- * @name function isSubsong
+ * @name isSubsong
  * @kind function
  * @param {FbMetadbHandle} handle - Track
  * @param {string} ext - [=''] Track extension (provide it if already known)
@@ -1038,7 +1038,7 @@ function isSubsong(handle, ext = '') {
  * Checks wether a path references a container or not.
  *
  * @function
- * @name function isSubsongPath
+ * @name isSubsongPath
  * @kind function
  * @param {string} path
  * @param {string} extension
@@ -1054,7 +1054,7 @@ function isSubsongPath(path, ext = '') {
  * Creates AutoPlaylist presets based on global tags.
  *
  * @function
- * @name function createAutoplaylistPresets
+ * @name createAutoplaylistPresets
  * @kind function
  * @returns {{name: string, menu?: string, plsName?:string, query?: string, sort?: string, bSortForced?: boolean}[]}
  */
@@ -1212,4 +1212,17 @@ function createAutoplaylistPresets() {
 		if (!Object.hasOwn(opt, 'plsName') && Object.hasOwn(opt, 'name') && opt.name !== 'sep') { opt.plsName = opt.name; }
 		return opt;
 	});
+}
+
+/**
+ * Creates AutoPlaylist presets based on global tags.
+ *
+ * @function
+ * @name toFbDateString
+ * @kind function
+ * @param {Date} date
+ * @returns {string} YYYY-MM-DD HH:mm:ss
+ */
+function toFbDateString(date) {
+	return date.getFullYear() + '-' + date.getMonth().toString().padStart(2, '0') + '-' + date.getDay().toString().padStart(2, '0') + ' ' + date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0') + ':' + date.getSeconds().toString().padStart(2, '0');
 }
