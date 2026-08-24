@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.12/06/2026
+REM Create packages (zip file) from js files v.19/08/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -936,7 +936,7 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Art-Display-SMP
 SET id=9DFE7B71-FA68-4E78-9004-16E3FEF6DA17
-SET description=https://github.com/regorxxx/Art-Display-SMP\r\n\r\nA display panel for foobar2000, using Spider Monkey Panel.\r\n\r\n• Supports any art type from tracks (playing and selection).\r\n• Load images from any path or folder.\r\n• Multiple image effects.\r\n• Configurable display text by TF.\r\n• Media playback notifications using foo_flowin.
+SET description=https://github.com/regorxxx/Art-Display-SMP\r\n\r\nA display panel for foobar2000, using Spider Monkey Panel.\r\n\r\n• Supports any art type from tracks (playing and selection).\r\n• Load images from any path or folder.\r\n• Multiple image effects.\r\n• Configurable display text by TF.\r\n• Automatic thumbs download from multiple sources.\r\n• Filmstrip features.\r\n• Media playback notifications using foo_flowin.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" art_display.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -965,6 +965,7 @@ CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_dynamic_colors.js
 CALL :copy_file main\window\window_xxx_helpers.js
 CALL :copy_file main\window\window_xxx_display.js
+CALL :copy_file main\window\window_xxx_downloader.js
 REM helpers
 CALL :check_folder helpers
 CALL :copy_file helpers\callbacks_xxx.js
