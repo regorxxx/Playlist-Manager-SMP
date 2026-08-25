@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.11](#100-beta11---2026-08-26)
 - [1.0.0-beta.10](#100-beta10---2026-08-24)
 - [1.0.0-beta.9](#100-beta9---2026-04-28)
 - [1.0.0-beta.8](#100-beta8---2026-01-12)
@@ -75,6 +76,13 @@
 ### Changed
 ### Removed
 ### Fixed
+
+## [1.0.0-beta.11] - 2026-08-26
+### Added
+### Changed
+### Removed
+### Fixed
+- Fixed wrong files on last update [1.0.0-beta.10](#100-beta10---2026-08-24) due to github glitch.
 
 ## [1.0.0-beta.10] - 2026-08-24
 ### Added
@@ -1640,7 +1648,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.10...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.11...HEAD
+[1.0.0-beta.11]: ../../compare/v1.0.0-beta.10...v1.0.0-beta.11
 [1.0.0-beta.10]: ../../compare/v1.0.0-beta.9...v1.0.0-beta.10
 [1.0.0-beta.9]: ../../compare/v1.0.0-beta.8...v1.0.0-beta.9
 [1.0.0-beta.8]: ../../compare/v1.0.0-beta.7...v1.0.0-beta.8
