@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/05/26
+//27/08/26
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -29,7 +29,12 @@ function getSoFeatures() {
 		if (cache) { try { doc.parentWindow.clipboardData.setData('Text', cache); } catch (e) { /* continue */ } } // eslint-disable-line no-unused-vars
 		if (clText !== 'test') { soFeat.clipboard = false; }
 	} else { soFeat.gecko = false; soFeat.clipboard = false; }
-	const paths = ['Program Files\\Internet Explorer\\ieinstal.exe', 'Program Files (x86)\\Internet Explorer\\ieinstal.exe'];
+	const paths = [
+		'Program Files\\Internet Explorer\\ieinstal.exe',
+		'Program Files (x86)\\Internet Explorer\\ieinstal.exe',
+		'Program Files\\Internet Explorer\\iexplore.exe.bak', // Winetricks is installed
+		'Program Files (x86)\\Internet Explorer\\iexplore.exe.bak' // Winetricks is installed
+	];
 	soFeat.ie = Array.from({ length: 26 }, (e, i) => String.fromCodePoint(i + 65) + ':\\').some((d) => {
 		try { return utils.IsDirectory(d) ? paths.some(p => utils.IsFile(d + p)) : false; } catch (e) { return false; } // eslint-disable-line no-unused-vars
 	});

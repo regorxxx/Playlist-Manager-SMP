@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/08/26
+//25/08/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets, toFbDateString */
 
@@ -671,7 +671,7 @@ function stripSort(query) {
 	}
 	return queryNoSort.trim();
 }
-stripSort.re = [new RegExp(/ ?SORT\s+BY\s+$/), new RegExp(/ ?SORT\s+DESCENDING\s+BY\s+/), new RegExp(/ ?SORT\s+ASCENDING\s+BY\s+/)];
+stripSort.re = [/ ?SORT\s+BY\s+/, / ?SORT\s+DESCENDING\s+BY\s+/, / ?SORT\s+ASCENDING\s+BY\s+/];
 
 /**
  * Process a sort or query string and outputs a sort object with direction, TF and tags

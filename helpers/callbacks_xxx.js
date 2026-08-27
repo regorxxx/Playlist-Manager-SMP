@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/06/26
+//26/08/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks, runDelayedEventListeners */
 
@@ -103,6 +103,7 @@ const callbacks = {
 	on_playlist_switch: { listeners: [], bRegistered: false, bOnVisible: false},
 	on_playlists_changed: { listeners: [], bRegistered: false, bOnVisible: false},
 	on_replaygain_mode_changed: { listeners: [], bRegistered: false, bOnVisible: false},
+	on_run_cmd_async_done: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter
 	on_script_unload: { listeners: [], bRegistered: false, bOnVisible: false},
 	on_selection_changed: { listeners: [], bRegistered: false, bOnVisible: false},
 	on_size: { listeners: [], bRegistered: false, bOnVisible: false},
@@ -113,7 +114,7 @@ const parentWindow = this; // NOSONAR This is Window in this context without SMP
 parentWindow.eventListener = { event: null, id: null };
 
 /**
- * @typedef {('on_always_on_top_changed'|'on_button_click'|'on_char'|'on_colours_changed'|'on_cursor_follow_playback_changed'|'on_download_file_done'|'on_drag_drop'|'on_drag_enter'|'on_drag_leave'|'on_drag_over'|'on_dsp_preset_changed'|'on_focus'|'on_font_changed'|'on_get_album_art_done'|'on_http_request_done'|'on_item_focus_change'|'on_item_played'|'on_key_down'|'on_key_up'|'on_library_items_added'|'on_library_items_changed'|'on_library_items_removed'|'on_load_image_done'|'on_main_menu'|'on_main_menu_dynamic'|'on_metadb_changed'|'on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_leave'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up'|'on_mouse_wheel'|'on_mouse_wheel_h'|'on_notify_data'|'on_output_device_changed'|'on_paint'|'on_panel_mouse_leave'|'on_panel_mouse_move'|'on_playback_dynamic_info'|'on_playback_dynamic_info_track'|'on_playback_edited'|'on_playback_follow_cursor_changed'|'on_playback_new_track'|'on_playback_order_changed'|'on_playback_pause'|'on_playback_queue_changed'|'on_playback_seek'|'on_playback_starting'|'on_playback_stop'|'on_playback_time'|'on_playlist_item_ensure_visible'|'on_playlist_items_added'|'on_playlist_items_removed'|'on_playlist_items_reordered'|'on_playlist_items_selection_change'|'on_playlist_stop_after_current_changed'|'on_playlist_switch'|'on_playlists_changed'|'on_replaygain_mode_changed'|'on_script_unload'|'on_selection_changed'|'on_size'|'on_volume_change'|'on_locations_added'|smpCustomEvents)} smpEvents
+ * @typedef {('on_always_on_top_changed'|'on_button_click'|'on_char'|'on_colours_changed'|'on_cursor_follow_playback_changed'|'on_download_file_done'|'on_drag_drop'|'on_drag_enter'|'on_drag_leave'|'on_drag_over'|'on_dsp_preset_changed'|'on_focus'|'on_font_changed'|'on_get_album_art_done'|'on_http_request_done'|'on_item_focus_change'|'on_item_played'|'on_key_down'|'on_key_up'|'on_library_items_added'|'on_library_items_changed'|'on_library_items_removed'|'on_load_image_done'|'on_main_menu'|'on_main_menu_dynamic'|'on_metadb_changed'|'on_mouse_lbtn_dblclk'|'on_mouse_lbtn_down'|'on_mouse_lbtn_up'|'on_mouse_leave'|'on_mouse_mbtn_dblclk'|'on_mouse_mbtn_down'|'on_mouse_mbtn_up'|'on_mouse_move'|'on_mouse_rbtn_dblclk'|'on_mouse_rbtn_down'|'on_mouse_rbtn_up'|'on_mouse_wheel'|'on_mouse_wheel_h'|'on_notify_data'|'on_output_device_changed'|'on_paint'|'on_panel_mouse_leave'|'on_panel_mouse_move'|'on_playback_dynamic_info'|'on_playback_dynamic_info_track'|'on_playback_edited'|'on_playback_follow_cursor_changed'|'on_playback_new_track'|'on_playback_order_changed'|'on_playback_pause'|'on_playback_queue_changed'|'on_playback_seek'|'on_playback_starting'|'on_playback_stop'|'on_playback_time'|'on_playlist_item_ensure_visible'|'on_playlist_items_added'|'on_playlist_items_removed'|'on_playlist_items_reordered'|'on_playlist_items_selection_change'|'on_playlist_stop_after_current_changed'|'on_playlist_switch'|'on_playlists_changed'|'on_replaygain_mode_changed'|'on_run_cmd_async_done'|'on_script_unload'|'on_selection_changed'|'on_size'|'on_volume_change'|'on_locations_added'|smpCustomEvents)} smpEvents
 */
 /**
  * @typedef {('on_mouse_lbtn_tplclk')} smpCustomEvents
@@ -194,7 +195,9 @@ parentWindow.eventListener = { event: null, id: null };
  * 																																	? (taskId: number, handleList: FbMetadbHandleList) => void
  * 																																	: smpEvent extends ('on_http_request_done')
  * 																																		? (taskId: number, success: boolean, responseText: string, status: number, contentType: string) => void
- * 																																		: () => void
+ * 																																		: smpEvent extends ('on_run_cmd_async_done')
+ * ? (taskId: number, success: boolean, exit_code: number, stdout: string, stderr: string) => void
+ * : () => void
  * } listener - Callback function
  * @param {boolean?} bRegister - [=true] Add to global context
  * @param {boolean?} bRegister - [=false] Require panel to be visible for processing
