@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.19/08/2026
+REM Create packages (zip file) from js files v.27/08/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -191,6 +191,7 @@ CALL :copy_folder helpers-external\countries-mercator-mask true
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
 CALL :copy_folder helpers-external\natsort
+CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 CALL :delete_file helpers-external\countries-mercator\_Kosovo.png
 CALL :delete_file helpers-external\countries-mercator\"_N. Cyprus.png"
@@ -344,6 +345,7 @@ CALL :copy_folder helpers-external\fuse
 CALL :copy_folder helpers-external\keycode-2.2.0
 CALL :copy_folder helpers-external\namethatcolor
 CALL :copy_folder helpers-external\natsort
+CALL :copy_folder helpers-external\nircmd
 CALL :copy_folder helpers-external\SimpleCrypto-js
 CALL :copy_folder helpers-external\xspf-to-jspf-parser
 CALL :copy_folder helpers-external\xsp-to-jsp-parser
@@ -446,6 +448,7 @@ CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\lz-string
 CALL :copy_folder helpers-external\lz-utf8
 CALL :copy_folder helpers-external\namethatcolor
+CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
@@ -551,6 +554,7 @@ CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
+CALL :copy_folder helpers-external\nircmd
 CALL :check_folder helpers-external\ngraph
 CALL :copy_file helpers-external\ngraph\ngrpah_LICENSE
 CALL :copy_file helpers-external\ngraph\README_xxx.txt
@@ -632,6 +636,7 @@ CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
+CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
@@ -777,6 +782,7 @@ CALL :copy_folder helpers-external\fooid-utils-js
 CALL :copy_folder helpers-external\fpcalc
 CALL :copy_folder helpers-external\ghostscript
 CALL :copy_folder helpers-external\namethatcolor
+CALL :copy_folder helpers-external\nircmd
 CALL :copy_folder helpers-external\nconvert
 CALL :copy_folder helpers-external\ngraph
 CALL :copy_folder helpers-external\ngraph-html
@@ -915,6 +921,7 @@ CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\curl
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
+CALL :copy_folder helpers-external\nircmd
 REM assets
 CALL :check_folder assets\library_tree
 CALL :copy_folder assets\library_tree\html
@@ -999,6 +1006,7 @@ CALL :copy_folder helpers-external\chroma.js
 CALL :copy_folder helpers-external\cmdutils
 CALL :copy_folder helpers-external\curl
 CALL :copy_folder helpers-external\namethatcolor
+CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
