@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/08/26
+//30/08/26
 
 /* exported extendGR, checkCompatible */
 
@@ -77,7 +77,7 @@ FbTitleFormat.prototype.EvalWithMetadbsDynamic = function EvalWithMetadbsDynamic
 		if (np) {
 			const handleArr = handleList.Convert();
 			let npTag = null;
-			for (let i = handleArr.length -1; i >= 0; i--) {
+			for (let i = handleArr.length - 1; i >= 0; i--) {
 				if (handleList[i].Compare(np)) {
 					if (npTag === null) { npTag = this.Eval(); }
 					tags[i] = npTag;
@@ -264,6 +264,37 @@ FbMetadbHandleList.partialSort = (handleList, orderHandleList) => { // 600 ms on
 	});
 	return bOutputList ? new FbMetadbHandleList(output.filter(Boolean)) : output.filter(Boolean);
 };
+
+if (FbMetadbHandleList.prototype.Reverse) {
+	const old = FbMetadbHandleList.prototype.Reverse;
+	FbMetadbHandleList.prototype.Reverse = function () { return old.call(this) || this; };
+} else {
+	FbMetadbHandleList.prototype.Reverse = function () {
+		const temp = this.Convert().reverse();
+		this.RemoveRange(0, this.Count);
+		this.AddRange(new FbMetadbHandleList(temp));
+		return this;
+	};
+}
+
+if (FbMetadbHandleList.prototype.Shuffle) {
+	const old = FbMetadbHandleList.prototype.Shuffle;
+	FbMetadbHandleList.prototype.Shuffle = function () { return old.call(this) || this; };
+} else {
+	FbMetadbHandleList.prototype.Shuffle = function () {
+		if (this.Count) {
+			const temp = this.Convert();
+			let last = temp.length, n;
+			while (last > 0) {
+				n = Math.floor(Math.random() * last--);
+				[temp[n], temp[last]] = [temp[last], temp[n]];
+			}
+			this.RemoveRange(0, this.Count);
+			this.AddRange(new FbMetadbHandleList(temp));
+		}
+		return this;
+	};
+}
 
 /*
 	fb

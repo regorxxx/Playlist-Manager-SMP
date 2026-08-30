@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/08/26
+//28/08/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt */
 
@@ -544,7 +544,8 @@ function _recycleFile(file, bCheckBin = false) {
 				console.log('_recycleFile: ' + file + '\n\t Error: Path longer than 260 chars.');
 				return false;
 			}
-			if (!_runCmd(_q(folders.xxx + 'helpers-external\\nircmd\\nircmd.exe') + ' moverecyclebin ' + _q(file), true) || _isFile(file)) {
+			if (utils.RecyclePath && utils.RecyclePath(file)) { return true; }
+			else if (!_runCmd(_q(folders.xxx + 'helpers-external\\nircmd\\nircmd.exe') + ' moverecyclebin ' + _q(file), true) || _isFile(file)) {
 				// These methods produce window flashing and active window focus loss
 				try {
 					if (utils.IsKeyPressed(VK_SHIFT)) { throw new Error('Shift'); }
