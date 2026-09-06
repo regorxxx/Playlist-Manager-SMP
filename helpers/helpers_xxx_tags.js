@@ -1,7 +1,7 @@
 ﻿'use strict';
-//25/08/26
+//31/08/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoplaylistPresets, toFbDateString */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoPlaylistPresets, toFbDateString */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable, globQuery:readable, MF_STRING:readable, MF_GRAYED:readable */
@@ -1054,11 +1054,11 @@ function isSubsongPath(path, ext = '') {
  * Creates AutoPlaylist presets based on global tags.
  *
  * @function
- * @name createAutoplaylistPresets
+ * @name createAutoPlaylistPresets
  * @kind function
  * @returns {{name: string, menu?: string, plsName?:string, query?: string, sort?: string, bSortForced?: boolean}[]}
  */
-function createAutoplaylistPresets() {
+function createAutoPlaylistPresets() {
 	const options = [
 		{ name: 'Media library', query: 'ALL' },
 	].concat([

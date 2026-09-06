@@ -1,7 +1,7 @@
 ﻿'use strict';
-//28/08/26
+//06/09/26
 
-/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt */
+/* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -620,7 +620,7 @@ function _open(file, codePage = 0) {
 	file = _resolvePath(file);
 	if (_isFile(file)) {
 		const bLongPath = _isLongPath(file);
-		return tryMethod('ReadTextFile', utils)(bLongPath ? _longPath(file) : file, codePage) || '';  // Bypasses crash on file locked by other process
+		return tryMethod(utils, 'ReadTextFile', '')(bLongPath ? _longPath(file) : file, codePage);  // Bypasses crash on file locked by other process
 	} else {
 		return '';
 	}
@@ -912,37 +912,39 @@ function checkCodePage(originalText, extension, bAdvancedCheck = false) {
 	return codepage || -1;
 }
 
-function findRecursivePaths(path = fb.ProfilePath) {
+function findRecursivePaths(path = fb.ProfilePath, level = Infinity) {
 	path = _resolvePath(path);
 	let arr = [], pathArr = [];
 	const bLongPath = _isLongPath(path);
+	if (!path.endsWith('\\')) { path += '\\'; }
 	arr = utils.Glob((bLongPath ? _longPath(path) : path) + '*.*', 0x00000020) // Directory
 		.map((path) => path.replace(/^\\\\\?\\/, ''));
 	arr.forEach((subPath) => {
 		if (subPath.includes('\\..') || subPath.includes('\\.')) { return; }
 		if (_comparePaths(subPath, path)) { return; }
 		pathArr.push(subPath);
-		pathArr = pathArr.concat(findRecursivePaths(subPath + '\\'));
+		if (level === Infinity || level > subPath.replace(path, '').count('\\')) {
+			pathArr = pathArr.concat(findRecursivePaths(subPath + '\\'));
+		}
 	});
 	return pathArr;
 }
 
-function findRecursiveDirs(path = fb.ProfilePath) {
-	return findRecursivePaths(path).map((dir) => dir.replace(_resolvePath(path), ''));
+function findRecursiveDirs(path = fb.ProfilePath, level = Infinity) {
+	return findRecursivePaths(path, level).map((dir) => dir.replace(_resolvePath(path), ''));
 }
 
-function findRecursiveFile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath]) {
+function findRecursiveFile(fileMask, inPaths = [fb.ProfilePath, fb.ComponentPath], level = Infinity) {
 	let fileArr = [];
-	if (isArrayStrings(inPaths)) {
-		inPaths = inPaths.map((path) => _resolvePath(path));
-		let pathArr = inPaths; // Add itself
-		inPaths.forEach((path) => { pathArr = pathArr.concat(findRecursivePaths(path)); });
-		pathArr.forEach((path) => {
-			const bLongPath = _isLongPath(path);
-			fileArr = fileArr.concat(utils.Glob((bLongPath ? _longPath(path) : path) + (path.endsWith('\\') ? '' : '\\') + fileMask))
-				.map((path) => path.replace(/^\\\\\?\\/, ''));;
-		});
-	}
+	if (!isArrayStrings(inPaths)) { inPaths = [inPaths]; }
+	inPaths = inPaths.map((path) => _resolvePath(path));
+	let pathArr = inPaths; // Add itself
+	if (level > 0) { inPaths.forEach((path) => { pathArr = pathArr.concat(findRecursivePaths(path, level - 1)); }); }
+	pathArr.forEach((path) => {
+		const bLongPath = _isLongPath(path);
+		fileArr = fileArr.concat(utils.Glob((bLongPath ? _longPath(path) : path) + (path.endsWith('\\') ? '' : '\\') + fileMask))
+			.map((path) => path.replace(/^\\\\\?\\/, ''));;
+	});
 	return fileArr;
 }
 
@@ -1104,6 +1106,26 @@ function formatFileSize(val) {
 	return val;
 }
 
+function getDrives(bBuiltIn = true) {
+	return bBuiltIn && utils.GetDriveInfo && utils.GetDrives // NOSONAR
+		? utils.GetDrives()
+			.map((root) => utils.GetDriveInfo(root))
+			.filter((info) => !!info)
+		: fso.Drives;
+}
+
+function getDrive(path, bBuiltIn = true) {
+	return bBuiltIn && utils.GetDriveInfo // NOSONAR
+		? utils.GetDriveInfo(path)
+		: fso.GetDrive(fso.GetDriveName(path));
+}
+
+function getShortPath(path, bBuiltIn = true) {
+	return bBuiltIn && utils.getShortPath
+		? utils.getShortPath(path)
+		: fso.GetFile(path).ShortPath || '';
+}
+
 function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 	path = _resolvePath(path);
 	try {
@@ -1154,7 +1176,7 @@ function getPathMeta(path, sizeUnit = 'GB', bSkipFolderSize = true) {
 }
 
 function parseWinApiError(message, bAddLink = true) {
-	const code = (/\((\w*)\)/gi.exec(message)[1] || 'UNKNOWN').toUpperCase().replace('0X', '0x');
+	const code = ((/\((\w*)\)/gi.exec(message) || [])[1] || 'UNKNOWN').toUpperCase().replace('0X', '0x');
 	return 'WinAPI error: ' + code + ' - ' + WinApiError[code] +
 		(bAddLink ? '\n\t Check: https://www.hresult.info/FACILITY_CONTROL' + (code === 'UNKNOWN' ? '' : '/' + code) : '');
 }

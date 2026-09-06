@@ -1,7 +1,7 @@
 ﻿'use strict';
-//29/05/26
+//01/09/26
 
-/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues, checkJsonProperties */
+/* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues, checkJsonProperties, PanelProperties */
 
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _isFolder:readable, doOnce:readable*/
@@ -287,4 +287,121 @@ function checkJsonProperties(propertiesDescriptor) {
 		}
 	}
 	if (bSave) { overwriteProperties(propertiesDescriptor); }
+}
+
+class PanelProperty {
+	constructor(name, initVal, check = {}, defVal = initVal, { prefix = '', count = 0, bPadding = true } = {}) {
+		const bNumber = count > 0;
+		this.name = name;
+		this.id = prefix + (bNumber ? (bPadding ? ('00' + count).slice(-2) : count) : '') + ((prefix || bNumber) ? '.' : '') + this.name;
+		this.initVal = initVal;
+		this.defVal = typeof defVal === 'undefined' ? initVal : defVal;
+		this.check = check;
+		this.value = checkProperty([this.name, this.initVal, this.check, this.defVal])
+			? window.GetProperty(this.id, this.initVal)
+			: window.GetProperty(this.id, this.defVal);
+		this.temp = null;
+	}
+	get() {
+		return this.value;
+	}
+	set(val) {
+		let bDone;
+		if (this.value !== val) {
+			if (checkProperty([this.name, val, this.check, this.defVal])) {
+				window.SetProperty(this.id, val);
+				this.value = val;
+			} else {
+				window.SetProperty(this.id, this.defVal);
+				this.value = this.defVal;
+			}
+			bDone = true;
+		}
+		this.temp = null;
+		return bDone;
+	}
+	change(val) {
+		if (this.temp !== val) {
+			this.temp = val;
+			return true;
+		}
+		return false;
+	}
+	apply() {
+		return this.temp === null
+			? false
+			: this.set(this.temp);
+	}
+}
+
+class PanelProperties {
+	constructor(properties, options = {}) {
+		this._nameList = new Set(); // debug
+		this._pptList = {}; // debug
+		if (properties) { this.init(properties, { options }); }
+	}
+	init(properties, { type = 'auto', thisArg, options = {} } = {}) {
+		switch (type) {
+			case 'manual':
+				for (const key in properties) {
+					thisArg[key] = this.get(properties[key][0], properties[key][1]);
+				}
+				break;
+			case 'auto':
+			default: {
+				let count = options.count || 0;
+				for (const key in properties) {
+					this.validate(key, properties[key]); //debug
+					this.add(key, properties[key], count > 0 ? { ...options, count } : { ...options });
+					if (count) { count++; }
+				}
+				break;
+			}
+		}
+	}
+	validate(key, item) {
+		if (!Array.isArray(item) || item.length < 2 || typeof item[0] !== 'string') {
+			throw new Error('invalid property: requires array: [string, any [, object]]\n' + item);
+		}
+		if (['add', 'get', 'set', 'toggle', 'init', 'validate'].includes(key)) {
+			throw new Error('property_id: ' + key + '\nThis id is reserved');
+		}
+		if (Object.hasOwn(this, key) || Object.hasOwn(this._pptList, key)) {
+			throw new Error('property_id: ' + key + 'nThis id is already occupied');
+		}
+		if (this._nameList.has(item[0])) {
+			throw new Error('property_name: ' + key + '\nThis name is already occupied');
+		}
+	}
+	add(key, item, options) {
+		this._nameList.add(item[0]); // debug
+		this._pptList[key] = new PanelProperty(item[0], item[1], item[2], item[3], options);
+		Object.defineProperty(this, key, {
+			get() {
+				return this._pptList[key].get();
+			},
+			set(val) {
+				this._pptList[key].set(val);
+			}
+		});
+	}
+	get(name, defVal) {
+		return window.GetProperty(name, defVal);
+	}
+	set(name, val) {
+		return window.SetProperty(name, val);
+	}
+	toggle(key) {
+		this[key] = !this[key];
+	}
+	change(key, val) {
+		return this._pptList[key].change(val);
+	}
+	save() {
+		let bDone;
+		for (const key in this._pptList) {
+			if (this._pptList[key].apply()) { bDone = true; }
+		}
+		return bDone;
+	}
 }

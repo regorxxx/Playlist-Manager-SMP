@@ -1,7 +1,7 @@
 ﻿'use strict';
-//05/05/26
+//06/09/26
 
-/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator, dateFormatter, tryActiveX */
+/* exported clone, getNested, setNested, addNested, baseToString, toString, escapeRegExp, escapeRegExpV2, randomString, repeatFn, delayFn, debounce, throttle, doOnce, tryFunc, tryMethod, tryGetter, memoize, convertStringToObject, convertObjectToString, SetReplacer, MapReplacer, module, exports, require, forEachNested, strNumCollator, dateFormatter, tryActiveX */
 
 // https://github.com/angus-c/just
 /*
@@ -208,18 +208,40 @@ const doOnce = (task, fn) => {
 	};
 };
 
-function tryFunc(fn) {
+function tryFunc(fn, returnOnError) {
 	return (...args) => {
 		let cache;
-		try { cache = fn(...args); } catch (e) {/* continue regardless of error */ } // eslint-disable-line no-unused-vars
+		try { cache = fn(...args); } catch (e) {
+			return returnOnError && returnOnError.constructor && returnOnError.call && returnOnError.apply
+				? returnOnError(e)
+				: returnOnError;
+		}
 		return cache;
 	};
 }
 
-function tryMethod(fn, parent, returnOnError) {
+function tryMethod(parent, fn, returnOnError) {
 	return (...args) => {
 		let cache;
-		try { cache = parent[fn](...args); } catch (e) { return returnOnError; } // eslint-disable-line no-unused-vars
+		try { cache = parent[fn](...args); }
+		catch (e) {
+			return returnOnError && returnOnError.constructor && returnOnError.call && returnOnError.apply
+				? returnOnError(e)
+				: returnOnError;
+		}
+		return cache;
+	};
+}
+
+function tryGetter(prop, parent, returnOnError) {
+	return () => {
+		let cache;
+		try { cache = parent[prop]; }
+		catch (e) {
+			return returnOnError && returnOnError.constructor && returnOnError.call && returnOnError.apply
+				? returnOnError(e)
+				: returnOnError;
+		}
 		return cache;
 	};
 }

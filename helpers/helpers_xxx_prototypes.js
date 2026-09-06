@@ -1,5 +1,5 @@
 'use strict';
-//21/08/26
+//03/09/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime, smartCut, NestedHashMap */
 
@@ -595,20 +595,9 @@ function isArray(checkKeys) {
 }
 
 function isArrayStrings(checkKeys, bAllowEmpty = false) {
-	if (checkKeys === null || Object.prototype.toString.call(checkKeys) !== '[object Array]' || checkKeys.length === null || checkKeys.length === 0) {
-		return false; //Array was null or not an array
-	} else {
-		let i = checkKeys.length;
-		while (i--) {
-			if (Object.prototype.toString.call(checkKeys[i]) !== '[object String]') {
-				return false; //values were null or not strings
-			}
-			if (!bAllowEmpty && checkKeys[i] === '') {
-				return false; //values were empty
-			}
-		}
-	}
-	return true;
+	return !checkKeys || !Array.isArray(checkKeys)
+		? false
+		: checkKeys.every((c) => typeof c === 'string' && (c.length || bAllowEmpty));
 }
 
 function isArrayNumbers(checkKeys) {
@@ -1185,7 +1174,7 @@ function NestedHashMap(levels = 2) {
 		return false;
 	};
 	this.forEach = function (fn) {
-		this._entries.forEach(([k, v]) => fn(v,k));
+		this._entries.forEach(([k, v]) => fn(v, k));
 		// this.iterateChildren({ entry: this._map }, (v, k) => fn.call(thisArg, v, k));
 	};
 	this.size; // NOSONAR

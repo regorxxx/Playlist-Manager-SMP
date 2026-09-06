@@ -1,5 +1,5 @@
 'use strict';
-//12/06/26
+//31/08/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -34,7 +34,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files_xspf.js');
 include('..\\..\\helpers\\helpers_xxx_playlists_files_xsp.js');
 /* global XSP:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
-/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, isSubsongPath:readable, createAutoplaylistPresets:readable */
+/* global checkQuery:readable, stripSort:readable, getHandleListTagsV2:readable, checkSort:readable, isSubsongPath:readable, createAutoPlaylistPresets:readable */
 include('..\\..\\helpers\\helpers_xxx_UI.js');
 /* global invert:readable, colorBlind:readable, RGB:readable, toRGB:readable, blendColors:readable */
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
@@ -1964,7 +1964,7 @@ function createListMenu() {
 		});
 		{	// Preset AutoPlaylists
 			const subMenuName = menu.newMenu('AutoPlaylists presets');
-			createAutoplaylistPresets().forEach((opt) => {
+			createAutoPlaylistPresets().forEach((opt) => {
 				const subMenuNameTwo = opt.menu ? menu.findOrNewMenu(opt.menu, subMenuName) : subMenuName;
 				if (menu.isSeparator(opt)) { menu.newSeparator(subMenuNameTwo); return; }
 				menu.newEntry({
@@ -5369,7 +5369,7 @@ function createSettingsMenu(parent, parentBackground) {
 		menu.newEntry({ menuName: subMenuName, entryText: 'Console loging', flags: MF_GRAYED });
 		menu.newSeparator(subMenuName);
 		[
-			{ key: 'autoSize', entryText: 'Autoplaylists updates' },
+			{ key: 'autoSize', entryText: 'AutoPlaylists updates' },
 			{ key: 'loadPls', entryText: 'Playlist loading' },
 			{ key: 'profile', entryText: 'Global profiling' },
 			{ key: 'mainMenu', entryText: 'Dynamic menus' },
