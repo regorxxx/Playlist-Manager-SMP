@@ -1,5 +1,5 @@
 'use strict';
-//29/07/26
+//10/09/26
 
 include(fb.ComponentPath + 'docs\\Codepages.js');
 /* global convertCharsetToCodepage:readable */
@@ -147,6 +147,8 @@ console.formatArg = (arg) => {
 								return 'Uint8Array ' + clean(JSON.stringify(v));
 							} else if (v instanceof Date) {
 								return 'Date {' + clean(v.toLocaleDateString()) + '}';
+							} else if (typeof FileNode !== 'undefined' && v instanceof FileNode) { // eslint-disable-line no-undef
+								return 'FileNode {' + clean(v.toString()) + '}';
 							} else if (typeof v === 'object') {
 								return clean('{ ' + Object.entries(v).map(([sk, sv]) => sk + ': ' + console.formatArg(sv)).join(', ') + ' }');
 							} else {

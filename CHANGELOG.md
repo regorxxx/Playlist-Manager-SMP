@@ -77,6 +77,7 @@
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
+- UI: chart types not being changed when using menu settings on statistics mode. See [here](https://hydrogenaudio.org/index.php/topic,125040.msg1086767.html#msg1086767).
 
 ## [1.0.0-beta.11] - 2026-08-26
 ### Added

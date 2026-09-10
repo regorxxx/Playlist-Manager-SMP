@@ -1,5 +1,5 @@
 'use strict';
-//03/09/26
+//08/09/26
 
 /* exported compareObjects, compareKeys, isJSON, roughSizeOfObject, deepAssign, BiMap, isFunction, $args, isPromise, matchCase, capitalizePartial, capitalizeAll, _p, _bt, _qCond, _ascii, _asciify, isArrayStrings, isArrayNumbers, isArrayEqual, zeroOrVal, emptyOrVal, isInt, isFloat, cyclicOffset, range, round, isUUID, isBoolean, regExBool, cartesian, isArray, _ps, isGetter, isSetter, isReal, isIntInf, isFloatInf, secondsToTime, smartCut, NestedHashMap */
 
@@ -635,6 +635,11 @@ if (!Array.prototype.rotate) {
 
 if (!Array.prototype.swap) {
 	Array.prototype.swap = function (i, j) { // NOSONAR
+		const len = this.length;
+		j = Math.min(j, len - 1);
+		i = Math.min(i, len - 1);
+		if (i < 0) { i = len + i; }
+		if (j < 0) { j = len + j; }
 		[this[i], this[j]] = [this[j], this[i]];
 		return this;
 	};

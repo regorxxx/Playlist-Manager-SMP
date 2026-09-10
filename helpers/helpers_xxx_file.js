@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/09/26
+//08/09/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -1049,7 +1049,7 @@ function sortFiles(files, method) {
 	switch (method) {
 		case 'name':
 			return files
-				.sort((a, b) => strNumCollator.compare(a, b));
+				.sort(strNumCollator.compare);
 		case 'cdate':
 			return files
 				.map((file) => { return { file, date: created(file, true) }; })

@@ -1,5 +1,5 @@
 'use strict';
-//10/08/26
+//10/09/26
 
 /* exported Input */
 
@@ -67,18 +67,22 @@ const Input = Object.freeze({
 	 * @param {Boolean} bFilterFalse?
 	 * @returns {null|Object}
 	 */
-	json: function (type, oldVal, message, title, example, checks = [], bFilterFalse = false) {
+	json: function (type, oldVal, message, title, example, checks = [], bFilterFalse = false, defVal = null) {
 		const types = new Set(['array', 'array numbers', 'array strings', 'array booleans', 'object']);
 		this.data.last = oldVal; this.data.lastInput = null;
-		if (!types.has(type)) { throw new Error('Invalid type: ' + type); }
+		if (!types.has(type)) { throw new TypeError('Invalid type: ' + type); }
 		let input, newVal;
 		const oldValStr = JSON.stringify(oldVal);
 		try {
 			input = utils.InputBox(window.ID, message, title, oldVal ? JSON.stringify(oldVal) : '', true);
-			if (!input || typeof input === 'string' && !input.length) { throw new Error('Invalid type'); }
-			else { newVal = JSON.parse(input); }
+			if (!input || typeof input === 'string' && !input.length) { throw new TypeError('Invalid type'); }
+			else if (defVal !== null && typeof input === 'string' && input.toUpperCase() === 'DEFAULT') {
+				if (typeof defVal !== 'object') { throw new TypeError('Invalid default value type'); }
+				newVal = defVal;
+			} else { newVal = JSON.parse(input); }
 			if (typeof newVal !== 'object') { throw new TypeError('Invalid type'); }
-			if (type.startsWith('array') && !Array.isArray(newVal)) { throw new Error('Invalid type'); }
+			if (type.startsWith('array') && !Array.isArray(newVal)) { throw new TypeError('Invalid type'); }
+			if (defVal !== null && type.startsWith('array') && !Array.isArray(defVal)) { throw new TypeError('Invalid default value type'); }
 			switch (type) {
 				case 'array': {
 					newVal = bFilterFalse
@@ -107,6 +111,7 @@ const Input = Object.freeze({
 				}
 				case 'object': {
 					if (Array.isArray(newVal)) { throw new TypeError('Invalid type'); }
+					if (defVal !== null && Array.isArray(defVal)) { throw new TypeError('Invalid default value type'); }
 					break;
 				}
 			}
@@ -127,6 +132,8 @@ const Input = Object.freeze({
 		catch (e) {
 			if (e.message === 'Invalid type' || e.name === 'SyntaxError') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
+			} else if (e.message === 'Invalid default value type') {
+				fb.ShowPopupMessage('Default value is not valid:\n' + defVal + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
 			} else if (e.message === 'Invalid checks') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
@@ -153,27 +160,35 @@ const Input = Object.freeze({
 	 * @param {Function[]} checks?
 	 * @returns {null|Number}
 	 */
-	number: function (type, oldVal, message, title, example, checks = []) {
+	number: function (type, oldVal, message, title, example, checks = [], defVal = null) {
 		const types = new Set(['int', 'int inf', 'int positive', 'int positive inf', 'int negative', 'int negative inf', 'float', 'float positive', 'float negative', 'real', 'real inf', 'real positive', 'real positive inf', 'real negative', 'real negative inf']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (type && type.length) { type = type.replace('/integer/gi', 'int'); }
 		if (type && type.length) { type = type.replace('/infinite/gi', 'inf'); }
-		if (!types.has(type)) { throw new Error('Invalid type: ' + type); }
+		if (!types.has(type)) { throw new TypeError('Invalid type: ' + type); }
 		let input, newVal;
 		try {
 			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? oldVal : '', true);
-			if (input === null || typeof input === 'undefined' || typeof input === 'string' && !input.length) { throw new Error('Invalid type'); }
+			if (input === null || typeof input === 'undefined' || typeof input === 'string' && !input.length) { throw new TypeError('Invalid type'); }
 			else {
 				if (typeof input === 'string') {
 					if (input === '\u221E') { input = 'Infinity'; }
 					else if (input === '-\u221E') { input = '-Infinity'; }
 				}
-				newVal = Number(input);
+				if (defVal !== null && typeof input === 'string' && input.toUpperCase() === 'DEFAULT') {
+					if (typeof defVal !== 'number') { throw new TypeError('Invalid default value type'); }
+					newVal = defVal;
+				} else { newVal = Number(input); }
 			}
-			if (newVal.toString() !== input) { throw new Error('Invalid type'); } // No fancy number checks, just allow proper input
-			if (type.startsWith('int') && (Number.isFinite(newVal) && !Number.isInteger(newVal) || !Number.isFinite(newVal) && !type.endsWith('inf'))) { throw new Error('Invalid type'); }
-			else if (type.startsWith('float') && Number.isFinite(newVal) && Number.isInteger(newVal)) { throw new Error('Invalid type'); } // NOSONAR[more clear errors]
-			else if (type.startsWith('real') && !Number.isFinite(newVal) && !type.endsWith('inf')) { throw new Error('Invalid type'); } // NOSONAR[more clear errors]
+			if (newVal.toString() !== input) { throw new TypeError('Invalid type'); } // No fancy number checks, just allow proper input
+			if (type.startsWith('int') && (Number.isFinite(newVal) && !Number.isInteger(newVal) || !Number.isFinite(newVal) && !type.endsWith('inf'))) { throw new TypeError('Invalid type'); }
+			else if (type.startsWith('float') && Number.isFinite(newVal) && Number.isInteger(newVal)) { throw new TypeError('Invalid type'); } // NOSONAR[more clear errors]
+			else if (type.startsWith('real') && !Number.isFinite(newVal) && !type.endsWith('inf')) { throw new TypeError('Invalid type'); } // NOSONAR[more clear errors]
+			if (defVal !== null) {
+				if (type.startsWith('int') && (Number.isFinite(defVal) && !Number.isInteger(defVal) || !Number.isFinite(defVal) && !type.endsWith('inf'))) { throw new TypeError('Invalid default value type'); }
+				else if (type.startsWith('float') && Number.isFinite(defVal) && Number.isInteger(defVal)) { throw new TypeError('Invalid default value type'); } // NOSONAR[more clear errors]
+				else if (type.startsWith('real') && !Number.isFinite(defVal) && !type.endsWith('inf')) { throw new TypeError('Invalid default value type'); } // NOSONAR[more clear errors]
+			}
 			switch (type) {
 				case 'float':
 				case 'real':
@@ -183,13 +198,15 @@ const Input = Object.freeze({
 				case 'float positive':
 				case 'real positive':
 				case 'int positive': {
-					if (newVal < 0) { throw new Error('Invalid type'); }
+					if (newVal < 0) { throw new TypeError('Invalid type'); }
+					if (defVal !== null && defVal < 0) { throw new TypeError('Invalid default value type'); }
 					break;
 				}
 				case 'float negative':
 				case 'real negative':
 				case 'int negative': {
-					if (newVal > 0) { throw new Error('Invalid type'); }
+					if (newVal > 0) { throw new TypeError('Invalid type'); }
+					if (defVal !== null && defVal > 0) { throw new TypeError('Invalid default value type'); }
 					break;
 				}
 			}
@@ -200,6 +217,8 @@ const Input = Object.freeze({
 		catch (e) {
 			if (e.message === 'Invalid type' || e.name === 'SyntaxError') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
+			} else if (e.message === 'Invalid default value type') {
+				fb.ShowPopupMessage('Default value is not valid:\n' + defVal + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
 			} else if (e.message === 'Invalid checks') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
 			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
@@ -218,7 +237,7 @@ const Input = Object.freeze({
 	 * @name string
 	 * @kind method
 	 * @memberof Input
-	 * @param {'string'|'trimmed string'|'unicode'|'path'|'file'|'url'|'file|url'} type
+	 * @param {'string'|'trimmed string'|'unicode'|'path'|'file'|'url'|'file|url'|'ascii printable'} type
 	 * @param {String} oldVal
 	 * @param {String} message
 	 * @param {String} title
@@ -227,17 +246,21 @@ const Input = Object.freeze({
 	 * @param {boolean} bFilterEmpty?
 	 * @returns {null|String}
 	 */
-	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false) {
-		const types = new Set(['string', 'trimmed string', 'unicode', 'path', 'file', 'url', 'file|url']);
+	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false, defVal = null) {
+		const types = new Set(['string', 'trimmed string', 'unicode', 'path', 'file', 'url', 'file|url', 'ascii printable']);
 		this.data.last = oldVal; this.data.lastInput = null;
-		if (!types.has(type)) { throw new Error('Invalid type: ' + type); }
+		if (!types.has(type)) { throw new TypeError('Invalid type: ' + type); }
 		let input, newVal;
 		let uOldVal = null;
 		if (type === 'unicode') { uOldVal = oldVal.split(' ').map((s) => s === '' ? '' : s.codePointAt(0).toString(16)).join(' '); }
 		try {
 			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true);
-			if (input === null || typeof input === 'undefined') { throw new Error('Invalid type'); }
+			if (input === null || typeof input === 'undefined') { throw new TypeError('Invalid type'); }
 			else { newVal = String(input); }
+			if (defVal !== null && newVal.toUpperCase() === 'DEFAULT') {
+				if (typeof defVal !== 'string') { throw new TypeError('Invalid default value type'); }
+				newVal = defVal;
+			}
 			switch (type) {
 				case 'string': {
 					if (bFilterEmpty && !newVal.length) { throw new Error('Empty'); }
@@ -271,6 +294,20 @@ const Input = Object.freeze({
 					newVal = this.sanitizePath(newVal);
 					break;
 				}
+				case 'ascii printable': {
+					if (!newVal.length) {
+						if (bFilterEmpty) { throw new Error('Empty'); }
+					}
+					newVal = newVal.replace(/[^\x20-\x7E]/g, '');
+					break;
+				}
+				case 'latin alphabet': {
+					if (!newVal.length) {
+						if (bFilterEmpty) { throw new Error('Empty'); }
+					}
+					newVal = newVal.replace(/([\x30-\x39]|[\x41-\x5A]|[\x61-\x7A])|./g, '$1');
+					break;
+				}
 			}
 			if (checks) {
 				if (!Array.isArray(checks)) {
@@ -283,6 +320,8 @@ const Input = Object.freeze({
 		catch (e) {
 			if (e.message === 'Invalid type' || e.name === 'SyntaxError') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
+			} else if (e.message === 'Invalid default value type') {
+				fb.ShowPopupMessage('Default value is not valid:\n' + defVal + '\n\nValue must be an ' + type.toUpperCase() + '\n\nExample:\n' + example, title);
 			} else if (e.message === 'Empty') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must be a non zero length string.\n\nExample:\n' + example, title);
 			} else if (e.message === 'Invalid checks argument') {
@@ -338,5 +377,17 @@ const Input = Object.freeze({
 		if (!value || !value.length) { return ''; }
 		const disk = (value.match(/^\w:\\/g) || [''])[0];
 		return disk + (disk && disk.length ? value.replace(disk, '') : value).replace(/\//g, '\\').replace(/[|–‐—-]/g, '-').replace(/\*/g, 'x').replace(/"/g, '\'\'').replace(/[<>]/g, '_').replace(/[?:]/g, '').replace(/(?! )\s/g, '');
+	},
+	is: {
+		latinAlphabet: function (val = Input.data.lastInput) {
+			return typeof val === 'string'
+				? /(?:[\x30-\x39]|[\x41-\x5A]|[\x61-\x7A])+/.test(val)
+				: false;
+		},
+		asciiPrintable: function (val = Input.data.lastInput) {
+			return typeof val === 'string'
+				? /(?:[\x20-\x7E])+/.test(val)
+				: false;
+		}
 	}
 });

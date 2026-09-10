@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/06/26
+//10/09/26
 
 /* exported createStatisticsMenu */
 
@@ -36,9 +36,9 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	if (bClear) { menu.clear(true); } // Reset on every call
 	// helper
 	const createMenuOption = (key, subKey, menuName = menu.getMainMenuName(), bCheck = true, addFunc = null, postFunc = null) => {
-		return function (option) {
+		return /** @this _chart */ function (option) {
 			if (menu.isSeparator(option) && !menu.isSeparator(menu.getEntries().pop())) { menu.newSeparator(menuName); return; } // Add sep only if any entry has been added
-			if (option.isEq && option.key === option.value || !option.isEq && option.key !== option.value || option.isEq === null) {
+			if ((option.isEq && option.key === option.value) || (!option.isEq && option.key !== option.value) || option.isEq === null) {
 				menu.newEntry({
 					menuName, entryText: option.entryText, func: () => {
 						if (addFunc && !addFunc(option)) { return; }
@@ -55,8 +55,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 							} else {
 								this.changeConfig({ [key]: { [subKey]: option.newValue }, callbackArgs: { bSaveProperties: true } });
 							}
-						}
-						else { this.changeConfig({ [key]: option.newValue, callbackArgs: { bSaveProperties: true } }); }
+						} else { this.changeConfig({ [key]: option.newValue, callbackArgs: { bSaveProperties: true } }); }
 						if (postFunc) { postFunc(option); }
 					}, flags: Object.hasOwn(option, 'flags') ? option.flags : MF_STRING
 				});
@@ -91,9 +90,9 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 		}.bind(this);
 	};
-	const filterGreat = (num) => new Function('p', 'return p.y > ' + num + ';');
-	const filterLow = (num) => new Function('p', 'return p.y < ' + num + ';');
-	const filterBetween = (lim) => new Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';');
+	const filterGreat = (num) => new Function('p', 'return p.y > ' + num + ';'); // NOSONAR [safe dynamic]
+	const filterLow = (num) => new Function('p', 'return p.y < ' + num + ';'); // NOSONAR [safe dynamic]
+	const filterBetween = (lim) => new Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';'); // NOSONAR [safe dynamic]
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
 	const switchedGraphs = new Set(['horizontal-bars']);
@@ -116,6 +115,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'pie', entryText: 'Pie' },
 		].filter((opt) => !hideCharts.has(opt.newValue)).forEach(createMenuOption('graph', 'type', subMenu, void (0), (option) => {
 			this.graph.borderWidth = fineGraphs.has(option.newValue) ? _scale(1) : _scale(4);
+			return true;
 		}));
 	}
 	{
