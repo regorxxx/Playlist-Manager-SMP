@@ -78,6 +78,7 @@
 ### Removed
 ### Fixed
 - UI: chart types not being changed when using menu settings on statistics mode. See [here](https://hydrogenaudio.org/index.php/topic,125040.msg1086767.html#msg1086767).
+- Drag n' drop: fix crash in some cases while scrolling to the end of the list while drag n' dropping.
 - Fixed UTF-8 script files without BOM not being properly recognized on windows.
 
 ## [1.0.0-beta.11] - 2026-08-26

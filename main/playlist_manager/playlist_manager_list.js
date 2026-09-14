@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/08/26
+//12/09/26
 
 /* exported _list */
 
@@ -1565,13 +1565,16 @@ function _list({ x, y, w, h, properties } = {}) {
 					this.offset = offset;
 					if (this.trace(this.mX, this.mY)) {
 						this.index = Math.floor((this.mY - this.y - yOffset) / panel.rowHeight) + this.offset;
+						this.inRange = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
+						if (!this.inRange) { this.index = -1; }
 					}
 					if (bPaint) { this.repaint(false, 'list'); }
 				}
 				if (this.uiElements['Scrollbar'].enabled && scrollBar && scrollBar.bDrag) {
 					this.offset = offset;
 					this.index = Math.floor((this.mY - this.y - yOffset) / panel.rowHeight) + this.offset;
-					this.inRange = true;
+					this.inRange = this.index >= this.offset && this.index < this.offset + Math.min(this.rows, this.items);
+					if (!this.inRange) { this.index = -1; }
 					this.cacheLastPosition();
 				}
 			}
@@ -2835,7 +2838,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			['L', 'M', 'R'].map((m) => {
 				const actions = Object.values(this.getShortcuts(m, 'LIST'));
 				return actions.filter((action) => action.key !== '- None -')
-					.map((action) => '\n• ' + this.getShortcutsMaskText(action) +  ': ' + action.key + '.')
+					.map((action) => '\n• ' + this.getShortcutsMaskText(action) + ': ' + action.key + '.')
 					.join('');
 			}).filter(Boolean).join('') +
 			'\n' +
