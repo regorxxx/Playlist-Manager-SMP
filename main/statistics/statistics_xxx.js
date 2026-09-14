@@ -251,6 +251,7 @@ function _chart({
 			}
 			if (pointType === 'circumference') {
 				this.dataCoords[i][j] = { x: xPoint - selBar / 3, y: yPoint - selBar / 3, w: selBar, h: valH + selBar / 3 };
+				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
 					gr.DrawEllipse(xPoint - selBar / 3, yPoint - selBar / 3, selBar * 2 / 3, selBar * 2 / 3, selBar / 4, color);
 				};
@@ -258,6 +259,7 @@ function _chart({
 				if (bFocused) { paintPoint(borderColor); }
 			} else if (pointType === 'cross') {
 				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + selBar / 2 };
+				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
 					gr.DrawLine(xPoint - selBar / 2, yPoint - selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 4, color);
 					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint - selBar / 2, selBar / 4, color);
@@ -266,6 +268,7 @@ function _chart({
 				if (bFocused) { paintPoint(borderColor); }
 			} else if (pointType === 'plus') {
 				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + + selBar / 2 };
+				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
 					gr.DrawLine(xPoint - selBar / 2, yPoint, xPoint + selBar / 2, yPoint, selBar / 4, color);
 					gr.DrawLine(xPoint, yPoint + selBar / 2, xPoint, yPoint - selBar / 2, selBar / 4, color);
@@ -274,6 +277,7 @@ function _chart({
 				if (bFocused) { paintPoint(borderColor); }
 			} else if (pointType === 'triangle') {
 				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + + selBar / 2 };
+				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
 					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 2 / 2, color);
 					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color);
@@ -283,6 +287,7 @@ function _chart({
 				if (bFocused) { paintPoint(borderColor); }
 			} else { // circle
 				this.dataCoords[i][j] = { x: xPoint - selBar / 4, y: yPoint - selBar / 4, w: selBar, h: valH + selBar / 4 };
+				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
 					gr.DrawEllipse(xPoint - selBar / 4, yPoint - selBar / 4, selBar / 2, selBar / 2, selBar / 2, color);
 				};
@@ -322,6 +327,7 @@ function _chart({
 			const yPoint = y - valH;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			const point = this.dataCoords[i][j] = { x: j > 0 ? xPoint - selBar / 2 : xPoint, y: yPoint, w: (j > 0 && j !== last ? selBar : selBar / 2), h: valH };
+			if (xPoint > w + tickW) { return; }
 			if (bFocused) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
 			}
@@ -360,6 +366,8 @@ function _chart({
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
+		const lineArr = [];
+		const clip = {x: Infinity, y: Infinity, w: 0, h: 0 };
 		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
@@ -372,30 +380,19 @@ function _chart({
 				w: (j > 0 && j !== last ? selBar : selBar / 2),
 				h: valH
 			};
+			if (xPoint > w + tickW) { return; }
+			lineArr.push(xPoint, yPoint) ;
+			clip.x = Math.min(clip.x, xPoint);
+			clip.y = Math.min(clip.y, yPoint);
+			clip.w = Math.max(clip.w, xPoint);
+			clip.h = Math.max(clip.h, yPoint);
 			if (bFocused) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
 			}
-			if (j !== 0) {
-				const paintPoint = (color) => {
-					const newValH = series[j - 1].y / (maxY || 1) * (y - h);
-					const newXPoint = x + (idx - 1) * tickW;
-					const newYPoint = y - newValH;
-					if (this.graph.borderWidth > 1) {
-						const half = this.graph.borderWidth / 2;
-						const m = (newXPoint - xPoint) / Math.abs(newYPoint - yPoint);
-						const alpha = Math.atan(m) * (m < 0 && newYPoint > yPoint ? -1 : 1);
-						const xOffset = half * Math.cos(alpha);
-						const yOffset = half * Math.sin(alpha);
-						const lineArr = [xPoint - xOffset, yPoint - yOffset, xPoint + xOffset, yPoint + yOffset, newXPoint + xOffset, newYPoint + yOffset, newXPoint - xOffset, newYPoint - yOffset];
-						gr.FillPolygon(color, 0, lineArr);
-					} else {
-						gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color);
-					}
-				};
-				paintPoint(color);
-				if (bFocused) { paintPoint(borderColor); }
-			}
 		});
+		gr.PushClip(clip.x, clip.y, clip.w, clip.h);
+		gr.DrawLines(color, this.graph.borderWidth, lineArr);
+		gr.PopClip();
 	};
 	/**
 	 * Draws fill chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
@@ -436,6 +433,7 @@ function _chart({
 				w: (j > 0 && j !== last ? selBar : selBar / 2),
 				h: valH
 			};
+			if (xPoint > w + tickW) { return; }
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (bFocused) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
@@ -449,7 +447,7 @@ function _chart({
 						const lineArr = [xPoint, yPoint, xPoint, y, newXPoint + 0.25, y, newXPoint + 0.25, newYPoint];
 						gr.FillPolygon(color, 0, lineArr);
 					};
-					paintPoint(color);
+					paintPoint(minColor);
 				} else {
 					const img = applyAsMask(
 						gdi.CreateImage(tickW, y - h),
@@ -501,9 +499,10 @@ function _chart({
 			const yPoint = y - valH;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: barW, h: valH };
+			if (xPoint > w + tickW) { return; }
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (minColor === topColor) {
-				gr.FillSolidRect(point.x, point.y, point.w, point.h, color);
+				gr.FillSolidRect(point.x, point.y, point.w, point.h, minColor);
 			} else {
 				gr.FillGradRect(point.x, point.y, point.w, point.h, 90.1, topColor, minColor);
 			}
@@ -550,7 +549,7 @@ function _chart({
 			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: valW, h: barW };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (minColor === topColor) {
-				gr.FillSolidRect(point.x, point.y, point.w, point.h, color);
+				gr.FillSolidRect(point.x, point.y, point.w, point.h, minColor);
 			} else {
 				gr.FillGradRect(point.x, point.y, point.w, point.h, 0.1, minColor, topColor);
 			}
@@ -595,8 +594,8 @@ function _chart({
 			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: barW, h: valH + this.axis.x.width };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (minColor === topColor) {
-				gr.FillSolidRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, color);
-				gr.FillSolidRect(point.x, point.y + point.h + this.axis.x.width / 2 - this.axis.x.width * (this.axis.x.show ? 0 : 1), point.w, point.h - this.axis.x.width * (this.axis.x.show ? 0.5 : 0), color);
+				gr.FillSolidRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, minColor);
+				gr.FillSolidRect(point.x, point.y + point.h + this.axis.x.width / 2 - this.axis.x.width * (this.axis.x.show ? 0 : 1), point.w, point.h - this.axis.x.width * (this.axis.x.show ? 0.5 : 0), minColor);
 			} else {
 				gr.FillGradRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, 270.1, minColor, topColor);
 				gr.FillGradRect(point.x, point.y + point.h + this.axis.x.width / 2 - this.axis.x.width * (this.axis.x.show ? 0 : 1), point.w, point.h - this.axis.x.width * (this.axis.x.show ? 0.5 : 0), 90.1, minColor, topColor);
@@ -864,7 +863,8 @@ function _chart({
 					} else if (graphType === 'lines') {
 						this.paintLines(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					} else if (graphType === 'lines-hq') {
-						this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
+						if (gr.DrawLines) { this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
+						else { this.paintLines(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
 					}
 				});
 				gr.SetSmoothingMode();

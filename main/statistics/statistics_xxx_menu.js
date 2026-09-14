@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/09/26
+//14/09/26
 
 /* exported createStatisticsMenu */
 
@@ -27,7 +27,7 @@ try { include('..\\..\\helpers\\menu_xxx.js'); } catch (e) { // eslint-disable-l
  * @param {set<string>} [o.hideCharts] - Set of chart types which should be hidden
  * @returns {_menu}
  */
-function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null, bShowMulti = true, hideCharts = new Set('lines-hq') } = {}) {
+function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null, bShowMulti = true, hideCharts = new Set() } = {}) {
 	// Constants
 	this.tooltip.SetValue(null);
 	if (!this[menuKey]) { this[menuKey] = new _menu({ onBtnUp }); }
@@ -96,7 +96,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
 	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
 	const switchedGraphs = new Set(['horizontal-bars']);
-	const gradientGraphs =  new Set(['horizontal-bars', 'bars', 'timeline', 'fill']);
+	const gradientGraphs = new Set(['horizontal-bars', 'bars', 'timeline', 'fill']);
 	// Header
 	menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
 	menu.newSeparator();
@@ -109,14 +109,17 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'bars', entryText: 'Bars' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'horizontal-bars', entryText: 'Bars (horizontal)' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'lines', entryText: 'Lines' },
-			{ isEq: null, key: this.graph.type, value: null, newValue: 'lines-hq', entryText: 'Lines (high quality)' },
+			Object.hasOwn(window, 'DrawMode') ? { isEq: null, key: this.graph.type, value: null, newValue: 'lines-hq', entryText: 'Lines (high quality)' } : null,
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'fill', entryText: 'Fill' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'doughnut', entryText: 'Doughnut' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'pie', entryText: 'Pie' },
-		].filter((opt) => !hideCharts.has(opt.newValue)).forEach(createMenuOption('graph', 'type', subMenu, void (0), (option) => {
-			this.graph.borderWidth = fineGraphs.has(option.newValue) ? _scale(1) : _scale(4);
-			return true;
-		}));
+		]
+			.filter(Boolean)
+			.filter((opt) => !hideCharts.has(opt.newValue))
+			.forEach(createMenuOption('graph', 'type', subMenu, void (0), (option) => {
+				this.graph.borderWidth = fineGraphs.has(option.newValue) ? _scale(1) : _scale(4);
+				return true;
+			}));
 	}
 	{
 		const subMenu = menu.newMenu('Distribution');
