@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //24/08/26
 
 /* exported ImportTextPlaylist */

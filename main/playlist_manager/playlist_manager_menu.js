@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //31/08/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
