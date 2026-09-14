@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //19/08/26
 
 /* exported _background */
@@ -122,7 +122,7 @@ function _background({
 			this.processArtEffects();
 			return true;
 		}).catch((error) => {
-			if (this.logging.bDebug || this.logging.bError && (!bPath || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
+			if (this.logging.bDebug || this.logging.bError && (!bPath && handle || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
 			this.resetArt();
 			return false;
 		}).finally(() => {
