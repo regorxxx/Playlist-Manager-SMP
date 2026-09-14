@@ -2,6 +2,7 @@
 
 ## [Table of Contents]
 - [Unreleased](#unreleased)
+- [1.0.0-beta.12](#100-beta12---2026-09-14)
 - [1.0.0-beta.11](#100-beta11---2026-08-26)
 - [1.0.0-beta.10](#100-beta10---2026-08-24)
 - [1.0.0-beta.9](#100-beta9---2026-04-28)
@@ -73,8 +74,16 @@
 
 ## [Unreleased][]
 ### Added
+### Changed
+### Removed
+### Fixed
+
+
+## [1.0.0-beta.12] - 2026-09-14
+### Added
 - UI: new 'Lines (high quality)' chart type. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1086993.html#msg1086993), uses DrawLines + PushClip method.
 ### Changed
+- UI: support for D2D draw mode has been changed at the properties panel to ('- Draw mode: GDI (0), D2D (1)'). After script update, it will need to be set again if desired.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
@@ -1654,7 +1663,8 @@
 ### Removed
 ### Fixed
 
-[Unreleased]: ../../compare/v1.0.0-beta.11...HEAD
+[Unreleased]: ../../compare/v1.0.0-beta.12...HEAD
+[1.0.0-beta.12]: ../../compare/v1.0.0-beta.11...v1.0.0-beta.12
 [1.0.0-beta.11]: ../../compare/v1.0.0-beta.10...v1.0.0-beta.11
 [1.0.0-beta.10]: ../../compare/v1.0.0-beta.9...v1.0.0-beta.10
 [1.0.0-beta.9]: ../../compare/v1.0.0-beta.8...v1.0.0-beta.9
