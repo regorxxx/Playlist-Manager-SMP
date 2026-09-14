@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Fuse.js v6.6.2 - Lightweight fuzzy-search (http://fusejs.io)
  *
  * Copyright (c) 2022 Kiro Risk (http://kiro.me)

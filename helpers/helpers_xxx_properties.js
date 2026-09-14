@@ -1,5 +1,5 @@
 ﻿'use strict';
-//01/09/26
+//10/09/26
 
 /* exported setProperties, overwriteProperties, deleteProperties, getPropertyByKey, getPropertiesPairs, getPropertiesValues, getPropertiesKeys, enumeratePropertiesValues, checkJsonProperties, PanelProperties */
 
@@ -403,5 +403,8 @@ class PanelProperties {
 			if (this._pptList[key].apply()) { bDone = true; }
 		}
 		return bDone;
+	}
+	getDefVal(key) {
+		return this._pptList[key].defVal;
 	}
 }

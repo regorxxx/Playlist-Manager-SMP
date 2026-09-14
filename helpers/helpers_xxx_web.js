@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //11/08/26
 
 /* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg, HTMLFile */

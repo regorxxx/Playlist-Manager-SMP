@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //10/09/26
 
 /* exported Input */

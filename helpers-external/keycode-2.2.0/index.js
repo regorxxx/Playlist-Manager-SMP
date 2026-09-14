@@ -1,4 +1,4 @@
-// Source: http://jsfiddle.net/vWx8V/
+﻿// Source: http://jsfiddle.net/vWx8V/
 // http://stackoverflow.com/questions/5603195/full-list-of-javascript-keycodes
 
 /**

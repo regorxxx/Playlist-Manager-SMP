@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //26/07/26
 
 /* exported dynamicColors, mostContrastColors */
