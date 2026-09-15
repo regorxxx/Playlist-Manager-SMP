@@ -81,14 +81,14 @@
 
 ## [1.0.0-beta.12] - 2026-09-14
 ### Added
-- UI: new 'Lines (high quality)' chart type. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1086993.html#msg1086993), uses DrawLines + PushClip method.
+- Statistics: new 'Lines (high quality)' chart type. See [here](https://hydrogenaudio.org/index.php/topic,126743.msg1086993.html#msg1086993), uses DrawLines + PushClip method.
 ### Changed
 - UI: support for D2D draw mode has been changed at the properties panel to ('- Draw mode: GDI (0), D2D (1)'). After script update, it will need to be set again if desired.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
-- UI: chart types not being changed when using menu settings on statistics mode. See [here](https://hydrogenaudio.org/index.php/topic,125040.msg1086767.html#msg1086767).
-- UI: minor color errors on gradient charts when values were zero in some cases.
+- Statistics: chart types not being changed when using menu settings on statistics mode. See [here](https://hydrogenaudio.org/index.php/topic,125040.msg1086767.html#msg1086767).
+- Statistics: minor color errors on gradient charts when values were zero in some cases.
 - Drag n' drop: fix crash in some cases while scrolling to the end of the list while drag n' dropping.
 - Fixed UTF-8 script files without BOM not being properly recognized on windows.
 
