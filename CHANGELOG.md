@@ -74,10 +74,12 @@
 
 ## [Unreleased][]
 ### Added
+- Statistics: support for line styles: solid, dot, dash, ... They work with most chart types, either as filling or border. Requires JSplitter.
 ### Changed
+- Statistics: minor improvements to menu entries display.
 ### Removed
 ### Fixed
-
+- Statistics: fixed vertical labels position on Horizontal bars charts when using multiple series (for ex. using 3 axis).
 
 ## [1.0.0-beta.12] - 2026-09-14
 ### Added

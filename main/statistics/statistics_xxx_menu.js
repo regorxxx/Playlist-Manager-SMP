@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/26
+//15/09/26
 
 /* exported createStatisticsMenu */
 
@@ -10,7 +10,7 @@ try { include('..\\..\\helpers\\menu_xxx.js'); } catch (e) { // eslint-disable-l
 }
 
 /* global _menu:readable */
-/* global MF_GRAYED:readable, MF_CHECKED:readable, _scale:readable, MF_STRING:readable, colorbrewer:readable, MF_MENUBARBREAK:readable, Input:readable, isArrayEqual:readable */
+/* global MF_GRAYED:readable, MF_CHECKED:readable, _scale:readable, MF_STRING:readable, colorbrewer:readable, MF_MENUBARBREAK:readable, Input:readable, isArrayEqual:readable, capitalize:readable */
 
 /**
  * Generic statistics menu which should work on almost any chart. Must be bound to a _chart() instance.
@@ -94,7 +94,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	const filterLow = (num) => new Function('p', 'return p.y < ' + num + ';'); // NOSONAR [safe dynamic]
 	const filterBetween = (lim) => new Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';'); // NOSONAR [safe dynamic]
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
-	const sizeGraphs = new Set(['scatter', 'lines']).difference(hideCharts || new Set());
+	const sizeGraphs = new Set(['scatter', 'lines', 'lines-hq']).difference(hideCharts || new Set());
 	const switchedGraphs = new Set(['horizontal-bars']);
 	const gradientGraphs = new Set(['horizontal-bars', 'bars', 'timeline', 'fill']);
 	// Header
@@ -500,20 +500,35 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		const subMenu = menu.newMenu('Other settings');
 		if (sizeGraphs.has(type)) {
 			{
-				const configSubMenu = menu.newMenu((type === 'lines' ? 'Line' : 'Point') + ' size', subMenu);
-				[1, 2, 3, 4].map((val) => {
-					return { isEq: null, key: this.graph.borderWidth, value: null, newValue: _scale(val), entryText: val.toString() };
+				const configSubMenu = menu.newMenu((type.includes('lines') ? 'Line' : 'Point') + ' size', subMenu);
+				menu.addTipLast('[' + this.graph.borderWidth + ']');
+				[1, 2, 3, 4, 5, 6].map((val) => {
+					val = _scale(val);
+					return { isEq: null, key: this.graph.borderWidth, value: null, newValue: val, entryText: val.toString() };
 				}).forEach(createMenuOption('graph', 'borderWidth', configSubMenu));
 			}
 			if (type === 'scatter' || type === 'p-p plot') {
 				const configSubMenu = menu.newMenu('Point type', subMenu);
+				menu.addTipLast('[' + (this.graph.point || 'circle').cut(5)  + ']');
 				['circle', 'circumference', 'cross', 'triangle', 'plus'].map((val) => {
-					return { isEq: null, key: this.graph.point, value: null, newValue: val, entryText: val };
+					return { isEq: null, key: this.graph.point, value: null, newValue: val, entryText: capitalize(val) };
 				}).forEach(createMenuOption('graph', 'point', configSubMenu));
+			}
+		}
+		if (!['fill'].includes(type) && (type !== 'scatter' || this.graph.point !== 'circle')) {
+			const configSubMenu = menu.newMenu('Line type', subMenu);
+			menu.addTipLast('[' + (this.graph.line || 'solid').cut(4) + ']');
+			if (typeof DashStyle === 'undefined') {
+				menu.newEntry({ menuName: configSubMenu, entryText: '- N/A by JS-Host -', flags: MF_GRAYED });
+			} else {
+				['Solid', 'Dash', 'Dot', 'Dash Dot', 'Dash Dot Dot'].map((val) => {
+					return { isEq: null, key: this.graph.line, value: null, newValue: val.replaceAll(' ', '').toLowerCase(), entryText: val };
+				}).forEach(createMenuOption('graph', 'line', configSubMenu));
 			}
 		}
 		{
 			const configSubMenu = menu.newMenu('Point opacity', subMenu);
+			menu.addTipLast('[' + this.graph.pointAlpha / 255 * 100  + ']');
 			[0, 20, 40, 60, 80, 100].map((val) => {
 				return { isEq: null, key: this.graph.pointAlpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
 			}).forEach(createMenuOption('graph', 'pointAlpha', configSubMenu));
