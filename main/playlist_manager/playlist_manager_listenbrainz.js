@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/08/26
+//16/09/26
 
 /* exported ListenBrainz */
 
@@ -14,7 +14,7 @@ include('..\\..\\helpers\\helpers_xxx_file.js');
 include('..\\..\\helpers\\helpers_xxx_playlists.js');
 /* global sendToPlaylist:readable */
 include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
-/* global getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable, savePlaylist:readable */
+/* global getHandlesFromPlaylist:readable, getHandlesFromUIPlaylists:readable, savePlaylist:readable, _jsonParse:readable */
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTags:readable, getHandleListTagsV2:readable, sanitizeTagIds:readable, sanitizeQueryVal:readable, checkQuery:readable, sanitizeQueryVal:readable, sanitizeTagValIds:readable */
 include('..\\..\\helpers\\helpers_xxx_web.js');
@@ -1788,7 +1788,7 @@ ListenBrainz.retrieveUserResponse = function retrieveUserResponse(token, bLog = 
 		bypassCache: true
 	}).then(
 		(resolve) => {
-			return JSON.parse(resolve);
+			return _jsonParse(resolve) || { code: -1, message: 'JSON parse error', valid: null };
 		},
 		(reject) => {
 			if (bLog) { console.log('retrieveUserResponse: ' + JSON.stringify(reject)); }
