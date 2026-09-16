@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/09/26
+//16/09/26
 
 /* exported createBackgroundMenu */
 
@@ -65,11 +65,12 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 				});
 				if (bCheck) {
 					menu.newCheckMenuLast(() => {
-						const val = subKey
+						let val = subKey
 							? Array.isArray(subKey)
 								? subKey.reduce((acc, curr) => acc[curr], this[key])
 								: this[key][subKey]
 							: this[key];
+						if (typeof val === 'undefined' && Object.hasOwn(option, 'fallbackCheckVal')) { val = option.fallbackCheckVal; }
 						if (option.newValue && typeof option.newValue === 'function') { return !!(val && val.name === option.newValue.name); }
 						if (option.newValue && typeof option.newValue === 'object') {
 							if (Array.isArray(val)) {
@@ -110,7 +111,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 					: folders.getBioArtistArtPath();
 				let input = option.newValue === 'path'
 					? Input.string('string', this.coverModeOptions.path, 'Enter TF expression or file path:\n\nMicrosoft MS-DOS wildcards are also allowed (at end of path), but only a single file will be matched. i.e.\n$directory_path(%PATH%)\\art\\*.jpg\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background file path', defTf)
-					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nMicrosoft MS-DOS wildcards are also allowed (at end of path), and all files matched by expression will be used. Note a folder path is equivalent to using [path]\\*.* i.e.\n$directory_path(%PATH%)\\art\\*.jpg\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf, void(0), void(0), defTf);
+					: Input.string('string', this.coverModeOptions.path, 'Enter TF expression or folder path:\n\nMicrosoft MS-DOS wildcards are also allowed (at end of path), and all files matched by expression will be used. Note a folder path is equivalent to using [path]\\*.* i.e.\n$directory_path(%PATH%)\\art\\*.jpg\n\nPaths starting with \'.\\profile\\\' are relative to foobar profile folder.' + (bLoadXXX ? '\nPaths starting with \'' + folders.xxxRootName + '\' are relative to this script\'s folder.' : '') + '\n\n\'%FB2K_PROFILE_PATH%\' or \'%PROFILE%\' may also be used.\n\nFor example:\n' + defTf + '\n\n\'DEFAULT\' applies default expression (above).', window.Name + ' (' + window.ScriptInfo.Name + '): Background folder path', defTf, void (0), void (0), defTf);
 				if (input === null) {
 					if (this.coverMode === option.newValue) { return false; }
 					else if (Input.isLastEqual) { input = Input.lastInput; }
@@ -152,7 +153,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menu.newSeparator(subMenu);
 			menu.newEntry({
 				menuName: subMenu, entryText: 'Open folder...', func: () => {
-					const path = this.getPanelArtPath(void(0), true);
+					const path = this.getPanelArtPath(void (0), true);
 					if (path) {
 						if (!_isFolder(path)) { _createFolder(path); }
 						_explorer(path);

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/26
+//16/09/26
 
 /* exported _listStatistics */
 
@@ -76,7 +76,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 		addEventListener('on_mouse_wheel', (step) => {
 			if (!window.ID || !this.bEnabled) { return; }
 			if (utils.IsKeyPressed(VK_CONTROL) && utils.IsKeyPressed(VK_ALT)) {
-				charts.some((chart) => chart.wheelResize(step, void(0), { bSaveProperties: true }));
+				charts.some((chart) => chart.wheelResize(step, void (0), { bSaveProperties: true }));
 			} else { charts.some((chart) => chart.wheel(step)); }
 		});
 	};
@@ -115,12 +115,13 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 								: option.newValue === this.sortKey || ['x', 'y', this.graph.multi ? 'z' : '']
 									.filter(Boolean).every((k) => option.newValue === this.sortKey[k]);
 						}
-						const val = subKey
+						if ((key === 'data' || key === 'dataAsync') && Object.keys(option.args[key]).every((val) => parent[val] === option.args[key][val])) { return true; }
+						let val = subKey
 							? Array.isArray(subKey)
 								? subKey.reduce((acc, curr) => acc[curr], this[key])
 								: this[key][subKey]
 							: this[key];
-						if ((key === 'data' || key === 'dataAsync') && Object.keys(option.args[key]).every((val) => parent[val] === option.args[key][val])) { return true; }
+						if (typeof val === 'undefined' && Object.hasOwn(option, 'fallbackCheckVal')) { val = option.fallbackCheckVal; }
 						if (option.newValue && typeof option.newValue === 'function') { return !!(val && val.name === option.newValue.name); }
 						if (option.newValue && typeof option.newValue === 'object') {
 							if (Array.isArray(val)) {
@@ -441,7 +442,7 @@ function _listStatistics(x, y, w, h, bEnabled = false, config = {}) {
 				config: {
 					backgroundColor: () => [background.getAvgPanelColor()],
 					change: function (config, changeArgs, callbackArgs) {
-						if (callbackArgs && callbackArgs.bSaveProperties) {	saveSettings.call(this); }
+						if (callbackArgs && callbackArgs.bSaveProperties) { saveSettings.call(this); }
 					},
 				},
 			},

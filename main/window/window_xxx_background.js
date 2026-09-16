@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/08/26
+//16/09/26
 
 /* exported _background */
 
@@ -111,7 +111,7 @@ function _background({
 				this.coverImg.art.image = result;
 				this.coverImg.handle = this.coverImg.art.path = path;
 			} else {
-				if (!result || !result.image) { throw new Error('Image not available'); }
+				if (!result || !result.image && this.logging.bDebug) { throw new Error('Image not available'); }
 				this.coverImg.art.image = result.image;
 				this.coverImg.art.path = result.path;
 				this.coverImg.handle = handle.RawPath;
