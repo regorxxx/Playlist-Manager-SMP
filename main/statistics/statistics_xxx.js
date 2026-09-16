@@ -1,10 +1,10 @@
-﻿'use strict';
-//15/09/26
+'use strict';
+//16/09/26
 
 /* exported _chart */
 
 include('statistics_xxx_helper.js');
-/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable, blendColors:readable, applyAsMask:readable, SmoothingMode:readable, IDC_WAIT:readable, DashStyle:readable */
+/* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable, blendColors:readable, applyAsMask:readable, SmoothingMode:readable, IDC_WAIT:readable, DashStyle:readable, CapStyle:readable */
 
 /**
  * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'lines-hq'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
@@ -14,7 +14,7 @@ include('statistics_xxx_helper.js');
  * @typedef {'circle'|'circle'|'circumference'|'cross'|'plus'|'triangle'} _chartGraphPoint
  */
 /**
- * @typedef {'solid'|'dot'|'dash'|'dashdot'|'dashdotdot'} _chartGraphLine
+ * @typedef {{ startCap: Flags.CapStyle, endCap: Flags.CapStyle, dashCap: Flags.CapStyle, lineJoin: Flags.LineJoin, miterLimit: number, dashStyle: Flags.DashStyle, dashOffset: number }} _chartGraphLine
  */
 
 /**
@@ -200,6 +200,7 @@ function _chart({
 		};
 		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
 		this.tooltipText = '';
+		this.strokeStyle = 0;
 	};
 
 	/*
@@ -240,9 +241,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintScatter = (gr, series, i, x, y, w, h, maxY, tickW, xAxisValues) => { // NOSONAR
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
@@ -260,7 +258,7 @@ function _chart({
 				this.dataCoords[i][j] = { x: xPoint - selBar / 3, y: yPoint - selBar / 3, w: selBar, h: valH + selBar / 3 };
 				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
-					gr.DrawEllipse(xPoint - selBar / 3, yPoint - selBar / 3, selBar * 2 / 3, selBar * 2 / 3, selBar / 4, color, lineType);
+					gr.DrawEllipse(xPoint - selBar / 3, yPoint - selBar / 3, selBar * 2 / 3, selBar * 2 / 3, selBar / 4, color, this.strokeStyle);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
@@ -268,8 +266,8 @@ function _chart({
 				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + selBar / 2 };
 				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
-					gr.DrawLine(xPoint - selBar / 2, yPoint - selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 4, color, lineType);
-					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint - selBar / 2, selBar / 4, color, lineType);
+					gr.DrawLine(xPoint - selBar / 2, yPoint - selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 4, color, this.strokeStyle);
+					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint - selBar / 2, selBar / 4, color, this.strokeStyle);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
@@ -277,8 +275,8 @@ function _chart({
 				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + + selBar / 2 };
 				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
-					gr.DrawLine(xPoint - selBar / 2, yPoint, xPoint + selBar / 2, yPoint, selBar / 4, color, lineType);
-					gr.DrawLine(xPoint, yPoint + selBar / 2, xPoint, yPoint - selBar / 2, selBar / 4, color, lineType);
+					gr.DrawLine(xPoint - selBar / 2, yPoint, xPoint + selBar / 2, yPoint, selBar / 4, color, this.strokeStyle);
+					gr.DrawLine(xPoint, yPoint + selBar / 2, xPoint, yPoint - selBar / 2, selBar / 4, color, this.strokeStyle);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
@@ -286,9 +284,9 @@ function _chart({
 				this.dataCoords[i][j] = { x: xPoint - selBar / 2, y: yPoint - selBar / 2, w: selBar, h: valH + + selBar / 2 };
 				if (xPoint > w + tickW) { return; }
 				const paintPoint = (color) => {
-					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 2 / 2, color, lineType);
-					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color, lineType);
-					gr.DrawLine(xPoint + selBar / 2, yPoint + selBar / 2, xPoint - selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color, lineType);
+					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2, yPoint + selBar / 2, selBar / 2 / 2, color, this.strokeStyle);
+					gr.DrawLine(xPoint - selBar / 2, yPoint + selBar / 2, xPoint + selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color, this.strokeStyle);
+					gr.DrawLine(xPoint + selBar / 2, yPoint + selBar / 2, xPoint - selBar / 2 / 8, yPoint - selBar / 2, selBar / 2 / 2, color, this.strokeStyle);
 				};
 				paintPoint(color);
 				if (bFocused) { paintPoint(borderColor); }
@@ -323,9 +321,6 @@ function _chart({
 	*/
 	this.paintLines = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
 		const selBar = tickW;
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
@@ -346,7 +341,7 @@ function _chart({
 					const newValH = series[j - 1].y / (maxY || 1) * (y - h);
 					const newXPoint = x + (idx - 1) * tickW;
 					const newYPoint = y - newValH;
-					gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color, lineType);
+					gr.DrawLine(newXPoint, newYPoint, xPoint, yPoint, this.graph.borderWidth, color, this.strokeStyle);
 				};
 				paintPoint(color);
 			}
@@ -371,11 +366,8 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintLinesHighQ = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
-		if (!gr.DrawLines || !gr.PushClip) { throw new Error('Chart type only supported on JSplitter'); }
+		if (!gr.DrawLines) { throw new Error('Chart type only supported on JSplitter'); }
 		const selBar = tickW;
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
@@ -404,9 +396,7 @@ function _chart({
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
 			}
 		});
-		gr.PushClip(clip.x, clip.y, clip.w, clip.h);
-		gr.DrawLines(color, this.graph.borderWidth, lineArr, lineType);
-		gr.PopClip();
+		gr.DrawLines(color, this.graph.borderWidth, lineArr, this.strokeStyle);
 	};
 	/**
 	 * Draws fill chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
@@ -500,9 +490,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintBars = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		const xValues = x + i * barW;
 		let valH;
@@ -526,7 +513,7 @@ function _chart({
 			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor); }
 			// Borders
 			if (this.graph.borderWidth) {
-				gr.DrawRect(point.x, point.y, point.w, point.h, this.graph.borderWidth, borderColor, lineType);
+				gr.DrawRect(point.x, point.y, point.w, point.h, this.graph.borderWidth, borderColor, this.strokeStyle);
 			}
 		});
 	};
@@ -550,9 +537,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintHorizontalBars = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues, xAxisValuesLen) => { // NOSONAR
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		const yValues = y - barW - i * barW;
 		let valW;
@@ -576,7 +560,7 @@ function _chart({
 			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor); }
 			// Borders
 			if (this.graph.borderWidth) {
-				gr.DrawRect(point.x, point.y, point.w, point.h, this.graph.borderWidth, borderColor, lineType);
+				gr.DrawRect(point.x, point.y, point.w, point.h, this.graph.borderWidth, borderColor, this.strokeStyle);
 			}
 		});
 	};
@@ -599,9 +583,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintTimeline = (gr, series, i, x, y, w, h, maxY, tickW, barW, xAxisValues) => { // NOSONAR
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		const xValues = x + i * barW;
 		let valH;
@@ -626,7 +607,7 @@ function _chart({
 			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h * 2 + this.axis.x.width, borderColor); }
 			// Borders
 			if (this.graph.borderWidth) {
-				gr.DrawRect(point.x, point.y, point.w, point.h * 2 - this.axis.x.width * (this.axis.x.show ? 0 : 0.5), this.graph.borderWidth, borderColor, lineType);
+				gr.DrawRect(point.x, point.y, point.w, point.h * 2 - this.axis.x.width * (this.axis.x.show ? 0 : 0.5), this.graph.borderWidth, borderColor, this.strokeStyle);
 			}
 		});
 	};
@@ -648,9 +629,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintPie = (gr, series, i, x, y, w, h, maxY, r) => { // NOSONAR
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		let circleArr = [];
 		const labelCoord = [];
@@ -693,7 +671,7 @@ function _chart({
 				if (bFocused) { gr.FillPolygon(borderColor, 0, circleArr); }
 				// Borders
 				if (this.graph.borderWidth && polygonPoints > 2) {
-					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr, lineType);
+					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr, this.strokeStyle);
 				}
 			}
 			circleArr = Object.values(c);
@@ -722,9 +700,6 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintDoughnut = (gr, series, i, x, y, w, h, maxY, r, rInner) => { // NOSONAR
-		const lineType = typeof DashStyle === 'undefined' || window.DrawMode === 0
-			? 0
-			: Object.entries(DashStyle).find((k) => k[0].toLowerCase() === (this.graph.line || 'solid'))[1];
 		// Values
 		let circleArr = [];
 		const labelCoord = [];
@@ -759,7 +734,7 @@ function _chart({
 				if (bFocused) { gr.FillPolygon(borderColor, 0, circleArr); }
 				// Borders
 				if (this.graph.borderWidth && polygonPoints > 2) {
-					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr, lineType);
+					gr.DrawPolygon(borderColor, this.graph.borderWidth, circleArr, this.strokeStyle);
 				}
 			}
 			circleArr.push(...Object.values(c));
@@ -2992,17 +2967,36 @@ function _chart({
 		const pPlot = this.dataManipulation.probabilityPlot ? this.dataManipulation.probabilityPlot.toLowerCase() : null;
 		const dist = this.dataManipulation.distribution ? this.dataManipulation.distribution.toLowerCase() : null;
 		const pointType = this.graph.point ? this.graph.point.toLowerCase() : null;
-		const lineType = this.graph.line ? this.graph.line.toLowerCase() : null;
 		let bPass = true;
 		if (pointType && !['circle', 'circumference', 'cross', 'plus', 'triangle'].includes(pointType)) {
 			this.graph.point = 'circle';
 			console.log('Statistics: not recognized point type ' + _p(pointType) + '.');
 			bPass = false;
 		}
-		if (lineType && !['solid', 'dot', 'dash', 'dashdot', 'dashdotdot'].includes(lineType)) {
-			this.graph.line = 'solid';
-			console.log('Statistics: not recognized line type ' + _p(lineType) + '.');
-			bPass = false;
+		if (!this.graph.line) { this.graph.line = {}; }
+		if (typeof DashStyle === 'undefined' || typeof window.DrawMode === 'undefined' || window.DrawMode === 0) {
+			this.strokeStyle = 0;
+		} else if (Object.keys(this.graph.line).length === 0) {
+			this.strokeStyle = 0;
+		} else {
+			const strokeStyle = { ...this.graph.line };
+			if (Object.hasOwn(strokeStyle, 'dashStyle') && strokeStyle.dashStyle >= 1) {
+				if (strokeStyle.dashStyle >= 2 && !strokeStyle.dashCap) { strokeStyle.dashCap = CapStyle.Round; }
+				if (!Object.hasOwn(strokeStyle, 'dashOffset') && this.graph.type === 'scatter') {
+					switch (this.graph.point) {
+						case 'cross': strokeStyle.dashOffset = strokeStyle.dashStyle >= 2 ? 1 : 0; break;
+						case 'plus': strokeStyle.dashOffset = 1; break;
+						case 'triangle': strokeStyle.dashOffset = -1; break;
+					}
+				}
+			}
+			try { this.strokeStyle = d2d.StrokeStyle(strokeStyle); }
+			catch (e) {
+				this.strokeStyle = 0;
+				this.graph.line = {};
+				console.log('Statistics: not recognized line style ' + _p(this.graph.line) + '.\n\n' + e.message);
+				bPass = false;
+			}
 		}
 		if (!this.graph.multi) {
 			this.axis.z = {};
@@ -3023,7 +3017,7 @@ function _chart({
 					this.axis.x.key = 'Theoretical cumulative distribution';
 					this.axis.y.key = 'Empirical cumulative distribution';
 					if (!this.graph.point) { this.graph.point = 'circle'; }
-					if (!this.graph.line) { this.graph.line = 'solid'; }
+					if (!this.graph.line) { this.graph.line = {}; }
 					bPass = false;
 				}
 			}
@@ -3274,6 +3268,8 @@ function _chart({
 	this.inFocus = false;
 	this.title = typeof title === 'undefined' ? window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}' : title;
 	this.tooltipText = tooltipText;
+	/** @type {D2DStrokeStyleOptions|null} */
+	this.strokeStyle = 0;
 	/** @type {{bLoadAsyncData: boolean, bAltVerticalText: boolean, bPopupBackground: boolean, bDebug: boolean, bProfile: boolean, bSlicePerKey: boolean, bDynLabelColor: boolean, bDynLabelColorBW: boolean, maxSliceOnDataChange: 50, bGradientPoints: boolean}} */
 	this.configuration = { ...this.configuration, ...configuration };
 	this.leftBtn = new _button({

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//15/09/26
+//16/09/26
 
 /* exported createStatisticsMenu */
 
@@ -10,7 +10,8 @@ try { include('..\\..\\helpers\\menu_xxx.js'); } catch (e) { // eslint-disable-l
 }
 
 /* global _menu:readable */
-/* global MF_GRAYED:readable, MF_CHECKED:readable, _scale:readable, MF_STRING:readable, colorbrewer:readable, MF_MENUBARBREAK:readable, Input:readable, isArrayEqual:readable, capitalize:readable */
+/* global MF_GRAYED:readable, MF_CHECKED:readable, _scale:readable, MF_STRING:readable, colorbrewer:readable, MF_MENUBARBREAK:readable, DashStyle:readable, LineJoin:readable */
+/* global Input:readable, isArrayEqual:readable, capitalize:readable */
 
 /**
  * Generic statistics menu which should work on almost any chart. Must be bound to a _chart() instance.
@@ -67,11 +68,13 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 								: option.newValue === this.sortKey || ['x', 'y', this.graph.multi ? 'z' : '']
 									.filter(Boolean).every((k) => option.newValue === this.sortKey[k]);
 						}
-						const val = subKey
+						let val = subKey
 							? Array.isArray(subKey)
 								? subKey.reduce((acc, curr) => acc[curr], this[key])
 								: this[key][subKey]
 							: this[key];
+						if ((key === 'data' || key === 'dataAsync') && Object.keys(option.args[key]).every((val) => parent[val] === option.args[key][val])) { return true; }
+						if (typeof val === 'undefined' && Object.hasOwn(option, 'fallbackCheckVal')) { val = option.fallbackCheckVal; }
 						if (option.newValue && typeof option.newValue === 'function') { return !!(val && val.name === option.newValue.name); }
 						if (option.newValue && typeof option.newValue === 'object') {
 							if (Array.isArray(val)) {
@@ -496,6 +499,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		}
 	}
 	{
+		/** @type {_chartGraphType} */
 		const type = this.graph.type.toLowerCase();
 		const subMenu = menu.newMenu('Other settings');
 		if (sizeGraphs.has(type)) {
@@ -509,26 +513,47 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 			if (type === 'scatter' || type === 'p-p plot') {
 				const configSubMenu = menu.newMenu('Point type', subMenu);
-				menu.addTipLast('[' + (this.graph.point || 'circle').cut(5)  + ']');
+				menu.addTipLast('[' + (this.graph.point || 'circle').cut(5) + ']');
 				['circle', 'circumference', 'cross', 'triangle', 'plus'].map((val) => {
 					return { isEq: null, key: this.graph.point, value: null, newValue: val, entryText: capitalize(val) };
 				}).forEach(createMenuOption('graph', 'point', configSubMenu));
 			}
 		}
 		if (!['fill'].includes(type) && (type !== 'scatter' || this.graph.point !== 'circle')) {
-			const configSubMenu = menu.newMenu('Line type', subMenu);
-			menu.addTipLast('[' + (this.graph.line || 'solid').cut(4) + ']');
-			if (typeof DashStyle === 'undefined') {
-				menu.newEntry({ menuName: configSubMenu, entryText: '- N/A by JS-Host -', flags: MF_GRAYED });
-			} else {
-				['Solid', 'Dash', 'Dot', 'Dash Dot', 'Dash Dot Dot'].map((val) => {
-					return { isEq: null, key: this.graph.line, value: null, newValue: val.replaceAll(' ', '').toLowerCase(), entryText: val };
-				}).forEach(createMenuOption('graph', 'line', configSubMenu));
+			{ // Line Style
+				const configSubMenu = menu.newMenu('Line style', subMenu);
+				const entries = typeof DashStyle === 'undefined' ? null : Object.entries(DashStyle).filter((s) => s[0] !== 'Custom');
+				const currVal = entries
+					? (entries.find((d) => d[1] === this.graph.line.dashStyle) || entries[0])[0]
+					: 'Solid';
+				menu.addTipLast('[' + (currVal).cut(4) + ']');
+				if (entries) {
+					entries.map((val) => {
+						return { isEq: null, key: this.graph.line.dashStyle, value: null, fallbackCheckVal: 0, newValue: val[1], entryText: val[0] };
+					}).forEach(createMenuOption('graph', ['line', 'dashStyle'], configSubMenu));
+				} else {
+					menu.newEntry({ menuName: configSubMenu, entryText: '- N/A by JS-Host -', flags: MF_GRAYED });
+				}
+			}
+			if (type === 'lines-hq')  { // Line Join
+				const configSubMenu = menu.newMenu('Line join', subMenu);
+				const entries = typeof LineJoin === 'undefined' ? null : Object.entries(LineJoin);
+				const currVal = entries
+					? (entries.find((d) => d[1] === this.graph.line.lineJoin) || entries[0])[0]
+					: 'Miter';
+				menu.addTipLast('[' + (currVal).cut(4) + ']');
+				if (entries) {
+					entries.map((val) => {
+						return { isEq: null, key: this.graph.line.lineJoin, value: null, fallbackCheckVal: 0, newValue: val[1], entryText: val[0] };
+					}).forEach(createMenuOption('graph', ['line', 'lineJoin'], configSubMenu));
+				} else {
+					menu.newEntry({ menuName: configSubMenu, entryText: '- N/A by JS-Host -', flags: MF_GRAYED });
+				}
 			}
 		}
 		{
 			const configSubMenu = menu.newMenu('Point opacity', subMenu);
-			menu.addTipLast('[' + this.graph.pointAlpha / 255 * 100  + ']');
+			menu.addTipLast('[' + this.graph.pointAlpha / 255 * 100 + ']');
 			[0, 20, 40, 60, 80, 100].map((val) => {
 				return { isEq: null, key: this.graph.pointAlpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
 			}).forEach(createMenuOption('graph', 'pointAlpha', configSubMenu));
