@@ -74,14 +74,21 @@
 
 ## [Unreleased][]
 ### Added
+- Statistics: new setting to modify the degree of point filling for bar-based charts. i.e. Instead of using the entire available width, it will leave blank spaces between points if using any value below 100%.
+- Statistics: new setting to modify and control how chart title is shown (previously on menus).
+- Statistics: new setting to control X-Y grids opacity.
 - Statistics: support for line styles: solid, dot, dash, ... They work with most chart types, either as filling or border. Requires JSplitter.
 - Statistics: support for line join styles: miter, round,... It works with Lines (high quality)' chart type. Requires JSplitter.
+- Statistics: new chart type 'Lines (with markers)'.
 ### Changed
 - Statistics: minor improvements to menu entries display.
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
 - Statistics: fixed vertical labels position on Horizontal bars charts when using multiple series (for ex. using 3 axis).
+- Statistics: minor fixes on focused point highlighting in some cases.
+- Statistics: fix Y-Tittle being shown even if it was disabled.
+- Statistics: fix horizontal grid width in some chart types.
 
 ## [1.0.0-beta.12] - 2026-09-14
 ### Added

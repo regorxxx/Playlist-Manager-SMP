@@ -1,5 +1,5 @@
 'use strict';
-//16/09/26
+//18/09/26
 
 /* exported _chart */
 
@@ -7,7 +7,7 @@ include('statistics_xxx_helper.js');
 /* global _gdiFont:readable, getBrightness:readable, toRGB:readable, RGBA:readable, invert:readable, Chroma:readable, _scale:readable, _tt:readable, round:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_RIGHT:readable, DT_LEFT:readable, DT_VCENTER:readable, TextRenderingHint:readable, StringFormatFlags:readable, InterpolationMode:readable, RotateFlipType:readable, VK_SHIFT:readable, range:readable, RGB:readable, isFunction:readable, _p:readable, IDC_HAND:readable, IDC_ARROW:readable, debounce:readable, throttle:readable, VK_CONTROL:readable, MK_LBUTTON:readable, colorbrewer:readable, NatSort:readable, MK_SHIFT:readable, _button:readable, chars:readable, _popup:readable, opaqueColor:readable, memoryPrint:readable, strNumCollator:readable, blendColors:readable, applyAsMask:readable, SmoothingMode:readable, IDC_WAIT:readable, DashStyle:readable, CapStyle:readable */
 
 /**
- * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'lines-hq'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
+ * @typedef {'timeline'|'bars'|'bars-horizontal'|'lines'|'lines-hq'|'lines-markers'|'fill'|'scatter'|'doughnut'|'pie'} _chartGraphType
  */
 
 /**
@@ -50,6 +50,7 @@ include('statistics_xxx_helper.js');
  * @param {_chartGraphType} [o.graph.type] - [='bars'] Chart type for display purposes
  * @param {boolean} [o.graph.multi] - [=false] Flag to expand {x,y,z} data into multiple {x,y} series to draw 3D data.
  * @param {number} [o.graph.borderWidth] - [=_scale(1)] Point size (scatter) or point border size
+ * @param {number} [o.graph.fillPercent] - [=100] Point filling percentage for bar-based charts
  * @param {_chartGraphPoint} [o.graph.point] - [=null] Point type for display (scatter only). If invalid, fallbacks to 'circle'
  * @param {_chartGraphLine} [o.graph.line] - [=null] Line type for display (line-like charts only). If invalid, fallbacks to 'solid'
  * @param {number} [o.graph.pointAlpha] - [=255] Point opacity [0-255]
@@ -70,14 +71,15 @@ include('statistics_xxx_helper.js');
  * @param {number} [o.background.color] - [=RGB(255, 255, 255)]
  * @param {GdiBitmap} [o.background.image] - [=null]
  * @param {object} [o.grid] - Grid settings
- * @param {{show:boolean, color:number, width:number}} [o.grid.x] - [={show: false, color: RGB(0,0,0), width: _scale(1)}] X-axis grid settings
- * @param {{show:boolean, color:number, width:number}} [o.grid.y] - [={show: false, color: RGB(0,0,0), width: _scale(1)}] Y-Axis Grid settings
+ * @param {{show:boolean, color:number, width:number, alpha:number}} [o.grid.x] - [={show: false, color: RGB(0,0,0), width: _scale(1), alpha: 200}] X-axis grid settings
+ * @param {{show:boolean, color:number, width:number, alpha:number}} [o.grid.y] - [={show: false, color: RGB(0,0,0), width: _scale(1), alpha: 200}] Y-Axis Grid settings
  * @param {object} [o.axis] - Axis settings (and its sub-elements)
  * @param {{show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string, bSingleLabels:boolean, bAltLabels:boolean}} [o.axis.x] - X-Axis settings. Key sets the displayed title. When bAltLabels is true, it uses a different method to display labels.
  * @param {{show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}} [o.axis.y] - Y-Axis settings. Key sets the displayed title.
  * @param {{show:boolean, color:number, width:number, ticks:boolean, labels:boolean, key:string}} [o.axis.z] - Z-Axis settings. Key sets the displayed title.
  * @param {object} [o.graphSpecs] - Graph type specific configuration
  * @param {{bAxisCenteredX:boolean}} [o.graphSpecs.timeline] - Timeline specific settings. bAxisCenteredX controls if ticks must be centered on the point or at the left.
+ * @param {{bShowGap:boolean}} [o.graphSpecs.fill] - Timeline specific settings. bShowGap controls if a 0.25 px wide is shown between points.
  * @param {object} [o.buttons] - Buttons settings
  * @param {boolean} [o.buttons.xScroll] - [=false] X-axis scroll buttons at sides
  * @param {boolean} [o.buttons.settings] - [=false] Settings button at right
@@ -103,7 +105,11 @@ include('statistics_xxx_helper.js');
  * @param {number} [o.y] - [=0] Y panel position
  * @param {number} [o.w] - [=window.Width] W panel position
  * @param {number} [o.w] - [=window.Height] H panel position
- * @param {string} [o.title] - Chart title
+ * @param {object} [o.title] - Title settings
+ * @param {string} [o.title.key] - Chart title string
+ * @param {boolean} [o.title.show] - [=false] Flag to control title display
+ * @param {number} [o.title.color] - [=RGB(0,0,0)] Title color
+ * @param {number} [o.title.alpha] - [=200] Title color
  * @param {GdiFont} [o.gFont] - [=_gdiFont('Segoe UI', _scale(10))] Chart font
  * @param {((refPoint, series, mask) => string)|string} [o.tooltipText] - [='']
  */
@@ -112,11 +118,11 @@ function _chart({
 	dataAsync = null,
 	colors = [/* rgbSeries1, ... */],
 	chroma = {/* scheme, colorBlindSafe, interpolation */ },
-	graph = {/* type, multi, borderWidth, point, pointAlpha */ },
+	graph = {/* type, multi, borderWidth, fillPercent, point, pointAlpha */ },
 	dataManipulation = {/* sort, filter, mFilter, slice, distribution , probabilityPlot, group */ },
 	background = {/* color, image*/ },
 	grid = {
-		x: {/* show, color, width */ },
+		x: {/* show, color, width, alpha */ },
 		y: {/* ... */ }
 	},
 	axis = {
@@ -126,6 +132,7 @@ function _chart({
 	},
 	graphSpecs = { // Graph type specific configuration
 		timeline: {/* bAxisCenteredX */ },
+		fill: {/* bShowGap */ },
 	},
 	margin = {/* left, right, top, bottom */ },
 	buttons = {/* xScroll, settings, display, zoom, custom, alpha, timer, size */ },
@@ -155,17 +162,24 @@ function _chart({
 	this.setDefaults = () => {
 		this.colors = [];
 		this.chroma = { scheme: 'sequential', colorBlindSafe: true, interpolation: 'lrgb' }; // diverging, qualitative, sequential, random or [color, ...] see https://vis4.net/chromajs/#color-scales
-		this.graph = { type: 'bars', multi: false, borderWidth: _scale(1), point: null, line: null, pointAlpha: 255 };
+		this.graph = { type: 'bars', multi: false, borderWidth: _scale(1), fillPercent: 100, point: null, line: null, pointAlpha: 255 };
 		this.dataManipulation = { sort: { x: 'natural', y: null, z: null, my: 'reverse num', mz: null }, filter: null, mFilter: true, slice: [0, 10], distribution: null, probabilityPlot: null, group: 4 };
 		this.background = { color: RGB(255, 255, 255), image: null };
-		this.grid = { x: { show: false, color: RGB(0, 0, 0), width: _scale(1) }, y: { show: false, color: RGB(0, 0, 0), width: _scale(1) } };
+		this.grid = { x: { show: false, color: RGB(0, 0, 0), width: _scale(1), alpha: 200 }, y: { show: false, color: RGB(0, 0, 0), width: _scale(1), alpha: 200 } };
 		this.axis = {
 			x: { show: true, showTicks: true, showKey: true, color: RGB(0, 0, 0), width: _scale(2), ticks: 'auto', labels: true, bSingleLabels: true, key: '', bAltLabels: false, mergeLabels: true, tf: '' },
 			y: { show: true, showTicks: true, showKey: true, color: RGB(0, 0, 0), width: _scale(2), ticks: 10, labels: true, key: 'tracks', tf: '', bProportional: false },
 			z: { key: '', tf: '' },
 		};
+		this.title = {
+			key: this.createTitle(),
+			color: RGB(0, 0, 0),
+			show: false,
+			alpha: 200
+		};
 		this.graphSpecs = {
 			timeline: { bAxisCenteredX: false },
+			fill: { bShowGap: true }
 		};
 		this.margin = { left: _scale(20), right: _scale(20), top: _scale(20), bottom: _scale(20) };
 		this.buttons = { xScroll: false, settings: false, display: false, zoom: false, custom: false, alpha: 25, timer: 1500, size: _scale(24) };
@@ -198,7 +212,6 @@ function _chart({
 			maxSliceOnDataChange: 50,
 			bGradientPoints: false
 		};
-		this.title = window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}';
 		this.tooltipText = '';
 		this.strokeStyle = 0;
 	};
@@ -230,7 +243,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -309,7 +322,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -333,9 +346,6 @@ function _chart({
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
 			const point = this.dataCoords[i][j] = { x: j > 0 ? xPoint - selBar / 2 : xPoint, y: yPoint, w: (j > 0 && j !== last ? selBar : selBar / 2), h: valH };
 			if (xPoint > w + tickW) { return; }
-			if (bFocused) {
-				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
-			}
 			if (j !== 0) {
 				const paintPoint = (color) => {
 					const newValH = series[j - 1].y / (maxY || 1) * (y - h);
@@ -345,6 +355,7 @@ function _chart({
 				};
 				paintPoint(color);
 			}
+			if (bFocused) { gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor); }
 		});
 	};
 	/**
@@ -355,7 +366,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -366,14 +377,14 @@ function _chart({
 	 * @returns {void}
 	*/
 	this.paintLinesHighQ = (gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues) => { // NOSONAR
-		if (!gr.DrawLines) { throw new Error('Chart type only supported on JSplitter'); }
+		if (!this.support.drawLines) { throw new Error('Chart type only supported on JSplitter'); }
 		const selBar = tickW;
 		// Values
 		let valH;
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const lineArr = [];
-		const clip = { x: Infinity, y: Infinity, w: 0, h: 0 };
+		let focusPoint;
 		series.forEach((value, j) => {
 			valH = value.y / (maxY || 1) * (y - h);
 			const idx = xAxisValues.indexOf(value.x);
@@ -388,15 +399,10 @@ function _chart({
 			};
 			if (xPoint > w + tickW) { return; }
 			lineArr.push(xPoint, yPoint);
-			clip.x = Math.min(clip.x, xPoint);
-			clip.y = Math.min(clip.y, yPoint);
-			clip.w = Math.max(clip.w, xPoint);
-			clip.h = Math.max(clip.h, yPoint);
-			if (bFocused) {
-				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
-			}
+			if (bFocused) { focusPoint = point; }
 		});
-		gr.DrawLines(color, this.graph.borderWidth, lineArr, this.strokeStyle);
+		if (lineArr.length) { gr.DrawLines(color, this.graph.borderWidth, lineArr, this.strokeStyle); }
+		if (focusPoint) { gr.FillSolidRect(focusPoint.x, focusPoint.y, focusPoint.w, focusPoint.h, borderColor); }
 	};
 	/**
 	 * Draws fill chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
@@ -406,7 +412,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -423,7 +429,9 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const minColor = this.configuration.bGradientPoints ? invert(color, false, true) : color;
+		const fillOffset = selBar * (1 - this.graph.fillPercent / 100);
 		const smoothMode = SmoothingMode.AntiAlias;
+		let focusPoint;
 		series.forEach((value, j) => {
 			const scale = value.y / (maxY || 1);
 			valH = scale * (y - h);
@@ -439,16 +447,13 @@ function _chart({
 			};
 			if (xPoint > w + tickW) { return; }
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
-			if (bFocused) {
-				gr.FillSolidRect(point.x, point.y, point.w, point.h, borderColor);
-			}
 			if (j !== 0) {
 				if (minColor === topColor) {
 					const paintPoint = (color) => {
 						const newValH = series[j - 1].y / (maxY || 1) * (y - h);
-						const newXPoint = x + (idx - 1) * tickW;
+						const newXPoint = x + (idx - 1) * tickW + fillOffset + (this.graphSpecs.fill.bShowGap ? 0.25 : -0.5);
 						const newYPoint = y - newValH;
-						const lineArr = [xPoint, yPoint, xPoint, y, newXPoint + 0.25, y, newXPoint + 0.25, newYPoint];
+						const lineArr = [xPoint, yPoint, xPoint, y, newXPoint, y, newXPoint, newYPoint];
 						gr.FillPolygon(color, 0, lineArr);
 					};
 					paintPoint(minColor);
@@ -469,7 +474,9 @@ function _chart({
 					gr.DrawImage(img, xPoint - tickW, h, tickW + 0.25, y - h, 0, 0, img.Width, img.Height);
 				}
 			}
+			if (bFocused) { focusPoint = point; }
 		});
+		if (focusPoint) { gr.FillSolidRect(focusPoint.x, focusPoint.y, focusPoint.w, focusPoint.h, borderColor); }
 	};
 	/**
 	 * Draws bars chart. Recommended to use gr.SetSmoothingMode(SmoothingMode.AntiAlias) before
@@ -479,7 +486,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -496,13 +503,14 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const minColor = this.configuration.bGradientPoints ? invert(color, false, true) : color;
+		const fillOffset = barW * (1 - this.graph.fillPercent / 100);
 		series.forEach((value, j) => {
 			const scale = value.y / (maxY || 1);
 			valH = scale * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = y - valH;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
-			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: barW, h: valH };
+			const point = this.dataCoords[i][j] = { x: xPoint + fillOffset / 2, y: yPoint, w: barW - fillOffset, h: valH };
 			if (xPoint > w + tickW) { return; }
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (minColor === topColor) {
@@ -525,7 +533,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -543,6 +551,7 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const minColor = this.configuration.bGradientPoints ? invert(color, false, true) : color;
+		const fillOffset = barW * (1 - this.graph.fillPercent / 100);
 		series.forEach((value, j) => {
 			const scale = value.y / (maxY || 1);
 			valW = scale * (w - x);
@@ -550,7 +559,7 @@ function _chart({
 			const yPoint = yValues - revIdx * tickW;
 			const xPoint = x;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
-			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: valW, h: barW };
+			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint + fillOffset / 2, w: valW, h: barW - fillOffset };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (minColor === topColor) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h, minColor);
@@ -572,7 +581,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -589,13 +598,14 @@ function _chart({
 		const borderColor = RGBA(...toRGB(invert(this.colors[i], true)), getBrightness(...toRGB(this.colors[i])) < 50 ? this.graph.pointAlpha : 25);
 		const color = RGBA(...toRGB(this.colors[i]), this.graph.pointAlpha);
 		const minColor = this.configuration.bGradientPoints ? invert(color, false, true) : color;
+		const fillOffset = barW * (1 - this.graph.fillPercent / 100);
 		series.forEach((value, j) => {
 			const scale = value.y / (maxY || 1);
 			valH = scale / 2 * (y - h);
 			const xPoint = xValues + xAxisValues.indexOf(value.x) * tickW;
 			const yPoint = (y - h) / 2 - valH + this.margin.top;
 			const bFocused = this.currPoint[0] === i && this.currPoint[1] === j;
-			const point = this.dataCoords[i][j] = { x: xPoint, y: yPoint, w: barW, h: valH + this.axis.x.width };
+			const point = this.dataCoords[i][j] = { x: xPoint + fillOffset / 2, y: yPoint, w: barW - fillOffset, h: valH + this.axis.x.width };
 			const topColor = this.configuration.bGradientPoints ? blendColors(minColor, color, scale, true) : color;
 			if (minColor === topColor) {
 				gr.FillSolidRect(point.x, point.y, point.w, point.h - this.axis.x.width / 2, minColor);
@@ -619,7 +629,7 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
@@ -689,14 +699,14 @@ function _chart({
 	 * @memberof _chart
 	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
 	 * @param {GdiGraphics} series - Point series
-	 * @param {GdiGraphics} i - Current serie
+	 * @param {GdiGraphics} i - Current series
 	 * @param {number} x - Draw zone coords
 	 * @param {number} y - Draw zone coords
 	 * @param {number} w - Draw zone coords
 	 * @param {number} h - Draw zone coords
 	 * @param {number} maxY - Max Y-axis value for all series
-	 * @param {number} r - Doughnut outer radious
-	 * @param {number} rInner - Doughnut inner radious
+	 * @param {number} r - Doughnut outer radius
+	 * @param {number} rInner - Doughnut inner radius
 	 * @returns {void}
 	*/
 	this.paintDoughnut = (gr, series, i, x, y, w, h, maxY, r, rInner) => { // NOSONAR
@@ -749,6 +759,16 @@ function _chart({
 		return [...new Map(arr.map((item) => [item[key], item])).values()];
 	};
 
+	/**
+	 * Paints chart area
+	 *
+	 * @property
+	 * @name paintGraph
+	 * @kind method
+	 * @memberof _chart
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @returns {boolean}
+	*/
 	this.paintGraph = (gr) => {
 		this.dataCoords = this.dataDraw.map(() => []);
 		let x, y, w, h, xOffsetKey, yOffsetKey;
@@ -767,8 +787,18 @@ function _chart({
 				? bgColor
 				: invert(xAxisColor, true);
 		const yAxisColor = bDynLabelColor ? bgColor : this.axis.y.color || bgColor;
-		const xGridColor = bDynLabelColor ? bgColor : this.grid.x.color || bgColor;
-		const yGridColor = bDynLabelColor ? bgColor : this.grid.y.color || bgColor;
+		const xGridColor = opaqueColor(
+			this.callbacks.config.backgroundColor
+				? invert(this.callbacks.config.backgroundColor(), true)
+				: bDynLabelColor ? bgColor : this.grid.x.color || bgColor,
+			this.grid.x.alpha / 255 * 100
+		);
+		const yGridColor = opaqueColor(
+			this.callbacks.config.backgroundColor
+				? invert(this.callbacks.config.backgroundColor(), true)
+				: bDynLabelColor ? bgColor : this.grid.y.color || bgColor,
+			this.grid.y.alpha / 255 * 100
+		);
 		// Max Y value for all series
 		let maxY = 0, minY = 0;
 		this.dataDraw.forEach((series) => {
@@ -851,6 +881,7 @@ function _chart({
 			case 'scatter':
 			case 'lines':
 			case 'lines-hq':
+			case 'lines-markers':
 			case 'fill': {
 				x -= this.axis.x.width * 1 / 2;
 				tickW = (w - this.margin.leftAuto) / ((xAxisValuesLen - 1) || 1);
@@ -860,15 +891,21 @@ function _chart({
 				const last = xAxisValuesLen - 1;
 				gr.SetSmoothingMode(SmoothingMode.AntiAlias);
 				this.dataDraw.forEach((series, i) => {
-					if (graphType === 'scatter' || (series.length === 1)) {
+					const len = series.length;
+					if (!len) { return; }
+					else if (graphType === 'scatter' || len === 1) {
 						this.paintScatter(gr, series, i, x, y, w, h, maxY, tickW, xAxisValues);
 					} else if (graphType === 'fill') {
 						this.paintFill(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					} else if (graphType === 'lines') {
 						this.paintLines(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues);
 					} else if (graphType === 'lines-hq') {
-						if (gr.DrawLines) { this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
+						if (this.support.drawLines) { this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
 						else { this.paintLines(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
+					} else if (graphType === 'lines-markers') {
+						if (this.support.drawLines) { this.paintLinesHighQ(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
+						else { this.paintLines(gr, series, i, x, y, w, h, maxY, tickW, last, xAxisValues); }
+						this.paintScatter(gr, series, i, x, y, w, h, maxY, tickW, xAxisValues);
 					}
 				});
 				gr.SetSmoothingMode();
@@ -1347,7 +1384,7 @@ function _chart({
 							}
 						});
 					}
-					if (this.axis.y.showKey || this.axis.y.key.length) {
+					if (this.axis.y.showKey && this.axis.y.key.length) {
 						const key = this.configuration.bAltVerticalText ? this.axis.y.key.flip() : this.axis.y.key;
 						const maxTickW = gr.CalcTextWidth(tickText[tickText.length - 1], this.gFont);
 						const keyW = gr.CalcTextWidth(key, this.gFont);
@@ -1439,8 +1476,8 @@ function _chart({
 								: 0
 							: 0
 						);
-						const lineW = Math.min(w + (this.axis.y.show ? this.margin.leftAuto - this.axis.y.width : 0), this.w - this.margin.right);
-						gr.DrawLine(x, yTick, lineW, yTick, this.grid.y.width, this.callbacks.config.backgroundColor ? invert(this.callbacks.config.backgroundColor(), true) : yGridColor);
+						const lineW = Math.min(w + this.margin.leftAuto + (this.axis.y.show ? this.axis.y.width : 0), this.w - this.margin.right);
+						gr.DrawLine(x, yTick, lineW, yTick, this.grid.y.width, yGridColor);
 					});
 				}
 				if (this.grid.x.show) {
@@ -1450,9 +1487,33 @@ function _chart({
 					});
 				}
 		}
+		/*
+			Title
+		*/
+		if (this.title.show && this.title.key.length) {
+			const titleColor = opaqueColor(
+				this.callbacks.config.backgroundColor
+					? invert(this.callbacks.config.backgroundColor(), true)
+					: bDynLabelColor ? bgColor : this.title.color || bgColor,
+				this.title.alpha / 255 * 100
+			);
+			const textW = gr.CalcTextWidth(this.title.key, this.gFont);
+			gr.DrawString(this.title.key, this.gFont, titleColor, x + (w - textW) / 2, h, w, y);
+		}
 		return { bHideToolbar };
 	};
 
+	/**
+	 * Paints scrolling and toolbar buttons
+	 *
+	 * @property
+	 * @name paintButtons
+	 * @kind method
+	 * @memberof _chart
+	 * @param {GdiGraphics} gr - GDI graphics object from on_paint callback.
+	 * @param {Boolean} bHideToolbar
+	 * @returns {boolean}
+	*/
 	this.paintButtons = (gr, bHideToolbar = false) => {
 		const color = invert(this.callbacks.config.backgroundColor ? this.callbacks.config.backgroundColor() : this.background.color || this.axis.x.color, true);
 		if (this.buttons.xScroll && this.getCurrentRange() < this.getMaxRange()) {
@@ -1537,6 +1598,7 @@ function _chart({
 	this.paint = (gr) => {
 		if (!window.ID) { return; }
 		if (!window.Width || !window.Height) { return; }
+		this.support.gr.DrawLines = !!gr.DrawLines;
 		if (this.configuration.bProfile) { this.profile.Reset(); }
 		this.paintBg(gr);
 		if (this.configuration.bProfile) { this.profile.Print('Paint background', false); }
@@ -1954,6 +2016,22 @@ function _chart({
 
 	this.getMaxRange = () => {
 		return Math.max(...this.stats.points);
+	};
+
+	this.createTitle = (chartNumber) => _chart.createTitle(chartNumber, this.axis.x.key, this.axis.y.key);
+
+	this.support = {
+		/** @private */
+		gr: { DrawLines: false },
+		get drawLines() {
+			return Object.hasOwn(window, 'DrawMode') && this.gr.DrawLines;
+		},
+		get lineJoin() {
+			return window.DrawMode === 1 && typeof LineJoin !== 'undefined';
+		},
+		get strokeStyle() {
+			return window.DrawMode === 1 && typeof DashStyle !== 'undefined';
+		}
 	};
 
 	let prevX = null;
@@ -2808,6 +2886,7 @@ function _chart({
 		}
 		if (graphSpecs) {
 			if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
+			if (graphSpecs.fill) { this.graphSpecs.fill = { ...this.graphSpecs.fill, ...graphSpecs.fill }; }
 		}
 		if (grid) {
 			if (grid.x) { this.grid.x = { ...this.grid.x, ...grid.x }; }
@@ -2828,7 +2907,7 @@ function _chart({
 				false
 			);
 		}
-		if (title) { this.title = title; }
+		if (title) { this.title = { ... this.title, ...title }; }
 		if (configuration) {
 			for (let key in configuration) {
 				this.configuration[key] = configuration[key];
@@ -2961,7 +3040,7 @@ function _chart({
 	};
 
 	this.checkConfig = () => {
-		if (this.configuration.bProfile) { this.profile = new FbProfiler(this.title); }
+		if (this.configuration.bProfile) { this.profile = new FbProfiler(this.title.key); }
 		if (this.graph.type) { this.graph.type = this.graph.type.replace('–', '-'); }
 		if (this.dataManipulation.probabilityPlot) { this.dataManipulation.probabilityPlot = this.dataManipulation.probabilityPlot.replace('–', '-'); }
 		const pPlot = this.dataManipulation.probabilityPlot ? this.dataManipulation.probabilityPlot.toLowerCase() : null;
@@ -2974,7 +3053,7 @@ function _chart({
 			bPass = false;
 		}
 		if (!this.graph.line) { this.graph.line = {}; }
-		if (typeof DashStyle === 'undefined' || typeof window.DrawMode === 'undefined' || window.DrawMode === 0) {
+		if (!this.support.strokeStyle) {
 			this.strokeStyle = 0;
 		} else if (Object.keys(this.graph.line).length === 0) {
 			this.strokeStyle = 0;
@@ -3132,8 +3211,9 @@ function _chart({
 			margin: { ...this.margin },
 			buttons: { ...this.buttons },
 			configuration: { ...this.configuration },
+			graphSpecs: { timeline: { ...this.graphSpecs.timeline }, fill: { ...this.graphSpecs.fill } },
 			...(bPosition ? { x: this.x, y: this.y, w: this.w, h: this.h } : {}),
-			title: this.title
+			title: { ...this.title }
 		};
 	};
 
@@ -3227,18 +3307,21 @@ function _chart({
 		if (axis.y) { this.axis.y = { ...this.axis.y, ...axis.y }; }
 		if (axis.z) { this.axis.z = { ...this.axis.z, ...axis.z }; }
 	}
-	/** @type {{x: {show:boolean, color:number, width:number}, y: {show:boolean, color:number, width:number}}} */
+	/** @type {{x: {show:boolean, color:number, width:number, alpha:number}, y: {show:boolean, color:number, width:number, alpha:number}}} */
 	this.grid; // NOSONAR
 	if (grid) {
 		if (grid.x) { this.grid.x = { ...this.grid.x, ...grid.x }; }
 		if (grid.y) { this.grid.y = { ...this.grid.y, ...grid.y }; }
 	}
+	/** @type {{key:string, show:boolean, color:number, alpha:number}} */
+	this.title = { ...this.title, ...title };
 	/** @type {{left: number, right: number, top: number, bottom: number}} */
 	this.margin = { ...this.margin, ...margin };
-	/** @type {{timeline: {bAxisCenteredX:boolean}} */
+	/** @type {{timeline: {bAxisCenteredX:boolean}, fill: {bShowGap:boolean}} */
 	this.graphSpecs; // NOSONAR
 	if (graphSpecs) {
 		if (graphSpecs.timeline) { this.graphSpecs.timeline = { ...this.graphSpecs.timeline, ...graphSpecs.timeline }; }
+		if (graphSpecs.fill) { this.graphSpecs.fill = { ...this.graphSpecs.fill, ...graphSpecs.fill }; }
 	}
 	this.buttons = { ...this.buttons, ...buttons };
 	if (callbacks) {
@@ -3266,7 +3349,6 @@ function _chart({
 	this.mX = -1;
 	this.mY = -1;
 	this.inFocus = false;
-	this.title = typeof title === 'undefined' ? window.Name + ' {' + this.axis.x.key + ' - ' + this.axis.y.key + '}' : title;
 	this.tooltipText = tooltipText;
 	/** @type {D2DStrokeStyleOptions|null} */
 	this.strokeStyle = 0;
@@ -3347,3 +3429,15 @@ function _chart({
 	});
 	this.init();
 }
+
+/**
+ * Creates a chart title for given keys
+ * @static
+ * @name createTitle
+ * @kind method
+ * @memberof _chart
+ * @returns {string}
+ */
+_chart.createTitle = (chartNumber, xKey, yKey) => {
+	return window.Name + (chartNumber ? ' - Graph ' + chartNumber : '') + ' {' + xKey + ' - ' + yKey + '}';
+};

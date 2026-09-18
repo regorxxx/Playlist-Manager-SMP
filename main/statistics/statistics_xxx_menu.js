@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/26
+//18/09/26
 
 /* exported createStatisticsMenu */
 
@@ -97,11 +97,11 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 	const filterLow = (num) => new Function('p', 'return p.y < ' + num + ';'); // NOSONAR [safe dynamic]
 	const filterBetween = (lim) => new Function('p', 'return p.y > ' + lim[0] + ' && p.y < ' + lim[1] + ';'); // NOSONAR [safe dynamic]
 	const fineGraphs = new Set(['bars', 'fill', 'doughnut', 'pie', 'timeline', 'horizontal-bars']).difference(hideCharts || new Set());
-	const sizeGraphs = new Set(['scatter', 'lines', 'lines-hq']).difference(hideCharts || new Set());
+	const sizeGraphs = new Set(['scatter', 'lines', 'lines-hq', 'lines-markers']).difference(hideCharts || new Set());
 	const switchedGraphs = new Set(['horizontal-bars']);
 	const gradientGraphs = new Set(['horizontal-bars', 'bars', 'timeline', 'fill']);
 	// Header
-	menu.newEntry({ entryText: this.title, flags: MF_GRAYED });
+	menu.newEntry({ entryText: this.title.key.cut(50), flags: MF_GRAYED });
 	menu.newSeparator();
 	// Menus
 	{
@@ -112,7 +112,8 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'bars', entryText: 'Bars' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'horizontal-bars', entryText: 'Bars (horizontal)' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'lines', entryText: 'Lines' },
-			Object.hasOwn(window, 'DrawMode') ? { isEq: null, key: this.graph.type, value: null, newValue: 'lines-hq', entryText: 'Lines (high quality)' } : null,
+			this.support.drawLines ? { isEq: null, key: this.graph.type, value: null, newValue: 'lines-hq', entryText: 'Lines (high quality)' } : null,
+			{ isEq: null, key: this.graph.type, value: null, newValue: 'lines-markers', entryText: 'Lines (with markers)' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'fill', entryText: 'Fill' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'doughnut', entryText: 'Doughnut' },
 			{ isEq: null, key: this.graph.type, value: null, newValue: 'pie', entryText: 'Pie' },
@@ -381,6 +382,21 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			[
 				{ isEq: null, key: this.grid.y.show, value: null, newValue: { show: !this.grid.y.show }, entryText: (this.grid.y.show ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' grid' }
 			].forEach(createMenuOption('grid', 'y', subMenuTwo, false));
+			menu.newSeparator(subMenuTwo);
+			{
+				const configSubMenu = menu.newMenu((switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' grid opacity', subMenuTwo);
+				menu.addTipLast('[' + Math.round(this.grid.x.alpha / 255 * 100) + ']');
+				[0, 20, 40, 60, 80, 100].map((val) => {
+					return { isEq: null, key: this.grid.x.alpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
+				}).forEach(createMenuOption('grid', ['x', 'alpha'], configSubMenu));
+			}
+			{
+				const configSubMenu = menu.newMenu((switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' grid opacity', subMenuTwo);
+				menu.addTipLast('[' + Math.round(this.grid.y.alpha / 255 * 100) + ']');
+				[0, 20, 40, 60, 80, 100].map((val) => {
+					return { isEq: null, key: this.grid.y.alpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
+				}).forEach(createMenuOption('grid', ['y', 'alpha'], configSubMenu));
+			}
 		}
 		{
 			const subMenuTwo = menu.newMenu('Axis', subMenu);
@@ -424,13 +440,35 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 			}
 		}
 		{
-			const subMenuTwo = menu.newMenu('Titles', subMenu);
+			const subMenuTwo = menu.newMenu('Axis titles', subMenu);
 			[
 				{ isEq: null, key: this.axis.x.showKey, value: null, newValue: { showKey: !this.axis.x.showKey }, entryText: (this.axis.x.showKey ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Vertical' : 'X') + ' title' }
 			].forEach(createMenuOption('axis', 'x', subMenuTwo, false));
 			[
 				{ isEq: null, key: this.axis.y.showKey, value: null, newValue: { showKey: !this.axis.y.showKey }, entryText: (this.axis.y.showKey ? 'Hide' : 'Show') + ' ' + (switchedGraphs.has(this.graph.type) ? 'Horizontal' : 'Y') + ' title' }
 			].forEach(createMenuOption('axis', 'y', subMenuTwo, false));
+		}
+		{
+			const subMenuTwo = menu.newMenu('Chart title', subMenu);
+			[
+				{ isEq: null, key: this.title.show, value: null, newValue: { show: !this.title.show }, entryText: this.title.show ? 'Hide' : 'Show' }
+			].forEach(createMenuOption('title', void (0), subMenuTwo, false));
+
+			menu.newSeparator(subMenuTwo);
+			menu.newEntry({
+				menuName: subMenuTwo, entryText: 'Caption...', func: () => {
+					const val = Input.string('string', this.title.key, 'Input chart title:\n\nNote it will be automatically changed along data TF.', 'Chart title', 'Albums per decade');
+					if (val === null) { return; }
+					this.changeConfig({ title: { key: val }, callbackArgs: { bSaveProperties: true } });
+				}
+			});
+			{
+				const configSubMenu = menu.newMenu('Opacity', subMenuTwo);
+				menu.addTipLast('[' + Math.round(this.title.alpha / 255 * 100) + ']');
+				[0, 20, 40, 60, 80, 100].map((val) => {
+					return { isEq: null, key: this.title.alpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
+				}).forEach(createMenuOption('title', 'alpha', configSubMenu));
+			}
 		}
 		{
 			const subMenuTwo = menu.newMenu('Dynamic colors', subMenu, this.callbacks.config.backgroundColor ? MF_STRING : MF_GRAYED);
@@ -511,7 +549,7 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 					return { isEq: null, key: this.graph.borderWidth, value: null, newValue: val, entryText: val.toString() };
 				}).forEach(createMenuOption('graph', 'borderWidth', configSubMenu));
 			}
-			if (type === 'scatter' || type === 'p-p plot') {
+			if (type === 'scatter' || type === 'p-p plot' || type === 'lines-markers') {
 				const configSubMenu = menu.newMenu('Point type', subMenu);
 				menu.addTipLast('[' + (this.graph.point || 'circle').cut(5) + ']');
 				['circle', 'circumference', 'cross', 'triangle', 'plus'].map((val) => {
@@ -535,9 +573,9 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 					menu.newEntry({ menuName: configSubMenu, entryText: '- N/A by JS-Host -', flags: MF_GRAYED });
 				}
 			}
-			if (type === 'lines-hq')  { // Line Join
+			if (type === 'lines-hq' || type === 'lines-markers') { // Line Join
 				const configSubMenu = menu.newMenu('Line join', subMenu);
-				const entries = typeof LineJoin === 'undefined' ? null : Object.entries(LineJoin);
+				const entries = this.support.lineJoin ? Object.entries(LineJoin) : null;
 				const currVal = entries
 					? (entries.find((d) => d[1] === this.graph.line.lineJoin) || entries[0])[0]
 					: 'Miter';
@@ -553,10 +591,21 @@ function createStatisticsMenu({ bClear = true, menuKey = 'menu', onBtnUp = null,
 		}
 		{
 			const configSubMenu = menu.newMenu('Point opacity', subMenu);
-			menu.addTipLast('[' + this.graph.pointAlpha / 255 * 100 + ']');
+			menu.addTipLast('[' + Math.round(this.graph.pointAlpha / 255 * 100) + ']');
 			[0, 20, 40, 60, 80, 100].map((val) => {
 				return { isEq: null, key: this.graph.pointAlpha, value: null, newValue: Math.round(val * 255 / 100), entryText: val.toString() + (val === 0 ? '\t(transparent)' : val === 100 ? '\t(opaque)' : '') };
 			}).forEach(createMenuOption('graph', 'pointAlpha', configSubMenu));
+		}
+		{
+			const configSubMenu = menu.newMenu('Point filling', subMenu);
+			menu.addTipLast('[' + Math.round(this.graph.fillPercent) + '%]');
+			[0, 20, 40, 60, 80, 100].map((val) => {
+				return { isEq: null, key: this.graph.fillPercent, value: null, newValue: val, entryText: val.toString() + (val === 0 ? '\t(none)' : val === 100 ? '\t(full)' : '') };
+			}).forEach(createMenuOption('graph', 'fillPercent', configSubMenu));
+			menu.newSeparator(configSubMenu);
+			[
+				{ isEq: null, key: this.graphSpecs.fill.bShowGap, value: null, newValue: !this.graphSpecs.fill.bShowGap, entryText: 'Show min. gap', flags: this.graph.type === 'fill' ? MF_STRING : MF_GRAYED },
+			].forEach(createMenuOption('graphSpecs', ['fill', 'bShowGap'], configSubMenu, true));
 		}
 		menu.newSeparator(subMenu);
 		[
