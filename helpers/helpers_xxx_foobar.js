@@ -1,5 +1,5 @@
 ﻿'use strict';
-//29/05/26
+//18/09/26
 
 /* exported memoryUsed, isPortable, lastStartup, memoryPrint*/
 
@@ -21,15 +21,21 @@ function memoryUsed(bConsole = false) { // In Mbs
 }
 
 function memoryPrint(text, obj) {
+	const mem = window.JsMemoryStats;
 	console.log(
-		window.Name  + _ps(window.ScriptInfo.Name) + (text ? ' - ' + text : '') +
+		window.Name +  _ps(window.ScriptInfo.Name) + (text ? ' - ' + text : '') +
 		(
 			typeof obj === 'undefined'
 				? ''
 				: '\n\t Args memory usage: ' + utils.FormatFileSize(roughSizeOfObject(obj))
 		) +
-		'\n\t Panel memory usage: ' + utils.FormatFileSize(window.JsMemoryStats.MemoryUsage) +
-		'  /  Total memory usage:: ' + utils.FormatFileSize(window.JsMemoryStats.TotalMemoryLimit)
+		(
+			Object.hasOwn(mem, 'MemoryUsage')
+				? '\n\t Panel memory usage: ' + utils.FormatFileSize(mem.MemoryUsage) +
+				'  /  Total memory usage: ' + utils.FormatFileSize(mem.TotalMemoryUsage)
+				: '\n\t Panel external memory usage: ' + utils.FormatFileSize(mem.CurrentPanelExternalUsage) +
+				'  /  Total Heap memory usage: ' + utils.FormatFileSize(mem.MainThreadHeapUsage)
+		)
 	);
 }
 

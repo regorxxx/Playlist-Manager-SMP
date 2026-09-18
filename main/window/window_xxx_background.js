@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/26
+//17/09/26
 
 /* exported _background */
 
@@ -2163,6 +2163,14 @@ function _background({
 	this.init();
 }
 
+/**
+ * Retrieves default settings
+ * @static
+ * @name defaults
+ * @kind method
+ * @memberof _background
+ * @returns {object}
+ */
 _background.defaults = (bPosition = false, bCallbacks = false) => {
 	return {
 		...(bPosition ? { x: 0, y: 0, w: window.Width, h: window.Height } : {}),
