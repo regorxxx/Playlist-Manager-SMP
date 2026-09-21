@@ -82,6 +82,7 @@
 - Statistics: new chart type 'Lines (with markers)'.
 ### Changed
 - Statistics: minor improvements to menu entries display.
+- Exporting Playlist: improved 'FiiO (playlists folder)' and 'Namida (playlists folder)' export and convert presets to better handle tags with '|' or non ASCII chars at end of folder names, so they match foobar2000 converter output paths. This is in fact a workaround to a [foobar2000 undesired behaviour](https://hydrogenaudio.org/index.php/topic,129623.0.html).
 - Helpers: updated helpers.
 ### Removed
 ### Fixed
