@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/09/26
+//21/09/26
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -82,9 +82,9 @@ function getSoFeatures() {
 	globProfiler.Print('getSoFeatures.ui');
 	// OS
 
-	const arch = typeof utils.Is64Bit === 'undefined'
+	const arch = typeof utils.IsOS64Bit === 'undefined'
 		? (fb.TitleFormat('[%_CPU_ARCH%]').Eval(true) || '')
-		: (utils.Is64Bit ? 'x64' : 'x86');
+		: (utils.IsOS64Bit ? 'x64' : 'x86');
 	if (arch) {
 		if (!arch.startsWith('x64')) { soFeat.x64 = false; }
 	} else {

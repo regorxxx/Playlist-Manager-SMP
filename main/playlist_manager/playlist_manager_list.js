@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/09/26
+//21/09/26
 
 /* exported _list */
 
@@ -4422,7 +4422,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	};
 	this.importAutoPlaylistsFromSqlite = (path = fb.ProfilePath + 'playlists-v2.0\\') => {
 		if (!_isFolder(path)) { return null; }
-		const files = findRecursiveFile('*.sqlite', [path]);
+		const files = findRecursiveFile('*.sqlite', [path], 0);
 		const data = files.map((file) => FPL.parseSqliteFile(file)).filter(Boolean);
 		// Playlist names must be retrieved from another index file
 		if (data && data.length) {
