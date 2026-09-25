@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/26
+//23/09/26
 
 /* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoPlaylistPresets, toFbDateString */
 
@@ -445,7 +445,7 @@ function queryJoin(queryArray, setLogic = 'AND') {
 		return; //Array was null or not an array
 	}
 	const allRegex = /ALL/;
-	const copy = [...queryArray].filter((q) => q && !allRegex.test(q));
+	const copy = [...queryArray].filter((q) => q && !allRegex.test(q)).map((q) => stripSort(q));
 	arrayLength = copy.length;
 	let query = '';
 	let i = 0;
@@ -680,12 +680,12 @@ stripSort.re = [/ ?SORT\s+BY\s+/, / ?SORT\s+DESCENDING\s+BY\s+/, / ?SORT\s+ASCEN
  * @name getSortObj
  * @kind function
  * @param {string} queryOrSort
- * @returns {{direction: number, tf: FbTitleFormat, tag: string}|null}
+ * @returns {{direction: number, tf: FbTitleFormat, tag: string, expression: string}|null}
  */
-function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIST'}
+function getSortObj(queryOrSort) {
 	const query = stripSort(queryOrSort);
 	const sort = ((query && query.length ? queryOrSort.replace(query, '') : queryOrSort) || '').trimStart();
-	/** @type {{direction?:number|string, tf?:FbTitleFormat, tag?:string}} */
+	/** @type {{direction?:number|string, tf?:FbTitleFormat, tag?:string, expression?:string }} */
 	let sortObj = null;
 	if (sort.length) {
 		sortObj = {};
@@ -695,7 +695,7 @@ function getSortObj(queryOrSort) { // {direction: 1, tf: [TFObject], tag: 'ARTIS
 		else if (/SORT\s+DESCENDING$/.test(sortObj.direction)) { sortObj.direction = -1; }
 		else { console.log('getSortObj: error identifying sort direction ' + queryOrSort); sortObj = null; }
 	}
-	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); }
+	if (sortObj) { sortObj.tf = fb.TitleFormat(sortObj.tag); sortObj.expression = sort; }
 	return sortObj;
 }
 
