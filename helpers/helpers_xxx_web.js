@@ -1,7 +1,7 @@
 ﻿'use strict';
-//11/08/26
+//25/09/26
 
-/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadImg, checkUpdate, getWikiImg, HTMLFile */
+/* exported downloadText, paginatedFetch, abortWebRequests, addUrlParams, sendV2, downloadFile, downloadFileV2, downloadFileV3, downloadImg, checkUpdate, getWikiImg, HTMLFile */
 
 include('helpers_xxx.js');
 /* global folders:readable, compareVersions:readable, globSettings:readable */
@@ -9,7 +9,7 @@ include('helpers_xxx_prototypes.js');
 /* global tryActiveX:readable, doOnce:readable */
 /* global _q:readable */
 include('helpers_xxx_file.js');
-/* global doc:readable, _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable, _open:readable */
+/* global doc:readable, _exec:readable, _runCmd:readable, _isFile:readable, _resolvePath:readable, popup:readable, WshShell:readable, _runCmd:readable, popup:readable, _explorer:readable, _open:readable, _moveFile:readable, _deleteFile:readable */
 
 // Http Requests when utils.HTTPRequestAsync is available. Properties are duplicated
 // with different casing so it works as 1:1 replacement for XMLHttp and
@@ -364,7 +364,7 @@ function onStateChange(timer, resolve, reject, func = null, type = null, request
 					request.bBuiltIn = false;
 					resolve(send(request));
 				} else if (this.status === 403 && request.bCurlFallback) {
-					downloadFile(request.URL, folders.temp + utils.MD5(request.URL))
+					downloadFileV3(request.URL, folders.temp + utils.MD5(request.URL))
 						.then((path) => resolve(_open(path) || ''));
 				} else {
 					window.IsUnload
@@ -611,34 +611,83 @@ function getCurl(impersonate = globSettings.curlImpersonate) {
 }
 
 // Methods
+
+// Curl + WshShell CMD
 function downloadFile(url, path, { referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '', timeout = 10, retry = 3 } = {}) {
 	if (!url) { return Promise.resolve(null); }
 	const curl = getCurl();
 	if (!curl) { return Promise.resolve(null); }
 	return new Promise((resolve) => {
-		let id = setInterval(() => { if (_isFile(path)) { clearInterval(id); id = null; resolve(path); } }, 50);
+		if (_isFile(path)) { _moveFile(path, path + '.old'); }
+		let id = setInterval(() => { if (_isFile(path)) { clearInterval(id); id = null; _deleteFile(path + '.old'); resolve(path); } }, 50);
 		setTimeout(() => { if (id) { clearInterval(id); id = null; resolve(null); } }, 10000);
 		_runCmd('CMD /C ' + _q(_q(curl) + (timeout ? ' --connect-timeout ' + timeout + ' --max-time ' + timeout : '') + (retry ? ' --retry ' + retry + ' --retry-max-time ' + (timeout || 5) : '') + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url) + ' & MOVE ' + _q(_resolvePath(path) + '_') + ' ' + _q(path)), false);
 	})
-		.catch(() => void (0))
-		.then((path) => path || null);
+		.catch(() => {
+			if (_isFile(path + '.old')) {
+				if (_isFile(path)) { _deleteFile(path + '.old'); }
+				else { _moveFile(path + '.old', path); }
+			}
+			return void (0);
+		})
+		.then((path) => {
+			if (!path) {
+				if (_isFile(path + '.old')) {
+					if (_isFile(path)) { _deleteFile(path + '.old'); }
+					else { _moveFile(path + '.old', path); }
+				}
+			}
+			return path || null;
+		});
 }
 
-function downloadImg(url, path, method = 'v1') {
-	if (!url) { return Promise.resolve(null); }
-	return (method.toLowerCase() === 'v1' ? downloadFile : downloadFileV2)(url, path)
-		.then((path) => path ? gdi.LoadImageAsyncV2(window.IDBCursor, path) : Promise.resolve(null));
-}
-
-
+// Curl + WshShell exec or utils.RunCmdAsync
 function downloadFileV2(url, path, { referer = typeof url === 'string' ? url.split('/').slice(0, -1).join('/') : '', timeout = 10, retry = 3 } = {}) {
 	if (!url) { return Promise.resolve(null); }
 	const curl = getCurl();
 	if (!curl) { return Promise.resolve(null); }
-	return _exec(_q(curl) + (timeout ? ' --connect-timeout ' + timeout + ' --max-time ' + timeout : '') + (retry ? ' --retry ' + retry + ' --retry-max-time ' + (timeout || 5) : '') + (referer ? ' --referer ' + _q(referer) : '') + ' -L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url))
-		.catch(() => void (0))
-		.then(() => _isFile(path) ? path : null);
+	if (_isFile(path)) { _moveFile(path, path + '.old'); }
+	return _exec(
+		curl,
+		[
+			timeout ? '--connect-timeout ' + timeout + ' --max-time ' + timeout : '',
+			retry ? '--retry ' + retry + ' --retry-max-time ' + (timeout || 5) : '',
+			referer ? '--referer ' + _q(referer) : '',
+			'-L -o ' + _q(_resolvePath(path) + '_') + ' ' + _q(url)
+		].filter(Boolean).join(' ')
+	)
+		.catch(() => {
+			if (_isFile(path + '.old')) { _moveFile(path + '.old', path); }
+			return void (0);
+		})
+		.then(() => _isFile(path + '_') && _moveFile(path + '_', path) ? path : null)
+		.then((path) => {
+			if (!path) {
+				if (_isFile(path + '.old')) {
+					if (_isFile(path)) { _deleteFile(path + '.old'); }
+					else { _moveFile(path + '.old', path); }
+				}
+			}
+			return path || null;
+		});
 
+}
+
+// Curl + WshShell cmd or utils.RunCmdAsync for hidden background process
+function downloadFileV3() {
+	return (utils.RunCmdAsyncV2 ? downloadFileV2 : downloadFile)(...arguments);
+}
+
+function downloadImg(url, path, options, method = 'v3') {
+	if (!url) { return Promise.resolve(null); }
+	let prom;
+	switch (method.toLowerCase()) {
+		case 'v1': prom = downloadFile(url, path, options); break;
+		case 'v2': prom = downloadFileV2(url, path, options); break;
+		case 'v3':
+		default: prom = downloadFileV3(url, path, options); break;
+	}
+	return prom.then((path) => path ? gdi.LoadImageAsyncV2(window.IDBCursor, path) : Promise.resolve(null));
 }
 
 function downloadText(URL) {

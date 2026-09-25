@@ -1,5 +1,5 @@
 ﻿'use strict';
-//08/09/26
+//25/09/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -9,6 +9,11 @@ include('helpers_xxx_basic_js.js');
 /* global tryMethod:readable, dateFormatter:readable, tryActiveX:readable, strNumCollator:readable */
 include('helpers_xxx_prototypes.js');
 /* global _q:readable, isString:readable, round:readable, roughSizeOfObject:readable, isArray:readable, isArrayStrings:readable */ /* window.FullPanelName:readable */
+if (utils.RunCmdAsync) {
+	include('callbacks_xxx.js');
+	include('helpers_xxx_prototypes_smp_post.js');
+	/* utils.RunCmdAsyncV2 */
+}
 
 /*
 	Global Variables
@@ -453,7 +458,6 @@ function _renameFolder(oldFolderPath, newFolderPath) { // TODO
 	return false;
 }
 
-
 // Copy
 // https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/copyfile-method
 // Long paths not supported
@@ -801,44 +805,48 @@ function _runCmd(command, bWait = false, iShow = 0) {
 	}
 }
 
-function _exec(command, rate = 50) {
-	const execObj = WshShell.Exec(command);
-	const parentId = getProcessID('foobar2000.exe');
-	if (parentId !== null) { WshShell.AppActivate(parentId); }
-	return new Promise((res, rej) => {
-		let stdOut = '';
-		let stdErr = '';
-		const intervalID = setInterval(() => {
-			switch (execObj.Status) {
-				case 2: {
-					while (!execObj.StdErr.AtEndOfStream) {
-						stdErr += execObj.StdErr.ReadAll();
+function _exec(command, args, rate = 50) {
+	if (utils.RunCmdAsyncV2) {
+		return utils.RunCmdAsyncV2(command, ' ' + args);
+	} else {
+		const execObj = WshShell.Exec(_q(command) + ' ' + args);
+		const parentId = getProcessID('foobar2000.exe');
+		if (parentId !== null) { WshShell.AppActivate(parentId); }
+		return new Promise((res, rej) => {
+			let stdOut = '';
+			let stdErr = '';
+			const intervalID = setInterval(() => {
+				switch (execObj.Status) {
+					case 2: {
+						while (!execObj.StdErr.AtEndOfStream) {
+							stdErr += execObj.StdErr.ReadAll();
+						}
+						clearInterval(intervalID);
+						rej(stdErr);
+						break;
 					}
-					clearInterval(intervalID);
-					rej(stdErr);
-					break;
+					case 1: {
+						while (!execObj.StdOut.AtEndOfStream) {
+							stdOut += execObj.StdOut.ReadAll();
+						}
+						clearInterval(intervalID);
+						res(stdOut);
+						break;
+					}
+					case 0: {
+						while (!execObj.StdOut.AtEndOfStream) {
+							stdOut += execObj.StdOut.ReadAll();
+						}
+						while (!execObj.StdErr.AtEndOfStream) {
+							stdErr += execObj.StdErr.ReadAll();
+						}
+						break;
+					}
+					default: return; // do nothing
 				}
-				case 1: {
-					while (!execObj.StdOut.AtEndOfStream) {
-						stdOut += execObj.StdOut.ReadAll();
-					}
-					clearInterval(intervalID);
-					res(stdOut);
-					break;
-				}
-				case 0: {
-					while (!execObj.StdOut.AtEndOfStream) {
-						stdOut += execObj.StdOut.ReadAll();
-					}
-					while (!execObj.StdErr.AtEndOfStream) {
-						stdErr += execObj.StdErr.ReadAll();
-					}
-					break;
-				}
-				default: return; // do nothing
-			}
-		}, rate);
-	});
+			}, rate);
+		});
+	}
 }
 
 function getProcessID(name) {
