@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/09/26
+//27/09/26
 
 /* exported _background */
 
@@ -148,6 +148,7 @@ function _background({
 			this.coverImg.art.colors = this.coverImg.art.image.GetColourSchemeJSONV2
 				? JSON.parse(this.coverImg.art.image.GetColourSchemeJSONV2(6))
 				: JSON.parse(this.coverImg.art.image.GetColourSchemeJSON(6));
+			if (this.coverImg.art.colors && !this.coverImg.art.colors.length) { this.coverImg.art.colors = null; }
 		}
 		if (this.logging.bProfile) { profiler.Print(); }
 		return this.coverImg.art.colors;
