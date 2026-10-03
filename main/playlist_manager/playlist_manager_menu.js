@@ -1,5 +1,5 @@
 ﻿'use strict';
-//31/08/26
+//02/10/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -5345,7 +5345,7 @@ function createSettingsMenu(parent, parentBackground) {
 			menu.newSeparator(subMenuName);
 			menu.newEntry({
 				menuName: subMenuName, entryText: 'By name...', func: () => {
-					const input = Input.json('array strings', parent.deletePlsStartup, 'Input playlist names:\n(JSON)\n\nRegExp are allowed in /[expression]/[flags] form. For ex: \\library\\i', 'Playlist Manager', '["Filter results", "Library viewer"]', void (0), true);
+					const input = Input.json('array strings', parent.deletePlsStartup, 'Input playlist names:\n(JSON strings array)\n\nRegExp are allowed in /[expression]/[flags] form. For ex: ["\\library\\i"]', 'Playlist Manager: Startup auto-delete', '["Filter results", "Library viewer"]', void (0), true);
 					if (input === null) { return; }
 					parent.deletePlsStartup = input;
 					parent.properties.deletePlsStartup[1] = JSON.stringify(parent.deletePlsStartup);
