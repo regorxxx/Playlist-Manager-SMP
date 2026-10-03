@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/26
+//02/10/26
 
 /* exported createBackgroundMenu */
 
@@ -139,7 +139,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 			menu.newSeparator(subMenuSecond);
 			menu.newEntry({
 				menuName: subMenuSecond, entryText: 'Edit art types...', func: () => {
-					const input = Input.json('array strings', this.coverModePriority, 'Enter art types:\n(array of strings)\n\nAllowed: ' + this.getCoverModes(false).join(', ') + '\nSuffix \'_stub\' or \'_embedded\' can also be added.\n\ne.g. ["front", "back_stub", "artist"]', window.Name + ' (' + window.ScriptInfo.Name + '): Y-axis margin', 2);
+					const input = Input.json('array strings', this.coverModePriority, 'Enter art types:\n(JSON strings array)\n\nAllowed: ' + this.getCoverModes(false).join(', ') + '\nSuffix \'_stub\' or \'_embedded\' can also be added.\n\ne.g. ["front", "back_stub", "artist"]', window.Name + ' (' + window.ScriptInfo.Name + '): Y-axis margin', 2);
 					if (input === null) { return; }
 					this.changeConfig({ config: { coverModePriority: [...new Set(input)] }, callbackArgs: { bSaveProperties: true } });
 				},

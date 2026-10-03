@@ -1,5 +1,5 @@
 ﻿'use strict';
-//27/09/26
+//01/10/26
 
 /* exported _background */
 
@@ -812,7 +812,7 @@ function _background({
 			const textH = gr.CalcTextHeight(text, this.fonts.artCounter);
 			const offsetW = textH / 3;
 			if (options.bPathCycleCountBg) {
-				gr.FillSolidRect(limits.w - offsetW - textW - _scale(3), limits.y + textH / 6, textW + _scale(6), textH * 5 / 6, bgCol);
+				gr.FillSolidRect(limits.x + limits.w - offsetW - textW - _scale(3), limits.y + textH / 6, textW + _scale(6), textH * 5 / 6, bgCol);
 			} else {
 				gr.GdiDrawText(text, this.fonts.artCounter, invert(textCol), limits.x, limits.y, limits.w - offsetW, limits.h, DT_RIGHT | DT_TOP);
 			}
@@ -827,18 +827,19 @@ function _background({
 	 * @kind method
 	 * @memberof _background
 	 * @param {GdiGraphics} gr - From on_paint
+	 * @param {{image?: object, colors?: object, reflection?: object, blend:? object}} options - Instance specific options instead of global settings
 	 * @returns {void}
 	 */
-	this.paint = (gr) => {
+	this.paint = (gr, options = { image: {}, colors: {}, reflection: {}, blend: {}}) => { // NOSONAR
 		if (this.w <= 1 || this.h <= 1) { return; }
 		let profiler;
 		if (this.logging.bProfile) { profiler = fb.CreateProfiler('paint'); }
 		if (repaintElements.colors) {
 			if (this.useColorsBlend) {
-				this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+				this.paintBlend({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH, ...options.blend } });
 				if (this.logging.bProfile) { profiler.Print('blend'); profiler.Reset(); }
 			}
-			this.paintColors({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+			this.paintColors({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH, ...options.colors } });
 		}
 		if (this.logging.bProfile) { profiler.Print('colors'); profiler.Reset(); }
 		if (repaintElements.image) {
@@ -862,12 +863,13 @@ function _background({
 				case 'folder': {
 					if (this.coverModeOptions.fadeMask > 0 && this.coverMasks.images.length === 0) { this.loadImgMasks(); }
 					if (this.coverModeOptions.reflection !== 'none' && !this.coverModeOptions.bFill && this.coverModeOptions.bProportions) {
-						this.paintReflection({ gr, mode: this.coverModeOptions.reflection });
+						this.paintReflection({ gr, mode: this.coverModeOptions.reflection, ...options.reflection });
 					} else {
 						this.paintImage({
 							gr,
 							limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH },
 							fadeMask: this.coverModeOptions.fadeMask > 0 ? this.getFadeMask() : null,
+							...options.image
 						});
 					}
 					break;
@@ -880,7 +882,7 @@ function _background({
 		}
 		if (repaintElements.histogram) {
 			if (this.coverImg.art.histogram) {
-				this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } });
+				this.paintHistogram({ gr, limits: { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH, ...options.histogram } });
 				if (this.logging.bProfile) { profiler.Print('histogram'); }
 			}
 		}
@@ -889,7 +891,7 @@ function _background({
 				const path = this.getPanelArtPath(void (0), true);
 				if (_isFolder(path)) {
 					const columnW = this.filmStripOptions.columnW;
-					this.paintFilmStrip({ gr, limits: { x: this.x, y: this.h - columnW, w: this.w, h: columnW, offsetH: this.offsetH }, columnW, path });
+					this.paintFilmStrip({ gr, limits: { x: this.x, y: this.h - columnW, w: this.w, h: columnW, offsetH: this.offsetH }, columnW, path, ...options.filmStrip  });
 				}
 			}
 		}
@@ -1653,7 +1655,7 @@ function _background({
 					limits: { x: 0, y: 0, w: w + 2, h: h + 2, offsetH: this.offsetH },
 					img: this.coverMasks.images[idx],
 					fill: RGBA(0, 0, 0),
-					options: { alpha: 255 }
+					options: { alpha: 255, pathCycleCount: 0 }
 				});
 				mask.StackBlur(3);
 			}
