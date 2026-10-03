@@ -1,5 +1,5 @@
 ﻿'use strict';
-//25/09/26
+//02/10/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -508,7 +508,7 @@ function _copyFolder(oldFolderPath, newFolderPath, bAsync = false) {
 		return false;
 	}
 	if (_isFolder(source)) {
-		if (newFolderPath.endsWith('\\') && !_isFolder(newFolderPath)) { _createFolder(newFolderPath); }
+		_createFolder(newFolderPath.endsWith('\\') ? newFolderPath : utils.SplitFilePath(newFolderPath)[0]);
 		try {
 			bAsync ? _runCmd('CMD /C COPY "' + oldFolderPath + '" "' + newFolderPath + '"', false) : fso.CopyFolder(oldFolderPath, newFolderPath);
 		} catch (e) {
@@ -549,7 +549,7 @@ function _recycleFile(file, bCheckBin = false) {
 				return false;
 			}
 			if (utils.RecyclePath && utils.RecyclePath(file)) { return true; }
-			else if (!_runCmd(_q(folders.xxx + 'helpers-external\\nircmd\\nircmd.exe') + ' moverecyclebin ' + _q(file), true) || _isFile(file)) {
+			else if (!_runCmd(_q(folders.xxx + 'helpers-external\\nircmd\\nircmdc.exe') + ' moverecyclebin ' + _q(file), true) && _isFile(file) || _isFile(file)) {
 				// These methods produce window flashing and active window focus loss
 				try {
 					if (utils.IsKeyPressed(VK_SHIFT)) { throw new Error('Shift'); }
