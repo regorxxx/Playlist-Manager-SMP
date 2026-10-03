@@ -1,12 +1,12 @@
 ﻿'use strict';
-//23/09/26
+//30/09/26
 
-/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoPlaylistPresets, toFbDateString */
+/* exported dynamicTags, numericTags, cyclicTags, keyTags, sanitizeTagIds, sanitizeTagValIds, queryCombinations, queryReplaceWithCurrent, checkQuery, checkDynQuery, getHandleTags, getHandleListTags ,getHandleListTagsV2, getHandleListTagsTyped, cyclicTagsDescriptor, isQuery, fallbackTagsQuery, isSubsong, isSubsongPath, fileRegex,queryCombinationsExpand, getHandleListTagsV3, createAutoPlaylistPresets, toFbDateString, getCustomPlaylistName */
 
 include('helpers_xxx.js');
 /* global globTags:readable, folders:readable, globQuery:readable, MF_STRING:readable, MF_GRAYED:readable */
 include('helpers_xxx_prototypes.js');
-/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable, strNumCollator:readable, _qCond:readable, _t:readable */
+/* global _isFile:readable, _q:readable, _asciify:readable, isArrayStrings:readable, _p:readable,_b:readable, isArray:readable, strNumCollator:readable, _qCond:readable, _t:readable, capitalizeAll:readable, */
 include('helpers_xxx_cache_volatile.js');
 /* global VolatileCache:readable */
 
@@ -1226,3 +1226,22 @@ function createAutoPlaylistPresets() {
 function toFbDateString(date) {
 	return date.getFullYear() + '-' + date.getMonth().toString().padStart(2, '0') + '-' + date.getDay().toString().padStart(2, '0') + ' ' + date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0') + ':' + date.getSeconds().toString().padStart(2, '0');
 }
+
+/**
+ * Creates a Playlist name based on input. Used for search output playlists, i.e. 'Search by Genre: Rock'
+ *
+ * @function
+ * @name toFbDateString
+ * @kind function
+ * @param {object} o
+ * @param {string} o.input
+ * @param {string} o.name
+ * @param {string} o.tagVal
+ * @param {number} o.len
+ * @returns {string}
+ */
+const getCustomPlaylistName = ({ input = '🔍 %1: %2', entryName, tagVal, len = 40 } = {}) => {
+	return input.replace(/%1/g, () => entryName || 'N/A')
+		.replace(/%2/g, () => typeof tagVal === 'undefined' ? 'N/A' : capitalizeAll(tagVal))
+		.cut(len);
+};
