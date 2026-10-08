@@ -87,7 +87,7 @@
 - Helpers: updated helpers.
 - Helpers: replaced nircmd.exe with nircmdx.exe so all recycle bin errors are directly handled by console.
 - Helpers: create full folder tree on file/folder remove.
-- Installation: required fonts are now loaded on the fly when using JSplitter instead of requiring being installed system-wide.
+- Installation: fonts installation is no longer needed when using JSplitter. Fonts will be directly loaded on real time, without system wide installation. Note this doesn't apply to 'Segoe UI' and 'Arial Unicode', which are supposed to be bundled with Windows; if missing (Unix systems), install required fonts from [here](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts).
 ### Removed
 ### Fixed
 - Statistics: fixed vertical labels position on Horizontal bars charts when using multiple series (for ex. using 3 axis).
