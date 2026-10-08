@@ -1,5 +1,5 @@
 ﻿'use strict';
-//19/06/26
+//07/10/26
 
 /**
  * Global folders setting
@@ -18,13 +18,17 @@ if (folders.JsPackageDirs) { for (const key in folders.JsPackageDirs) { folders.
  * @type {(boolean) => string} - Ex: scripts\\SMP\\xxx-scripts\\
  */
 folders.getRoot = (bRelative = true) => {
-	if (folders.JsPackageDirs) { return folders.JsPackageDirs.Root.replace((bRelative ? fb.ProfilePath : ''), ''); }
-	try { include(''); }
-	catch (e) {
-		return e.message.replace('include failed:\nPath does not point to a valid file: ', '')
-			.replace((bRelative ? fb.ProfilePath : ''), '')
-			.replace(/helpers\\$/, ''); // Required since include() points to this file (not the main one)
+	let path;
+	if (folders.JsPackageDirs) { path = folders.JsPackageDirs.Root; } // Package
+	else if (window.ScriptInfo.Path) { path = utils.SplitFilePath(window.ScriptInfo.Path)[0]; } // JSplitter
+	else { // SMP
+		try { include(''); }
+		catch (e) {
+			path = e.message.replace('include failed:\nPath does not point to a valid file: ', '')
+				.replace(/helpers\\$/, ''); // Required since include() points to this file (not the main one)
+		}
 	}
+	return path.replace((bRelative ? fb.ProfilePath : ''), '');
 };
 /**
  * Scripts virtual root to be replaced on execution by real path
@@ -112,7 +116,7 @@ folders.bioArtistArtPathTf = '.\\profile\\yttm\\art_img\\$lower($cut($meta(ARTIS
  * @param {string?} root
  * @returns {string}
  */
-folders.getBioArtistArtPath = ({artist = '', albumArtist = '', root = ''} = {}) => {
+folders.getBioArtistArtPath = ({ artist = '', albumArtist = '', root = '' } = {}) => {
 	let folder = folders.bioArtistArtPathTf;
 	if (typeof artist === 'string' && artist) { folder = folder.replaceAll('$meta(ARTIST,0)', artist); }
 	if (typeof albumArtist === 'string' && albumArtist) { folder = folder.replaceAll('$meta(ARTIST,0)', albumArtist).replaceAll('$meta(ALBUM ARTIST,0)', albumArtist); }
@@ -190,7 +194,7 @@ loadUserDefFile(globNoSplitArtist);
 
 /** @type {FbProfiler} - Global profiler instance to use at init */
 const globProfiler = globSettings.bProfileInit
-	? new FbProfiler(window.Name  + _ps(window.ScriptInfo.Name) + ' - Global profiler')
+	? new FbProfiler(window.Name + _ps(window.ScriptInfo.Name) + ' - Global profiler')
 	: { Print: () => void (0), Time: void (0), Reset: () => void (0) };
 
 if (!globSettings.bLogToFile) { console.disableFile(); }
@@ -230,18 +234,19 @@ Object.keys(globFonts).forEach((key) => {
 	SO features
 */
 if (Object.values(soFeat).slice(0, -1).some((val) => !val)) { // Retry once if something fails
-	new Promise((resolve) => { setTimeout(getSoFeatures, 1000); resolve(true); }).then(() => { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); });
+	void new Promise((resolve) => { setTimeout(getSoFeatures, 1000); resolve(true); })
+		.then(() => { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); });
 } else { initCheckFeatures(soFeat, globSettings.bPopupOnCheckSOFeatures); }
 
 /*
 	Installation
 */
 if (globSettings.bCheckInstallationPath && /\w:\\.*/i.test(folders.xxxName)) {
-	const message = 'Script has been installed in a folder outside foobar2000 profile folder, which is not supported. Errors are expected at some point.\n\nCurrent script path:\t' + folders.xxxName + '\nExpected path (*):\t' + fb.ProfilePath  + folders.xxxName.replace(/\w:\\.*\\profile\\/i, '').replace(/\w:\\.*\\xxx-scripts\\/i, 'xxx-scripts') + '\n\n(*) Note this path is just a guess based on your original path, may not be 100% accurate.';
+	const message = 'Script has been installed in a folder outside foobar2000 profile folder, which is not supported. Errors are expected at some point.\n\nCurrent script path:\t' + folders.xxxName + '\nExpected path (*):\t' + fb.ProfilePath + folders.xxxName.replace(/\w:\\.*\\profile\\/i, '').replace(/\w:\\.*\\xxx-scripts\\/i, 'xxx-scripts') + '\n\n(*) Note this path is just a guess based on your original path, may not be 100% accurate.';
 	if (globSettings.bPopupOnCheckInstallationPath) {
 		fb.ShowPopupMessage(message, 'Installation error: ' + window.FullPanelName);
 	}
-	console.log('Installation error: ' + window.FullPanelName + '\n\t ' + message.replace(/\n/g,'\n\t'));
+	console.log('Installation error: ' + window.FullPanelName + '\n\t ' + message.replace(/\n/g, '\n\t'));
 }
 
 globProfiler.Print('helpers_xxx');

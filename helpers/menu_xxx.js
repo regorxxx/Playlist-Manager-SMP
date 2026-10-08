@@ -1,5 +1,5 @@
 ﻿'use strict';
-//18/06/26
+//08/10/26
 
 /* exported _menu */
 
@@ -57,6 +57,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @property  {String|() => String} [subMenuFrom]
 	 * @property  {Number|() => Number} flags
 	 * @property  {boolean} bIsMenu
+	 * @property  {boolean} bDefault
 	 * @property  {Function?} [func]
 	 * @property  {Function?} [condFunc]
 	 * @property  {any?} [data]
@@ -229,7 +230,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {string} menuName - Menu name for lookup
 	 * @returns {MenuEntry?}
 	 */
-	this.getLastEntryFrom = (menuName) => this.getEntries().filter((entry) => entry.subMenuFrom === menuName).reverse()[0] || null;
+	this.getLastEntryFrom = (menuName) => this.getEntries().filter((entry) => !entry.bIsMenu && entry.menuName === menuName || entry.bIsMenu && entry.subMenuFrom === menuName).reverse()[0] || null;
 	/**
 	 * Checks if last entry from specific subMenu matches a name by type
 	 *
@@ -238,7 +239,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @name isLastEntryFrom
 	 * @param {string} name - Entry name for lookup
 	 * @param {string} menuName - Menu name for lookup
-	 * @param {('entry'|'cond'|'menu'|_menu.Separator)} [type] - [='entry'] Entry type.
+	 * @param {('entry'|'cond'|'menu'|_menu.Separator|'empty')} [type] - [='entry'] Entry type.
 	 * @returns {boolean}
 	 */
 	this.isLastEntryFrom = (name, menuName, type = 'entry') => {
@@ -251,7 +252,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			} else if (separator.test(type)) {
 				return this.isSeparator(last);
 			}
-		}
+		} else if (type === 'empty') { return true; }
 		return false;
 	};
 	/**
@@ -264,6 +265,17 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @returns {boolean}
 	 */
 	this.isLastEntrySepFrom = (menuName) => this.isLastEntryFrom(void (0), menuName, this.separator);
+	/**
+	 * Returns if an specific submenu is empty
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name isMenuEmpty
+	 * @param {string} menuName - Name for lookup
+	 * @param {string} [subMenuFrom] - If not set, performs a global lookup.
+	 * @returns {boolean}
+	 */
+	this.isMenuEmpty = (menuName, subMenuFrom = '') => this.hasMenu(menuName, subMenuFrom) && this.isLastEntryFrom(void (0), menuName, 'empty');
 	/**
 	 * Gets all submenu entries, but those created by conditional entries are not set yet!
 	 *
@@ -400,15 +412,17 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {() =>(Boolean)} [o.checkFunc] - [=null] For Boolean checks  of a single entry only, just return true/false.
 	 * @param {any?} [o.data] - [=null] Arbitrary data attached to the entry
 	 * @param {Boolean} [o.bAddInvisibleIds] -  [=false] Entries can have duplicate names without problems, but it may be difficult to use duplicate names for lookup. Invisible Ids may be automatically added to the entry name in such case setting this to true.
+	 * @param {Boolean} [o.bDefault] -  [=false] Flag to set as default entry (bold), if JS-Host supports it.
 	 * @returns {MenuEntry}
 	 */
-	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, checkFunc = null, data = null, bAddInvisibleIds = false }) => {
+	this.newEntry = ({ entryText = '', func = null, menuName = this.getMainMenuName(), flags = MF_STRING, checkFunc = null, data = null, bAddInvisibleIds = false, bDefault = false } = {}) => {
 		menuName = this.cleanEntryName(menuName);
 		entryText = this.cleanEntryName(entryText);
 		if (typeof entryText === 'string' && separator.test(entryText)) { func = null; flags = MF_GRAYED; }
+		if (!func && flags === MF_STRING && !arguments[0].flags) { flags = MF_GRAYED; }
 		if (bAddInvisibleIds) { entryText += this.getNextId(); } // At this point don't use other name than this!
 		if (checkFunc) { this.newCheckMenu(menuName, entryText, null, checkFunc); }
-		entryArr.push({ entryText, func, menuName, flags, bIsMenu: false, data });
+		entryArr.push({ entryText, func, menuName, flags, bIsMenu: false, data, bDefault });
 		return this.getLastEntry();
 	};
 	/**
@@ -558,7 +572,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		return tip;
 	};
 	/**
-	 * Runs the function of a given menu entry (without menu mapping running first)
+	 * Runs the function of a given menu entry (without menu mapping running first). Conditional entries (and menus) are skipped. Note invisible ids will not be matched, so it will not work with duplicated entries within same submenu
 	 *
 	 * @kind method
 	 * @memberof _menu
@@ -568,23 +582,43 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @returns {{ entry: MenuEntry, result: any|null }} If not found returns null as result and entry, otherwise runs the associated function and returns its result
 	 */
 	this.runEntry = (entryText, menuName = this.getMainMenuName()) => {
-		const entry = this.findEntry(entryText, menuName);
+		const entry = this.findEntry(entryText, menuName, 'entry');
 		return { entry, result: entry && entry.func ? entry.func() : null };
 	};
 	/**
-	 * Finds a menu entry (without menu mapping running first). Note invisible ids will not be matched, so it will not work with duplicated entres with a same submenu
+	 * Finds a menu entry (without menu mapping running first). Note invisible ids will not be matched, so it will not work with duplicated entries within same submenu
 	 *
 	 * @kind method
 	 * @memberof _menu
 	 * @name findEntry
 	 * @param {stringLike|() => String} entryText - Entry name.
 	 * @param {stringLike|() => String} menuName - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
-	 * @returns {any|void(0)} If not found returns undefined, otherwise runs the associated function and returns its result
+	 * @param {'entry'|'cond'|'menu'|_menu.Separator|'entry-menu'}  [type] - [='entry'] Entry type.
+	 * @returns {MenuEntry|void(0)} If not found returns null, otherwise returns the associated entry
 	 */
-	this.findEntry = (entryText, menuName = this.getMainMenuName()) => {
+	this.findEntry = (entryText, menuName = this.getMainMenuName(), type = 'entry-menu') => {
 		menuName = this.cleanEntryName(menuName);
 		entryText = this.cleanEntryName(entryText);
-		return entryArr.find((entry) => entry.entryText === entryText && entry.menuName === menuName) || null;
+		let entry;
+		type = type.toLowerCase();
+		switch (type) {
+			case 'entry-menu':
+				entry = entryArr.find((entry) => !entry.bIsMenu && entry.entryText === entryText && entry.menuName === menuName || entry.bIsMenu && entry.menuName === entryText && entry.subMenuFrom === menuName);
+				break;
+			case 'entry':
+				entry = entryArr.find((entry) => !entry.bIsMenu && entry.entryText === entryText && entry.menuName === menuName);
+				break;
+			case 'cond':
+				entry = entryArr.find((entry) => !entry.bIsMenu && !!entry.condFunc && entry.entryText === entryText);
+				break;
+			case 'menu':
+				entry = entryArr.find((entry) => entry.bIsMenu && entry.menuName === entryText && entry.subMenuFrom === menuName);
+				break;
+			case _menu.separators.includes(type):
+				entry = entryArr.find((entry) => !entry.bIsMenu && entry.entryText === entryText && entry.menuName === menuName && !entry.func && entry.flags === MF_GRAYED);
+				break;
+		}
+		return entry || null;
 	};
 	/**
 	 * Adds a tip to last entry, joining multiple strings prefixed by a tab (\t).
@@ -610,6 +644,46 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 		if (eTypeToStr.has(typeof entryText)) { entryText = entryText.toString(); }
 		entryArr.push({ entryText, condFunc });
 		return this.getLastEntry();
+	};
+	/**
+	 * Sets a menu entry as default (bold). Note invisible ids will not be matched, so it will not work with duplicated entries within same submenu
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name setDefaultEntry
+	 * @param {stringLike|() => String} entryText - Entry name.
+	 * @param {stringLike|() => String} menuName - [=this.getMainMenuName()] To which menu/submenu the entry is associated. Uses main menu when not specified.
+	 * @returns {boolean} If not found or JS-Host doesn't support feature returns false, otherwise returns true
+	 */
+	this.setDefaultEntry = (entryText, menuName = this.getMainMenuName()) => {
+		if (!fb.ComponentPath.includes('foo_uie_jsplitter')) { return false; }
+		const entry = this.findEntry(entryText, menuName, 'entry-menu');
+		if (entry) {
+			entryArr.forEach((entry) => {
+				if (!entry.bIsMenu && entry.menuName === menuName) { entry.bDefault = false; }
+			});
+			entry.bDefault = true;
+		}
+		return !!entry;
+	};
+	/**
+	 * Sets last menu entry as default (bold)
+	 *
+	 * @kind method
+	 * @memberof _menu
+	 * @name setDefaultEntryLast
+	 * @returns {boolean} If not found or JS-Host doesn't support feature returns false, otherwise returns true
+	 */
+	this.setDefaultEntryLast = () => {
+		if (!fb.ComponentPath.includes('foo_uie_jsplitter')) { return false; }
+		const last = this.getLastEntry();
+		if (last) {
+			entryArr.forEach((entry) => {
+				if (!entry.bIsMenu && entry.menuName === last.menuName) { entry.bDefault = false; }
+			});
+			last.bDefault = true;
+		}
+		return !!last;
 	};
 	/**
 	 * Should only be called on .initMenu(), thus within other checkMenu entries, to check if another entry has a radius or boolean check. For ex. in a submenu with an entry to input custom values, can be used to discover if any of the predefined entries are already checked. Returns null if the entry check was not found, otherwise returns a boolean or a number (with the delta idx) for radius checks.
@@ -751,7 +825,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 	 * @param {Number} [flags] - [= MF_STRING] Entry flags.
 	 * @returns {MenuObject}
 	 */
-	this.addToMenu = ({ entryText = null, func = null, menuName = this.getMainMenuName(), flags = MF_STRING }) => {
+	this.addToMenu = ({ entryText = null, func = null, menuName = this.getMainMenuName(), flags = MF_STRING, bDefault = false }) => {
 		if (separator.test(entryText)) { this.getMenu(menuName).AppendMenuSeparator(); }
 		else {
 			idx++;
@@ -785,7 +859,13 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 			// Delete invisible chars since they may appear as bugged chars with some fonts on Wine
 			entryTextSanitized = entryTextSanitized.replace(hiddenCharsRegEx, '');
 			// Create FB menu entry. Add proper error info
-			try { this.getMenu(menuName).AppendMenuItem(flags, idx, entryTextSanitized); } catch (e) { throwError(e.message + '\nmenuName: ' + menuName); }
+			try {
+				const menuObj = this.getMenu(menuName);
+				menuObj.AppendMenuItem(flags, idx, entryTextSanitized);
+				if (bDefault && menuObj.SetDefault) { menuObj.SetDefault(idx); }
+			} catch (e) {
+				throwError(e.message + '\nmenuName: ' + menuName);
+			}
 			// Add to index
 			const entryName = (menuName === this.getMainMenuName() ? entryText : menuName + '\\' + entryText);
 			entryMap.set(entryName, idx);
@@ -946,7 +1026,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 									else { throwError('Missing child menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
 								}
 							} else {
-								this.addToMenu({ entryText: '   - No tracks -   ', menuName: subMenuName, flags: MF_GRAYED });
+								this.addToMenu({ entryText: '   - No tracks -   ', menuName: subMenuName, flags: MF_GRAYED, bDefault: true });
 							}
 						} else if (type === 'playlist' || type === 'nowplaying') { // InitContextPlaylist()
 							contextMenu = fb.CreateContextMenuManager();
@@ -985,8 +1065,10 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 					if (!bMainMenu) {
 						const from = this.getMenu(subMenuFrom);
 						const child = this.getMenu(subMenuName);
-						try { child.AppendTo(from, flags, subMenuNameSanitized); }
-						catch (e) {
+						try {
+							child.AppendTo(from, flags, subMenuNameSanitized);
+							if (entry.bDefault) { from.SetDefault(child); }
+						} catch (e) {
 							if (!from) { throwError('Missing parent menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
 							else if (child) { throwError(e.message + '\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom); }
 							else { throwError('Missing child menu:\n\tmenuName:\t' + subMenuName + '\n\tsubMenuFrom:\t' + subMenuFrom + '\n\n' + e.message); }
@@ -995,7 +1077,7 @@ function _menu({ bInit = true, bSuppressDefaultMenu = true, properties = null, i
 				}
 			} else { // To main menu
 				try {
-					this.addToMenu({ entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags });
+					this.addToMenu({ entryText: entry.entryText, func: entry.func, menuName: entry.menuName, flags: entry.flags, bDefault: entry.bDefault });
 				} catch (e) {
 					throwError(e.message + '\n\tentryText:\t' + entry.entryText + '\n\tmenuName:\t' + entry.menuName + '\n\tmenuName:\t' + entry.menuName);
 				}

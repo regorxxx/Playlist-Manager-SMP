@@ -1,5 +1,5 @@
-'use strict';
-//19/09/26
+﻿'use strict';
+//07/10/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -316,7 +316,8 @@ const globFonts = {
 	standardSmall: { name: 'Segoe UI', size: 8 },
 	standardMedium: { name: 'Segoe UI', size: 12 },
 	standardBig: { name: 'Segoe UI', size: 15 },
-	alt: { name: 'Tahoma', size: 10 }
+	alt: { name: 'Tahoma', size: 10 },
+	tooltip: {name: 'Tahoma', size: 10}
 };
 
 // Fonts: user replaceable with a presets file at folders.data

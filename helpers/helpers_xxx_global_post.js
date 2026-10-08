@@ -1,12 +1,9 @@
 ﻿'use strict';
-//19/04/26
+//07/10/26
 
 
 include('helpers_xxx_global.js');
-/* global globFonts:readable, globQuery:readable, soFeat:readable */
-
-// Fonts: user replaceable with a presets file at folders.data
-globFonts.tooltip = {name: soFeat.popup ? 'Tahoma' : 'Arial Unicode MS', size: 10};
+/* global globQuery:readable */
 
 // Query helpers
 globQuery.recentBy = (time) => globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST ' +  time);

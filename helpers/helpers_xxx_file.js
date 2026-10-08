@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/10/26
+//07/10/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -25,6 +25,7 @@ const app = new ActiveXObject('Shell.Application');
 const spaces = { desktop: 0, documents: 5, startup: 7, recent: 8, bin: 10, userDesktop: 16, fonts: 19, pictures: 39, profile: 40 };
 const fileAttr = { Normal: 0, ReadOnly: 1, Hidden: 2, System: 4, Volume: 8, Directory: 16, Archive: 32, Alias: 1024, Compressed: 2048 };
 const utf8 = convertCharsetToCodepage('UTF-8');
+const utf16 = convertCharsetToCodepage('UTF-16');
 const fileSizeMask = new Map([['B', 1], ['KB', 1024], ['MB', 1024 ** 2], ['GB', 1024 ** 3]]);
 const imgAllowedExt = ['.jpg', '.jpeg', '.png', '.gif', '.tiff', '.bmp', '.webp'];
 const absPathRegExp = /^[a-z]+:\\/i;
@@ -272,7 +273,9 @@ function _resolvePath(path) {
 	if (path.startsWith('.\\profile\\')) { path = path.replace('.\\profile\\', fb.ProfilePath); }
 	else if (path.startsWith(folders.xxxRootName)) { path = path.replace(folders.xxxRootName, folders.xxx); }
 	else if (path.startsWith('.\\')) { path = path.replace('.\\', fb.FoobarPath); }
-	else { path = path.replace(/%fb2k_component_path%\\?/gi, () => fb.ComponentPath).replace(/%(fb2k_profile_path|profile)%\\?/gi, () => fb.ProfilePath).replace(/%fb2k_path%\\?/gi, () => fb.FoobarPath); }
+	path = path.replace(/%fb2k_component_path%\\?/gi, () => fb.ComponentPath)
+		.replace(/%(?:fb2k_profile_path|profile|jsplitter_fb2k_profile)%\\?/gi, () => fb.ProfilePath)
+		.replace(/%(?:fb2k_path|jsplitter_fb2k)%\\?/gi, () => fb.FoobarPath);
 	return path;
 }
 
@@ -630,14 +633,18 @@ function _open(file, codePage = 0) {
 	}
 }
 
-function _save(file, value, bBOM = false) {
+function _save(file, value, bBOM = false, codePage = utf8) {
+	if (window.Parent !== 'foo_uie_jsplitter' && codePage !== utf8) {
+		if (codePage === utf16) { return _saveFSO(file, value, true); }
+		else { throw new Error('JS-Host doesn\'t support codepage: ' + codePage); }
+	}
 	file = _resolvePath(file);
 	const filePath = utils.SplitFilePath(file)[0];
 	if (!_isFolder(filePath)) { _createFolder(filePath); }
 	if (round(roughSizeOfObject(value) / 1024 ** 2 / 2, 1) > 110) { console.popup('Data is bigger than 100 Mb, it may crash SMP. Report to use split JSON.', window.FullPanelName + ': JSON saving'); }
 	const bLongPath = _isLongPath(file);
 	if (_isFolder(filePath)) {
-		if (utils.WriteTextFile(bLongPath ? _longPath(file) : file, value, bBOM) || _isFile(file) && value === '') {
+		if (utils.WriteTextFile(bLongPath ? _longPath(file) : file, value, bBOM, codePage) || _isFile(file) && value === '') {
 			return true;
 		}
 	}
