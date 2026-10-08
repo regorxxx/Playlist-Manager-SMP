@@ -765,6 +765,8 @@ CALL :copy_file helpers\menu_xxx.js
 CALL :copy_file helpers\menu_xxx_extras.js
 CALL :copy_file helpers\menu_xxx_macros.js
 CALL :copy_file helpers\playlist_history.js
+CALL :copy_folder helpers\data
+CALL :copy_file helpers\data\iso-639.json
 CALL :delete_file helpers\readme\auto_dj.txt
 CALL :delete_file helpers\readme\playlist_manager.txt
 CALL :delete_file helpers\readme\playlist_manager_network.txt
