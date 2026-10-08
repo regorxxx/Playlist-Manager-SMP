@@ -1,5 +1,5 @@
 ﻿'use strict';
-//24/08/26
+//07/10/26
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2, _isTrack */
 
@@ -28,8 +28,8 @@ include('helpers_xxx_playlists_files_fpl.js');
 // Playlists descriptors
 const playlistDescriptors = {
 	// Physical items
-	'.m3u': /* .... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
 	'.m3u8': /* ... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
+	'.m3u': /* .... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
 	'.pls': /* .... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf15c', iconBg: null },
 	'.xspf': /* ... */ { isWritable: true, isReadable: true, isLoadable: true, icon: '\uf1e0', iconBg: null },
 	'.xsp': /* ...................... */ { isReadable: true, isLoadable: true, icon: '\uf0d0', iconBg: null },

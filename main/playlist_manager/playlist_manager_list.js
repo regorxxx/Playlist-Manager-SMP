@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/09/26
+//07/10/26
 
 /* exported _list */
 
@@ -7,7 +7,7 @@
 /* global backup:readable, Input:readable, _menu:readable, callbacksListener:readable, isFoobarV2:readable*/
 /* global createSettingsMenu:readable, createListMenu:readable, createFilterSortMenu:readable, createMulSelMenu:readable, createSelMenu:readable, createSearchMenu:readable, createMenuExport:readable */
 /* global background:readable, stats:readable, pop:readable, bottomToolbar:readable scrollBar:readable */
-
+ui
 include('..\\..\\helpers\\helpers_xxx.js');
 /* global popup:readable, debounce:readable, MK_CONTROL:readable, VK_SHIFT:readable, VK_CONTROL:readable, MK_SHIFT:readable, IDC_ARROW:readable, IDC_HAND:readable, IDC_HELP:readable, DT_BOTTOM:readable, DT_CENTER:readable, DT_END_ELLIPSIS:readable, DT_CALCRECT:readable, DT_NOPREFIX:readable, DT_LEFT:readable, SmoothingMode:readable, folders:readable, TextRenderingHint:readable, IDC_NO:readable, delayFn:readable, throttle:readable, VK_UP:readable, VK_DOWN:readable, VK_PGUP:readable, VK_PGDN:readable, VK_HOME:readable, VK_END:readable, clone:readable, convertStringToObject:readable, VK_ESCAPE:readable, escapeRegExpV2:readable, globTags:readable, globProfiler:readable, convertObjectToString:readable, globQuery:readable, TTDT_AUTOMATIC:readable, dropMask:readable */
 include('..\\window\\window_xxx_input.js');
@@ -5265,7 +5265,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				});
 				if (promises.length) { // Updates this.dataAutoPlaylists when all are processed
 					if (bLog && !this.logOpt.autoSize) { console.log('Updating AutoPlaylists size'); }
-					Promise.all(promises).then(() => {
+					void Promise.all(promises).then(() => {
 						if (test) { test.Print(); }
 						this.save();
 						if (bInit && this.iDynamicMenus > 0 && this.logOpt.mainMenu) { console.log('Playlist Manager: Created dynamic menus'); }
@@ -6794,7 +6794,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					if (pls.extension === '.xsp') { setLocks(fbPlaylistIndex, ['AddItems', 'RemoveItems'], 'remove'); }
 					loadPromise.bDone = loadTracksFromPlaylist({ playlistPath: pls.path, playlistIndex: plman.ActivePlaylist, relPath: this.playlistsPath, remDupl, bAdvTitle: this.bAdvTitle, bMultiple: this.bMultiple, xspfRules: { ...this.xspfRules } });
 					loadPromise.bLoaded = Promise.resolve(true);
-					loadPromise.bDone.then((bDone) => {
+					void loadPromise.bDone.then((bDone) => {
 						if (!bDone && (pls.extension !== '.xspf' || utils.CheckComponent('foo_xspf_1'))) {
 							plman.AddLocations(fbPlaylistIndex, [pls.path], true);
 						} else if (pls.query) { // Update size on load for smart playlists
@@ -8477,7 +8477,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.plsCache = new Map();
 	globProfiler.Print('list.prototype');
 	this.bInit = false;
-	this.init().finally(() => this.bInit = true);
+	void this.init().finally(() => this.bInit = true);
 }
 
 // Calculate auto-playlist in steps to not freeze the UI, returns the handle list. Size is updated on the process

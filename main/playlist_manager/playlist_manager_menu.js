@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/10/26
+//07/10/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -253,7 +253,7 @@ function createSelMenu(forcedIndex = -1) {
 								list.filter();
 								// Refresh in UI
 								const uiIdx = getPlaylistIndexArray(pls.nameId);
-								(async () => {
+								void (async () => {
 									for (let idx of uiIdx) {
 										if (!bXsp && plman.IsAutoPlaylist(idx) || bXsp && !plman.IsAutoPlaylist(idx)) {
 											if (await list.loadPlaylist(z).bLoaded) { break; }
@@ -280,7 +280,7 @@ function createSelMenu(forcedIndex = -1) {
 								list.filter();
 								// Refresh in UI
 								const uiIdx = getPlaylistIndexArray(pls.nameId);
-								(async () => {
+								void (async () => {
 									for (let idx of uiIdx) {
 										if (!plman.IsAutoPlaylist(idx)) {
 											if (await list.loadPlaylist(z).bLoaded) { break; }
@@ -987,7 +987,7 @@ function createSelMenu(forcedIndex = -1) {
 					menuName: subMenuName, entryText: 'Revive dead items\t' + (bLocked ? '[locked]' : _b(deadItems)), func: () => {
 						list.addToSkipRwLock({ uiIdx, bNotify: true });
 						playlistRevive({ playlist: uiIdx, simThreshold: 0.5, bFindAlternative: true, bNotifyPlsMan: false });
-					}, flags: !bLocked && deadItems ? MF_STRING : MF_GRAYED
+					}, flags: !bLocked && deadItems ? MF_STRING : MF_GRAYED, bDefault: deadItems !== 0
 				});
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Select dead items\t' + _b(deadItems), func: () => {
@@ -1050,6 +1050,7 @@ function createFolderSubMenu(menu, folder, z) {
 		if (!list.bLiteMode) {
 			menu.newSeparator(subMenuName);
 			const subMenuNameTwo = menu.newMenu('New Playlist File (by ext)...', subMenuName);
+			let i = 0;
 			writablePlaylistFormats.forEach((ext) => {
 				menu.newEntry({
 					menuName: subMenuNameTwo,
@@ -1059,7 +1060,7 @@ function createFolderSubMenu(menu, folder, z) {
 							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 							: null;
 						list.add({ bEmpty: true, toFolder, ext });
-					}
+					}, bDefault: i++ === 0
 				});
 			});
 		}
@@ -1887,7 +1888,7 @@ function createMulSelMenu(forcedIndexes = []) {
 							list.addToSkipRwLock({ uiIdx, bNotify: true });
 							playlistRevive({ playlist: uiIdx, simThreshold: 0.5, bFindAlternative: true, bNotifyPlsMan: false });
 						});
-					}, flags: !bLocked && deadItems ? MF_STRING : MF_GRAYED
+					}, flags: !bLocked && deadItems ? MF_STRING : MF_GRAYED, bDefault: deadItems !== 0
 				});
 				menu.newEntry({
 					menuName: subMenuName, entryText: 'Select dead items\t' + _b(deadItems), func: () => {
@@ -1930,7 +1931,7 @@ function createListMenu() {
 					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 					: null;
 				list.add({ bEmpty: true, toFolder });
-			}
+			}, bDefault: true
 		});
 		menu.newEntry({
 			entryText: 'New UI-only Playlist...' + list.getGlobalShortcut('new ui'), func: () => {
@@ -1939,7 +1940,7 @@ function createListMenu() {
 					? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 					: null;
 				list.addUiPlaylist({ bInputName: true, toFolder });
-			}
+			}, bDefault: list.bLiteMode
 		});
 		menu.newSeparator();
 		menu.newEntry({
@@ -1991,6 +1992,7 @@ function createListMenu() {
 		if (!list.bLiteMode) {
 			menu.newSeparator();
 			const menuName = menu.newMenu('New Playlist File (by ext)...');
+			let i = 0;
 			writablePlaylistFormats.forEach((ext) => {
 				menu.newEntry({
 					menuName,
@@ -2000,7 +2002,7 @@ function createListMenu() {
 							? list.dataFolder.find((f) => f.name === rule) || list.addFolder(rule)
 							: null;
 						list.add({ bEmpty: true, toFolder, ext });
-					}
+					}, bDefault: i++ === 0
 				});
 			});
 		}
@@ -2636,7 +2638,7 @@ function createListMenu() {
 					list.addToSkipRwLock({ uiIdx: plman.ActivePlaylist, bNotify: true });
 					playlistRevive({ playlist: plman.ActivePlaylist, simThreshold: 0.5, bFindAlternative: true, bNotifyPlsMan: false });
 				}
-			}, flags: bLoad && !bLocked && deadItems ? MF_STRING : MF_GRAYED
+			}, flags: bLoad && !bLocked && deadItems ? MF_STRING : MF_GRAYED, bDefault: deadItems !== 0
 		});
 	}
 	menu.newSeparator();
@@ -5557,6 +5559,7 @@ function createSortMenu() {
 				}
 			});
 		});
+		menu.setDefaultEntryLast();
 		menu.newCheckMenuLast((o) => o.indexOf(list.methodState), options);
 	}
 	return menu;
@@ -5609,7 +5612,7 @@ function createFilterMenu(buttonKey) {
 		menu.newEntry({
 			entryText: 'Reset all filters', func: () => {
 				list.resetFilter();
-			}
+			}, bDefault: Object.keys(list.getFilter(true)).length !== 0
 		});
 	}
 	return menu;
@@ -6091,7 +6094,7 @@ function createFilterSortMenu() {
 		menu.newEntry({
 			entryText: 'Reset all filters', func: () => {
 				list.resetFilter();
-			}, flags: Object.keys(list.getFilter(true)).length ? MF_STRING : MF_GRAYED
+			}, flags: Object.keys(list.getFilter(true)).length ? MF_STRING : MF_GRAYED, bDefault: Object.keys(list.getFilter(true)).length !== 0
 		});
 	}
 	return menu;
