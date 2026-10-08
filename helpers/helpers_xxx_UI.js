@@ -1,12 +1,12 @@
 ﻿'use strict';
-//18/08/26
+//07/10/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
 /* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable, TTDT_INITIAL:readable */
 include('helpers_xxx.js');
-/* global globFonts:readable, globSettings:readable, doOnce:readable, globSettings:readable */
+/* global globFonts:readable, globSettings:readable, doOnce:readable, globSettings:readable, folders:readable */
 /* global _isFile:readable */
 if (window.Parent === 'foo_uie_jsplitter' && _isFile(fb.ComponentPath + '\\docs\\Effects.js')) { include(fb.ComponentPath + '\\docs\\Effects.js'); }
 /* global Effects:readable */
@@ -423,7 +423,12 @@ function invert(color, bBW = false, bUseAlpha = false) {
 function _gdiFont(name, size, style) {
 	const id = name.toLowerCase() + '_' + size + '_' + (style || 0);
 	if (!fonts[id]) {
-		fonts[id] = gdi.Font(name, size, style || 0);
+		if (utils.CheckFont(name)) { fonts[id] = gdi.Font(name, size, style || 0); }
+		else if (utils.LoadFont) {
+			const files = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf' };
+			if (files[name] && utils.LoadFont(folders.xxx + 'fonts\\' + files[name])) { fonts[id] = gdi.Font(name, size, style || 0); }
+		}
+		if (!fonts[id]) { fonts[id] = gdi.Font(utils.CheckFont('Segoe UI') ? 'Segoe UI' : 'Tahoma', size, style || 0); }
 	}
 	if (fonts[id].Name !== name && !fonts.notFound.includes(name)) { // Display once per session, otherwise it floods the console with the same message...
 		fonts.notFound.push(name);

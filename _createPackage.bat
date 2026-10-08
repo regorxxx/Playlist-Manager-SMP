@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.31/08/2026
+REM Create packages (zip file) from js files v.08/10/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -232,6 +232,7 @@ CALL :copy_file presets\AutoHotkey\foobar_preview_play.ahk
 CALL :copy_file presets\AutoHotkey\foobar_preview_sel.ahk
 CALL :copy_file presets\AutoHotkey\readme.txt
 CALL :copy_folder presets\"World Map"
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -376,6 +377,7 @@ CALL :copy_file examples\track_list_to_import.txt
 CALL :copy_folder images\masks
 CALL :check_folder presets
 CALL :copy_folder presets\Network
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -455,6 +457,7 @@ CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -567,6 +570,7 @@ CALL :copy_file helpers-external\ngraph\ngraph.graph.js
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -645,6 +649,7 @@ CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -844,6 +849,7 @@ CALL :copy_folder images\wrapped\fallback
 CALL :copy_folder images\wrapped\genres
 CALL :copy_folder images\wrapped\month
 CALL :copy_folder images\wrapped\soundcity
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -939,6 +945,8 @@ CALL :copy_folder assets\library_tree\images\noCover\small
 CALL :copy_folder assets\library_tree\images\root
 CALL :copy_folder assets\library_tree\images\root\small
 CALL :copy_folder assets\library_tree\licences
+REM others
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
@@ -1017,6 +1025,7 @@ CALL :copy_folder helpers-external\nircmd
 CALL :delete_file helpers-external\chroma.js\chroma-ultra-light.min.js
 REM others
 CALL :copy_folder images\masks
+CALL :copy_folder fonts
 REM package info, zip and report
 CALL :finish
 GOTO:EOF
