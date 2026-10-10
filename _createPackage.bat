@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.10/10/2026
+REM Create packages (zip file) from js files v.11/10/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -23,6 +23,7 @@ SETLOCAL
 SET packagesFolder=packages
 SET zipExec=helpers-external\7z\7za_32.exe
 SET hasErrors=false
+SET timestamp=YYYY/MM/DD hh:mm
 SET foobarPath=%2
 IF [%foobarPath%]==[.] (
 	SET foobarPath="..\..\..\..\foobar2000.exe"
@@ -1076,12 +1077,12 @@ GOTO:EOF
 REM ------------------------------
 REM Internals
 REM ------------------------------
-:delete_file
+:delete_file [file path]
 SET filePath=%1
 IF EXIST %root%\%filePath% DEL /Q /F %root%\%filePath%
 GOTO:EOF
 
-:delete_folder
+:delete_folder [folder path]
 REM Copy functions are Async, so put these at the end
 IF EXIST %1 (
 	DEL /Q /F /S %1\*.* >NUL
@@ -1090,20 +1091,20 @@ IF EXIST %1 (
 )
 GOTO:EOF
 
-:copy_main
+:copy_main [file path]
 SET filePath=%1
 COPY /V /Y %filePath% %root%\main.js
 IF ERRORLEVEL 1 (CALL :report_error %filePath%)
 GOTO:EOF
 
-:copy_file
+:copy_file [file path]
 SET filePath=%1
 ECHO %filePath%
 COPY /V /Y %filePath% %root%\%filePath%>nul
 IF ERRORLEVEL 1 (CALL :report_error %filePath%)
 GOTO:EOF
 
-:copy_folder
+:copy_folder [folder path] [omit listing files]
 SET folderPath=%1
 IF NOT EXIST %root%\%folderPath% MD %root%\%folderPath%
 IF [%2]==[true] (
@@ -1115,17 +1116,17 @@ IF [%2]==[true] (
 IF ERRORLEVEL 1 (CALL :report_error %folderPath%)
 GOTO:EOF
 
-:check_folder
+:check_folder [folder path]
 SET folderPath=%1
 IF NOT EXIST %root%\%folderPath% MD %root%\%folderPath%
 GOTO:EOF
 
-:check_root
+:check_root [folder path]
 CALL :delete_folder %root%
 MD %root%
 GOTO:EOF
 
-:copy_files
+:copy_files [folder path] [file list]
 SET folder=%1
 SET files=%~2
 CALL :check_folder %folder%
@@ -1135,13 +1136,17 @@ FOR %%f in (%files%) do (
 )
 GOTO:EOF
 
-:copy_folders
+:copy_folders [root] [folder list]
 SET folder=%1
 SET folders=%~2
 CALL :check_folder %folder%
 FOR %%f in (%folders%) do (
 	CALL :copy_folder %folder%\%%f
 )
+GOTO:EOF
+
+:get_date
+for /f "delims=" %%# in ('powershell get-date -format "{yyyy-MM-dd HH:mm}"') do @set timestamp=%%#
 GOTO:EOF
 
 :create_package_info
@@ -1151,7 +1156,7 @@ REM add bom EF BB BF bytes in HEX-editor
 ECHO | SET /P dummyName="﻿"> %root%\%filePath%
 ECHO {>> %root%\%filePath%
 ECHO 	"author": "Regorxxx",>> %root%\%filePath%
-ECHO 	"description": "%description%",>> %root%\%filePath%
+ECHO 	"description": "Package built: %timestamp%\r\n%description%",>> %root%\%filePath%
 ECHO 	"enableDragDrop": %enableDragDrop%,>> %root%\%filePath%
 ECHO 	"id": "{%id%}",>> %root%\%filePath%
 ECHO 	"name": "%name%",>> %root%\%filePath%
@@ -1162,7 +1167,7 @@ REM omit new line at end
 REM https://stackoverflow.com/questions/7105433/windows-batch-echo-without-new-line
 GOTO:EOF
 
-:compress
+:compress [filename] [version]
 SET fileName=%1-%version:.=-%-package.zip
 SET version=%2
 IF EXIST %packagesFolder%\%fileName% DEL /Q /F %packagesFolder%\%fileName%
@@ -1197,7 +1202,7 @@ IF %hasErrors%==true (
 )
 GOTO:EOF
 
-:report_error
+:report_error [path]
 ECHO.
 ECHO ERROR
 ECHO Not found: %1
@@ -1234,6 +1239,7 @@ GOTO:EOF
 REM package info, zip and report
 :finish
 IF NOT %hasErrors%==true (
+	CALL :get_date
 	CALL :create_package_info
 	CALL :compress %name% %version%
 	CALL :report
