@@ -277,7 +277,6 @@ CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_button.js
 CALL :copy_file main\window\window_xxx_helpers.js
-CALL :copy_file main\window\window_xxx_downloader.js
 CALL :copy_file main\window\window_xxx_dynamic_colors.js
 CALL :copy_file main\window\window_xxx_input.js
 CALL :copy_file main\window\window_xxx_scrollbar.js
@@ -714,6 +713,7 @@ CALL :copy_file main\window\window_xxx_background.js
 CALL :copy_file main\window\window_xxx_background_menu.js
 CALL :copy_file main\window\window_xxx_dynamic_colors.js
 CALL :copy_file main\window\window_xxx_helpers.js
+CALL :copy_file main\window\window_xxx_downloader.js
 REM Buttons
 CALL :copy_folder buttons
 CALL :copy_folder buttons\helpers
