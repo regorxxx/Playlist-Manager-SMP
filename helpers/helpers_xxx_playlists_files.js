@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/26
+//10/10/26
 
 /* exported savePlaylist, addHandleToPlaylist, precacheLibraryRelPaths, precacheLibraryPathsAsync, loadTracksFromPlaylist, arePathsInMediaLibrary, loadPlaylists, getFileMetaFromPlaylist, loadXspPlaylist, getHandlesFromPlaylistV2, _isTrack */
 
@@ -7,7 +7,8 @@ include(fb.ComponentPath + 'docs\\Codepages.js');
 include('helpers_xxx.js');
 /* global globQuery:readable, iStepsLibrary:readable, iDelayLibraryPLM:readable */
 include('helpers_xxx_prototypes.js');
-/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable, round:readable, isFbMetadbHandle:readable */ /* window.FullPanelName:readable */
+/* global nextId:readable, _p:readable, isArrayStrings:readable, isArray:readable, escapeRegExp:readable, round:readable, isFbMetadbHandle:readable */
+/* window.FullPanelName:readable */
 include('helpers_xxx_file.js');
 /* global _isFile:readable, _open:readable, checkCodePage:readable, _isLink:readable, utf8:readable, _save:readable, _copyFile:readable, _renameFile:readable, _deleteFile:readable, youTubeRegExp:readable, _resolvePath:readable */
 include('helpers_xxx_tags.js');

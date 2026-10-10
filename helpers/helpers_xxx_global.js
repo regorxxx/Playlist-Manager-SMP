@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/26
+//09/10/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
 
@@ -200,6 +200,7 @@ function addGlobValues(type) {
 			globQuery.compareTitle = '"$stricmp(' + _t(globTags.title) + ',#' + globTags.title + '#)" IS 1';
 			globQuery.recent = globQuery.lastPlayedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST 4 WEEKS');
 			globQuery.added = globQuery.addedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST 4 WEEKS');
+			globQuery.modified = globQuery.modifiedFunc.replaceAll('#QUERYEXPRESSION#', 'DURING LAST 4 WEEKS');
 			break;
 		case 'All':
 			addGlobValues('tags');
@@ -234,6 +235,7 @@ const globTags = {
 	playCount: '$max(%PLAY_COUNT%,%LASTFM_PLAY_COUNT%,%2003_PLAYCOUNT%,0)',
 	skipCount: '$max(%SKIP_COUNT%,%SKIP_TRACK_SKIP_COUNT%,0)',
 	added: '$if3(%ADDED_ENHANCED%,%2003_ADDED%,%ADDED%)',
+	modified: '%LAST_MODIFIED%',
 	firstPlayed: '$if3(%FIRST_PLAYED_ENHANCED%,%2003_FIRST_PLAYED%,%FIRST_PLAYED%)',
 	lastPlayed: '$if3(%LAST_PLAYED_ENHANCED%,%2003_LAST_PLAYED%,%LAST_PLAYED%)',
 	folksonomy: 'FOLKSONOMY',
@@ -272,6 +274,7 @@ const globQuery = {
 	lastPlayedFunc: '((%LAST_PLAYED_ENHANCED% PRESENT AND %LAST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% PRESENT AND %2003_LAST_PLAYED% #QUERYEXPRESSION#) OR (%2003_LAST_PLAYED% MISSING AND %LAST_PLAYED% #QUERYEXPRESSION#))',
 	firstPlayedFunc: '((%FIRST_PLAYED_ENHANCED% PRESENT AND %FIRST_PLAYED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% PRESENT AND %2003_FIRST_PLAYED% #QUERYEXPRESSION#) OR (%2003_FIRST_PLAYED% MISSING AND %FIRST_PLAYED% #QUERYEXPRESSION#))',
 	addedFunc: '((%ADDED_ENHANCED% PRESENT AND %ADDED_ENHANCED% #QUERYEXPRESSION#) OR (%2003_ADDED% PRESENT AND %2003_ADDED% #QUERYEXPRESSION#) OR (%2003_ADDED% MISSING AND %ADDED% #QUERYEXPRESSION#))',
+	modifiedFunc: '%LAST_MODIFIED% #QUERYEXPRESSION#',
 	loved: '(' + globTags.feedback + ' IS 1 OR %2003_LOVED% IS 1)',
 	hated: globTags.feedback + ' IS -1'
 };

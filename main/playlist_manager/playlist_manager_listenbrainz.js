@@ -1,5 +1,5 @@
 ﻿'use strict';
-//16/09/26
+//09/10/26
 
 /* exported ListenBrainz */
 
@@ -413,7 +413,9 @@ ListenBrainz.joinArtistMBIDs = function joinArtistMBIDs(artists, MBIDs, token, b
 		},
 		(reject) => {
 			console.log('joinArtistMBIDs: ' + reject.status + ' ' + reject.responseText);
-			return results;
+			return bInverse
+				? artists.map((artist, i) => { return { artist, mbids: [MBIDs[i]] }; })
+				: results;
 		}
 	);
 };
