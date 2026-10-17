@@ -74,6 +74,7 @@
 
 ## [Unreleased][]
 ### Added
+- Sorting: new sorting method 'By playlist idx' which mimics the current order in UI (playlist tabs, etc.). It only works for loaded or UI-only playlists, obviously. Folders or non-loaded playlists have a -1 idx, thus always being shown the first.
 - Statistics: new setting to modify the degree of point filling for bar-based charts. i.e. Instead of using the entire available width, it will leave blank spaces between points if using any value below 100%.
 - Statistics: new setting to modify and control how chart title is shown (previously on menus).
 - Statistics: new setting to control X-Y grids opacity.

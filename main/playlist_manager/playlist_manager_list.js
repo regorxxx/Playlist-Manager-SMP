@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/10/26
+//17/10/26
 
 /* exported _list */
 
@@ -4864,6 +4864,15 @@ function _list({ x, y, w, h, properties } = {}) {
 				'(Ts) Asc.': (a, b) => propertyGet(a, 'trackSize') - propertyGet(b, 'trackSize'),
 				'(Ts) Des.': (a, b) => propertyGet(b, 'trackSize') - propertyGet(a, 'trackSize')
 			},
+			...(this.bAllPls
+				? {
+					'By playlist idx': {
+						'(Ts) Asc.': (a, b) => propertyGet(a, 'idx') - propertyGet(b, 'idx'),
+						'(Ts) Des.': (a, b) => propertyGet(b, 'idx') - propertyGet(a, 'idx')
+					}
+				}
+				: {}
+			),
 			// Manual
 			'Manual sorting':
 			{
@@ -5415,7 +5424,8 @@ function _list({ x, y, w, h, properties } = {}) {
 							trackSize: handleList.CalcTotalSize(),
 							author: 'Foobar2000',
 							created: now,
-							modified: now
+							modified: now,
+							idx: pls.idx
 						});
 						const cacheItem = this.dataUI.find((dataPls) => { return dataPls.nameId === item.name; });
 						if (cacheItem) {
