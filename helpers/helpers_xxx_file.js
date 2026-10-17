@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/26
+//14/10/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -771,17 +771,24 @@ function _explorer(fileOrFolder) {
 // Warning: don't use mask for critical performance tasks, since it will have to match the pattern against every found file (m)
 // which implies a utils.PathWildcardMatch call. If getFiles is called n times, thats n x m calls. Just put the mask at the path
 // and limit files with the extensionSet.
-function getFiles(folderPath, extensionSet, mask) {
+function getFiles(folderPath, extensionSet, mask, level = 0) {
 	folderPath = _resolvePath(folderPath);
 	if (!folderPath.includes('?') && !folderPath.includes('*') && !folderPath.endsWith('\\') && !/\.[a-z1-9]+$/i.test(folderPath)) { folderPath += '\\'; }
-	if (folderPath.endsWith('\\')) { folderPath += '*.*'; }
-	const bLongPath = _isLongPath(folderPath);
-	const files = utils.Glob((bLongPath ? _longPath(folderPath) : folderPath)).filter((item) => {
-		return extensionSet.has('.' + item.split('.').at(-1).toLowerCase());
-	}).map((path) => path.replace(/^\\\\\?\\/, ''));
-	return mask
-		? files.map((file) => utils.PathWildcardMatch(mask, file) ? file : null).filter(Boolean)
-		: files;
+	if (level > 0) {
+		const files = findRecursiveFile(mask || '*.*', [folderPath], level).filter((item) => {
+			return extensionSet.has('.' + item.split('.').at(-1).toLowerCase());
+		}).map((path) => path.replace(/^\\\\\?\\/, ''));
+		return files;
+	} else {
+		if (folderPath.endsWith('\\')) { folderPath += '*.*'; }
+		const bLongPath = _isLongPath(folderPath);
+		const files = utils.Glob((bLongPath ? _longPath(folderPath) : folderPath)).filter((item) => {
+			return extensionSet.has('.' + item.split('.').at(-1).toLowerCase());
+		}).map((path) => path.replace(/^\\\\\?\\/, ''));
+		return mask
+			? files.map((file) => utils.PathWildcardMatch(mask, file) ? file : null).filter(Boolean)
+			: files;
+	}
 }
 
 function _run() {

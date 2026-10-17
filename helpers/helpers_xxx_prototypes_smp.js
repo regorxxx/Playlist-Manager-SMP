@@ -1,10 +1,10 @@
 ﻿'use strict';
-//30/08/26
+//17/10/26
 
 /* exported extendGR, checkCompatible */
 
 /*
-	Object
+	Object polyfill
 */
 
 // Add ES2022 method
@@ -21,8 +21,7 @@ if (!Object.hasOwn) {
 	});
 }
 
-/*
-	RegExp
+/*polyfill
 */
 
 // Add unofficial method for JSsplitter
@@ -35,6 +34,41 @@ if (!RegExp.prototype.toSource) {
 		value: function () {
 			return '/' + this.source + '/' + this.flags; // NOSONAR
 		}
+	});
+}
+
+/* Global */
+
+if (!window.Parent) {
+	Object.defineProperty(window, 'Parent', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: fb.ComponentPath.toLowerCase().includes('foo_uie_jsplitter')
+			? 'foo_uie_jsplitter'
+			: fb.ComponentPath.toLowerCase().includes('foo_spider_monkey_panel')
+				? 'foo_spider_monkey_panel'
+				: 'unknown'
+	});
+}
+
+if (!window.PanelName) {
+	Object.defineProperty(window, 'PanelName', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: /{.{8}-.{4}-.{4}-.{4}-.{12}}/.test(window.Name)
+			? window.ScriptInfo.Name
+			: window.Name
+	});
+}
+
+if (!window.FullPanelName) {
+	Object.defineProperty(window, 'FullPanelName', {
+		enumerable: false,
+		configurable: false,
+		writable: false,
+		value: window.Name + ' (' + window.ScriptInfo.Name + ')'
 	});
 }
 
@@ -235,6 +269,7 @@ function extendGR(/** @type {GdiGraphics} */ gr, options = { DrawRoundRect: true
 }
 
 // Patch GDI objects while using D2D to avoid breaking GDI-only code
+if (window.Parent === 'foo_spider_monkey_panel' && window.DrawMode === 1) { window.DrawMode = 0; }
 if (window.DrawMode === 1) {
 	if (typeof D2DBitmap !== 'undefined') { Object.defineProperty(GdiBitmap, Symbol.hasInstance, { value(instance) { return instance instanceof D2DBitmap; } }); }
 	if (typeof D2DFont !== 'undefined') { Object.defineProperty(GdiFont, Symbol.hasInstance, { value(instance) { return instance instanceof D2DFont; } }); }
@@ -602,41 +637,6 @@ if (fb.AddLocationsAsync) {
 			}
 		});
 	};
-}
-
-/* Global */
-
-if (!window.Parent) {
-	Object.defineProperty(window, 'Parent', {
-		enumerable: false,
-		configurable: false,
-		writable: false,
-		value: fb.ComponentPath.toLowerCase().includes('foo_uie_jsplitter')
-			? 'foo_uie_jsplitter'
-			: fb.ComponentPath.toLowerCase().includes('foo_spider_monkey_panel')
-				? 'foo_spider_monkey_panel'
-				: 'unknown'
-	});
-}
-
-if (!window.PanelName) {
-	Object.defineProperty(window, 'PanelName', {
-		enumerable: false,
-		configurable: false,
-		writable: false,
-		value: /{.{8}-.{4}-.{4}-.{4}-.{12}}/.test(window.Name)
-			? window.ScriptInfo.Name
-			: window.Name
-	});
-}
-
-if (!window.FullPanelName) {
-	Object.defineProperty(window, 'FullPanelName', {
-		enumerable: false,
-		configurable: false,
-		writable: false,
-		value: window.Name + ' (' + window.ScriptInfo.Name + ')'
-	});
 }
 
 /* SMP bugs */
