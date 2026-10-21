@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/10/26
+//21/10/26
 
 /* exported _list */
 
@@ -502,6 +502,10 @@ function _list({ x, y, w, h, properties } = {}) {
 		// Synced playlists with ListenBrainz
 		if (showTt.mbid && pls.playlist_mbid.length) {
 			tooltipText += '\n' + 'MBID: ' + pls.playlist_mbid;
+		}
+		// Descriptions
+		if (showTt.description && pls.description.length) {
+			tooltipText += '\n' + 'Description: ' + pls.description;
 		}
 		// Show UI playlist duplicate warning
 		let iDup = 0;
@@ -7336,34 +7340,6 @@ function _list({ x, y, w, h, properties } = {}) {
 		this.lastOffset = 0;
 		this.internalPlsDrop = [];
 		this.data = []; // Data to paint
-		/**
-		 * @typedef {object} Playlist - Playlist object
-		 * @property {string} path - File path
-		 * @property {string} name - Playlist name
-		 * @property {string} nameId - Playlist name + Id
-		 * @property {string} id - Playlist Id
-		 * @property {string} extension - File extension
-		 * @property {number} size - Playlist tracks number
-		 * @property {number} fileSize - File size
-		 * @property {number} trackSize - Playlist tracks' file size
-		 * @property {number} duration - Playlist tracks' duration
-		 * @property {boolean} isLocked - Flag if file is locked
-		 * @property {boolean} isFolder - Flag for folders
-		 * @property {boolean} isAutoPlaylist - Flag for AutoPlaylists
-		 * @property {string} query  - Query for AutoPlaylists
-		 * @property {string} sort  - Sorting for AutoPlaylists
-		 * @property {boolean} bSortForced  - Flag for AutoPlaylists sorting
-		 * @property {number} limit  - Limit for Smart Playlists
-		 * @property {string} category  - Playlist category
-		 * @property {string[]} tags  - Playlist tags
-		 * @property {string[]} trackTags  - Playlist track tags
-		 * @property {string} playlist_mbid  - ListenBrainz playlist MBID
-		 * @property {string} author  - Playlist author
-		 * @property {string} description  - Playlist description
-		 * @property {number} created  - Playlist created date
-		 * @property {number} created  - Playlist modified date
-		 */
-		/** @type {Playlist[]} - Playlists list */
 		this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
 		this.dataAutoPlaylists = []; // Only autoplaylists to save to json
 		this.dataFpl = []; // Only fpl playlists to save to json
@@ -8149,6 +8125,42 @@ function _list({ x, y, w, h, properties } = {}) {
 	this.itemsXsp = 0;
 	this.itemsFoobar = 0;
 	this.itemsFolder = 0;
+	this.data = []; // Data to paint
+	/**
+	 * @typedef {object} Playlist - Playlist object
+	 * @property {string} path - File path
+	 * @property {string} name - Playlist name
+	 * @property {string} nameId - Playlist name + Id
+	 * @property {string} id - Playlist Id
+	 * @property {'.ui'|'.fpl'|'.m3u'|'.pls'|'.m3u8'|'.xspf'|'.xsp'|'.strm'|''} extension - File extension
+	 * @property {number} size - Playlist tracks number
+	 * @property {number} fileSize - File size
+	 * @property {number} trackSize - Playlist tracks' file size
+	 * @property {number} duration - Playlist tracks' duration
+	 * @property {boolean} isLocked - Flag if file is locked
+	 * @property {boolean} isFolder - Flag for folders
+	 * @property {boolean} isAutoPlaylist - Flag for AutoPlaylists
+	 * @property {string} query  - Query for AutoPlaylists
+	 * @property {string} sort  - Sorting for AutoPlaylists
+	 * @property {boolean} bSortForced  - Flag for AutoPlaylists sorting
+	 * @property {number} limit  - Limit for Smart Playlists
+	 * @property {string} category  - Playlist category
+	 * @property {string[]} tags  - Playlist tags
+	 * @property {string[]} trackTags  - Playlist track tags
+	 * @property {string} playlist_mbid  - ListenBrainz playlist MBID
+	 * @property {string} author  - Playlist author
+	 * @property {string} description  - Playlist description
+	 * @property {number} created  - Playlist created date
+	 * @property {number} created  - Playlist modified date
+	 */
+	/** @type {Playlist[]} - Playlists list */
+	this.dataAll = []; // Everything cached (filtering changes this.data but not this one)
+	this.dataAutoPlaylists = []; // Only autoplaylists to save to json
+	this.dataFpl = []; // Only fpl playlists to save to json
+	this.dataXsp = []; // Only xsp playlists to save to json
+	this.dataUI = []; // Only foobar2000 playlists on UI
+	this.dataFoobar = []; // Only foobar2000 playlists on UI
+	this.dataFolder = []; // Only folders for sorting
 	this.text_x = 0;
 	this.timeOut = null;
 	this.bDoubleClick = false;

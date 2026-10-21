@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/09/26
+//21/10/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -175,6 +175,7 @@ let properties = {
 			mbid: true,
 			tags: true,
 			trackSize: true,
+			description: true
 		}
 	}), { func: isJSON, forceDefaults: true }],
 	bAutoLoadTag: ['Automatically add \'bAutoLoad\' to all playlists', false, { func: isBoolean }],
