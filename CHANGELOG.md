@@ -81,7 +81,7 @@
 - Statistics: support for line styles: solid, dot, dash, ... They work with most chart types, either as filling or border. Requires JSplitter.
 - Statistics: support for line join styles: miter, round,... It works with Lines (high quality)' chart type. Requires JSplitter.
 - Statistics: new chart type 'Lines (with markers)'.
-- UI: new 'Description' option to show on tooltips (configurable at 'Panel UI' submenu)
+- UI: new 'Description' option to show on tooltips (configurable at 'Panel UI' submenu).
 ### Changed
 - UI: some menus now have default actions set (bold text), if JS-Host allows it. This is only a minor display detail without any associated functionality.
 - Statistics: minor improvements to menu entries display.
