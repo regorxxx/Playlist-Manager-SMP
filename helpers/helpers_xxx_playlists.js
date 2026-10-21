@@ -83,7 +83,7 @@ function selectTracksAtPlaylistAndFocus({ selection, plsIdx }) {
 // Outputs names of all playlists
 function getPlaylistNames() {
 	let names = [];
-	for (let i = 0; i < plman.PlaylistCount; i++) { names.push({ name: plman.GetPlaylistName(i), idx: i }); }
+	for (let i = 0; i < plman.PlaylistCount; i++) { names.push({ name: plman.GetPlaylistName(i), guid: plman.GetGUID(i), idx: i }); }
 	return names;
 }
 

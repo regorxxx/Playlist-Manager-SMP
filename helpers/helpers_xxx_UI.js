@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/26
+//21/10/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -61,6 +61,8 @@ const SF_CENTRE = 285212672;
 
 const LM = _scale(5);
 const TM = _scale(15);
+
+const builtInFonts = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf', 'Twemoji Mozilla': 'Twemoji.Mozilla.ttf' };
 
 // Combinations of invisible chars may be used on UI elements to assign IDs...
 const hiddenChars = ['\u200b', '\u200c', '\u200d', '\u200e'];
@@ -425,8 +427,7 @@ function _gdiFont(name, size, style) {
 	if (!fonts[id]) {
 		if (utils.CheckFont(name)) { fonts[id] = gdi.Font(name, size, style || 0); }
 		else if (utils.LoadFont) {
-			const files = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf' };
-			if (files[name] && utils.LoadFont(folders.xxx + 'fonts\\' + files[name])) { fonts[id] = gdi.Font(name, size, style || 0); }
+			if (builtInFonts[name] && utils.LoadFont(folders.xxx + 'fonts\\' + builtInFonts[name])) { fonts[id] = gdi.Font(name, size, style || 0); }
 		}
 		if (!fonts[id]) { fonts[id] = gdi.Font(utils.CheckFont('Segoe UI') ? 'Segoe UI' : 'Tahoma', size, style || 0); }
 	}
