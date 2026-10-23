@@ -400,7 +400,7 @@ function setCategory(categories, list, z) {
 			list.editData(pls, { category: categories, modified: Date.now() });
 			console.log(pls);
 			list.update({ bReuseData: true, bNotPaint: true });
-			const categoryState = [...new Set(list.categoryState.concat(categories)).intersection(new Set(list.category()))];
+			const categoryState = [...new Set(list.categoryState.concat(categories)).intersection(new Set(list.categories()))];
 			list.filter({ categoryState });
 			bDone = true;
 		} else if (pls.extension === '.strm') {
