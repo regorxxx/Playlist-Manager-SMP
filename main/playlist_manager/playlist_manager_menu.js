@@ -1461,7 +1461,7 @@ function createMulSelMenu(forcedIndexes = []) {
 				menuName, entryText: 'New category...', func: () => {
 					const input = Input.json(
 						'array strings',
-						playlists[0].tags,
+						playlists[0].category,
 						'Category Name(s):\n(JSON)\n\nFor ex: ["My category", "Another category"]',
 						window.FullPanelName + ': ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 50),
 						'["My category", "Another category"]',
