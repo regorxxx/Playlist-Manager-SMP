@@ -396,9 +396,7 @@ function setCategory(categories, list, z) {
 	const extension = pls.extension;
 	if (!new Set(categories).isEqual(new Set(pls.category))) { // Compares arrays
 		if (pls.isAutoPlaylist || extension === '.fpl' || extension === '.xsp' || pls.extension === '.ui' || pls.isFolder) {
-			console.log(categories);
 			list.editData(pls, { category: categories, modified: Date.now() });
-			console.log(pls);
 			list.update({ bReuseData: true, bNotPaint: true });
 			const categoryState = [...new Set(list.categoryState.concat(categories)).intersection(new Set(list.categories()))];
 			list.filter({ categoryState });
