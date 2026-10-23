@@ -3843,6 +3843,23 @@ function createSettingsMenu(parent, parentBackground) {
 				});
 			}
 		}
+		menu.newSeparator(menuName);
+		menu.newEntry({
+			menuName, entryText: 'Tags blacklist...', func: () => {
+				const input = Input.json('array strings', _jsonParse(parent.properties.blacklistTagExport[1]), 'Input pls. tags to be ignored on exported playlist files:\n(JSON strings array)\n\nMatching is not case sensitive.\n\nFor ex: ["fiio", "spotify"]\nThey will not be written at tags playlist field (for ex. on m3u8).', 'Playlist Manager: Tags blacklist', '["fiio", "spotify"]', void (0), true);
+				if (input === null) { return; }
+				parent.properties.blacklistTagExport[1] = JSON.stringify(input);
+				overwriteProperties(parent.properties);
+			}
+		});
+		menu.newEntry({
+			menuName, entryText: 'Category blacklist...', func: () => {
+				const input = Input.json('array strings', _jsonParse(parent.properties.blacklistCategoryExport[1]), 'Input pls. categories to be ignored on exported playlist files:\n(JSON strings array)\n\nMatching is not case sensitive.\n\nFor ex: ["fiio", "spotify"]\nThey will not be written at category playlist field (for ex. on m3u8).', 'Playlist Manager: Category blacklist', '["Autoplaylists", "Car"]', void (0), true);
+				if (input === null) { return; }
+				parent.properties.blacklistCategoryExport[1] = JSON.stringify(input);
+				overwriteProperties(parent.properties);
+			}
+		});
 	}
 	menu.newSeparator();
 	{	// UI

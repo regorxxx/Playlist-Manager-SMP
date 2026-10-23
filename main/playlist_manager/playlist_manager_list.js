@@ -6995,6 +6995,21 @@ function _list({ x, y, w, h, properties } = {}) {
 		return output;
 	};
 
+	this.applyBlackList = (source, blacklistOrType) => {
+		let blacklist;
+		if (typeof blacklistOrType === 'string') {
+			switch (blacklistOrType) {
+				case 'tags': blacklist = _jsonParse(this.properties.blacklistTagExport[1]) || []; break;
+				case 'category': blacklist = _jsonParse(this.properties.blacklistCategoryExport[1]) || []; break;
+				case 'default': blacklist = []; break;
+			}
+		} else { blacklist = blacklistOrType; }
+		blacklist = new Set(blacklist.map((s) => s.toLowerCase()));
+		source = new Set(source);
+		for (let val of source) { if (blacklist.has(val.toLowerCase())) { source.delete(val); } }
+		return [...source];
+	};
+
 	this.getHandleFrom = (idx, bLog = true) => {
 		const pls = this.dataAll[idx];
 		let handleList = new FbMetadbHandleList();

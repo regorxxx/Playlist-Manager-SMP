@@ -938,7 +938,7 @@ async function exportPlaylistFile({ list, z, ext, defPath = '' } = {}) {
 			if (report.length) { fb.ShowPopupMessage('Tracks not found:\n\n' + report.join('\n'), window.FullPanelName); }
 			if (handleList.Count) {
 				// Retrieve new paths
-				bDone = savePlaylist({ handleList, playlistPath: newPath, ext, playlistName: oriName, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
+				bDone = savePlaylist({ handleList, playlistPath: newPath, ext, playlistName: oriName, bLocked: pls.isLocked, category: list.applyBlackList(pls.category, 'category'), tags: list.applyBlackList(pls.tags, 'tags'), trackTags: pls.trackTags, author: pls.author, description: pls.description, bBOM: list.bBOM, relPath: (list.bRelativePath ? list.playlistsPath : '') });
 			}
 		}
 		bDone = bDone && _isFile(newPath); // Debug popups are already handled at prev line
@@ -1167,15 +1167,19 @@ function exportPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.mp3'
 			let file = '';
 			let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
 			if (_isFile(newPath)) { bDeleted = _recycleFile(newPath, true); }
-			if (!extension.length || playlistExt.length && (playlistExt.startsWith(extension) || extension.startsWith(playlistExt))) {
+			if (!extension.length || playlistExt.length && (playlistExt.startsWith(extension) || extension.startsWith(playlistExt))) { // TODO Bug with XSPF?
 				const codePage = checkCodePage(_open(playlistPath), pls.extension);
 				file = _open(playlistPath, codePage === -1 ? 0 : codePage);
 				paths.forEach((path, i) => { file = file.replace(path, sanitizePath(fileNames[i])); });
-				if ((extension === '.m3u8' || extension === '.m3u') && !bExtendedM3U) {
-					file = file.replace(/^#(?:EXT.*|.*:.*)[\r\n]*/gm, '');
+				if ((extension === '.m3u8' || extension === '.m3u')) {
+					if (!bExtendedM3U) { file = file.replace(/^#(?:EXT.*|.*:.*)[\r\n]*/gm, ''); }
+					else {
+						file = file.replace(/(^#TAGS:)(.*)/gm, (match, p1, p2) => p1 + list.applyBlackList((p2 || '').split(';'), 'tags'))
+							.replace(/(^#CATEGORY:)(.*)/gm, (match, p1, p2) => p1 + list.applyBlackList((p2 || '').split(';'), 'category'));
+					}
 				}
 			} else { // Or create new playlist file when translating between different formats
-				savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
+				savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: list.applyBlackList(pls.category, 'category'), tags: list.applyBlackList(pls.tags, 'tags'), trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
 				file = _open(newPath, utf8);
 				paths.forEach((path, i) => { file = file.replace(path, sanitizePath(fileNames[i])); });
 			}
@@ -1270,7 +1274,7 @@ function exportAutoPlaylistFileWithTracksConvert({ list, z, tf = '.\\%FILENAME%.
 			let bDeleted; // 3 possible states, false, true or nothing deleted (undefined)
 			if (_isFile(newPath)) { bDeleted = _recycleFile(newPath, true); }
 			// Create new playlist file when translating between different formats
-			savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: pls.category, tags: pls.tags, trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
+			savePlaylist({ handleList, playlistPath: newPath, ext: extension, playlistName: pls.name, bLocked: pls.isLocked, category: list.applyBlackList(pls.category, 'category'), tags: list.applyBlackList(pls.tags, 'tags'), trackTags: pls.trackTags, playlist_mbid: pls.playlist_mbid, author: pls.author, description: pls.description, bBOM: list.bBOM, bExtendedM3U });
 			let file = _open(newPath, utf8);
 			paths.forEach((path, i) => { file = file.replace(path, sanitizePath(fileNames[i])); });
 			if (bDeleted === false) {

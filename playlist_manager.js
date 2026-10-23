@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/10/26
+//23/10/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -392,6 +392,8 @@ let properties = {
 		bFallbackComponentXSPF: false,
 		bLoadNotTrackedItems: false,
 	}), { func: isJSON, forceDefaults: true }],
+	blacklistTagExport: ['Blacklist tags export', JSON.stringify([]), { func: isJSON }],
+	blacklistCategoryExport: ['Blacklist category export', JSON.stringify([]), { func: isJSON }],
 	bDynamicColors: ['Adjust colors to artwork', true, { func: isBoolean }],
 	bDynamicColorsBg: ['Adjust colors to artwork (bg)', false, { func: isBoolean }],
 	bOnNotifyColors: ['Adjust colors on panel notify', true, { func: isBoolean }],

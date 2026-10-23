@@ -82,8 +82,9 @@
 - Statistics: support for line join styles: miter, round,... It works with Lines (high quality)' chart type. Requires JSplitter.
 - Statistics: new chart type 'Lines (with markers)'.
 - UI: new 'Description' option to show on tooltips (configurable at 'Panel UI' submenu).
+- Exporting Playlist: added new settings to omit exporting specific tags/categories and writing them to files. This is mainly to be used by external players, like [Namida](https://github.com/namidaco/namida/issues/1336), so unwanted values are filtered and not writing to exported playlists. Feature can be set at 'File import/export' submenu.
 ### Changed
-- Playlist formats: category metadata is now multi-value supporting values split by ';'. Note all items tracked by the manager will be updated automatically at startup (existing playlist files don't need to be rewritten though).
+- Playlist formats: category metadata is now multi-value supporting values split by ';'. Note all items tracked by the manager will be updated automatically at startup (existing playlist files don't need to be rewritten though). Change has been done to support other players metadata, like [Namida](https://github.com/namidaco/namida/issues/1336).
 - UI: some menus now have default actions set (bold text), if JS-Host allows it. This is only a minor display detail without any associated functionality.
 - Statistics: minor improvements to menu entries display.
 - Exporting Playlist: improved 'FiiO (playlists folder)' and 'Namida (playlists folder)' export and convert presets to better handle tags with '|' or non ASCII chars at end of folder names, so they match foobar2000 converter output paths. This is in fact a workaround to a [foobar2000 undesired behavior](https://hydrogenaudio.org/index.php/topic,129623.0.html).
