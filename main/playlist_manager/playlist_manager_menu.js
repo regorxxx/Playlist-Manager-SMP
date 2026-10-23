@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/26
+//23/10/26
 
 /* exported createSelMenu, createMulSelMenu, createFilterMenu, createSearchMenu, createSettingsMenu, createSortMenu, createFilterSortMenu, onRbtnUpImportSettings, createMenuExport */
 
@@ -16,7 +16,7 @@ include('..\\..\\helpers\\helpers_xxx_properties.js');
 include('..\\..\\helpers\\helpers_xxx_prototypes.js');
 /* global isArrayStrings:readable, sanitize:readable, _p:readable, nextId:readable, isArrayEqual:readable, _b:readable, capitalize:readable, capitalizeAll:readable, isUUID:readable, range:readable, isCompatible:readable, strNumCollator:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable, convertCharsetToCodepage:readable */
+/* global _isLink:readable, _isFile:readable, _save:readable, _deleteFile:readable, _renameFile:readable, _explorer:readable, WshShell:readable, getRelPath:readable, _open:readable, utf8:readable, _run:readable, _hasRecycleBin:readable, _restoreFile:readable, sanitizePath:readable, _isFolder:readable _createFolder:readable, mappedDrives:readable, _resolvePath:readable, _runCmd:readable, _copyFile:readable, _recycleFile:readable , _jsonParseFileCheck:readable, getFiles:readable, _moveFile:readable _foldPath:readable, convertCharsetToCodepage:readable, _jsonParse:readable */
 include('..\\..\\helpers\\helpers_xxx_export.js');
 /* global exportSettings:readable, importSettings:readable */
 include('..\\..\\helpers\\menu_xxx.js');
@@ -40,7 +40,7 @@ include('..\\..\\helpers\\helpers_xxx_UI.js');
 include('..\\..\\helpers\\helpers_xxx_UI_chars.js');
 /* global chars:readable */
 include('playlist_manager_helpers.js');
-/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, setCategory:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable, findDuplicatesByPath:readable, findCircularReferences:readable, findDuplicatesByTF:readable */
+/* global setCategory:readable, setTag:readable, setTrackTags:readable, clonePlaylistInUI:readable, convertToRelPaths:readable, setPlaylist_mbid:readable, cloneAsSmartPls:readable, switchLock:readable, cloneAsAutoPls:readable, findFormatErrors:readable, clonePlaylistMergeInUI:readable, clonePlaylistFile:readable, exportPlaylistFile:readable, exportPlaylistFiles:readable, exportPlaylistFileWithTracks:readable, exportPlaylistFileWithTracksConvert:readable, exportAutoPlaylistFileWithTracksConvert:readable, renamePlaylist:readable, renameFolder:readable, rewriteXSPQuery:readable, rewriteXSPSort:readable, rewriteXSPLimit:readable, findMixedPaths:readable, backup:readable, findExternal:readable, findSubSongs:readable, findBlank:readable, findDurationMismatch:readable, findSizeMismatch:readable, findSubSongs:readable, findDead:readable, cloneAsStandardPls:readable, findDuplicatesByPath:readable, findCircularReferences:readable, findDuplicatesByTF:readable */
 include('playlist_manager_listenbrainz.js');
 /* global ListenBrainz:readable, SimpleCrypto:readable */
 include('playlist_manager_youtube.js');
@@ -361,19 +361,33 @@ function createSelMenu(forcedIndex = -1) {
 				const menuName = menu.newMenu('Set category', parentMenuName, !bIsLockPls && bIsPlsEditable || bIsPlsUI ? MF_STRING : MF_GRAYED);
 				menu.newEntry({
 					menuName, entryText: 'New category...', func: () => {
-						const input = Input.string('string', pls.category === null ? '' : pls.category, 'Category name (only 1):', window.FullPanelName + ': ' + pls.name, 'My category');
+						const input = Input.json(
+							'array strings',
+							pls.category,
+							'Category Name(s):\n(JSON)\n\nFor ex: ["My category", "Another category"]',
+							window.FullPanelName + ': ' + pls.name,
+							'["My category", "Another category"]',
+							void (0),
+							true
+						);
 						if (input === null) { return; }
 						setCategory(input, list, z);
 					}
 				});
 				menu.newSeparator(menuName);
+				let bAddInvisibleIds = false;
 				list.categories().forEach((category, i) => {
+					if (menu.isSeparator(category)) { menu.newSeparator(menuName); bAddInvisibleIds = true; return; } // Add invisible id for entries after separator to duplicate check marks
 					menu.newEntry({
 						menuName, entryText: category, func: () => {
-							if (pls.category !== category) { setCategory(i ? category : '', list, z); }
-						}
+							let categories;
+							if (i === 0) { categories = []; }
+							else if (pls.category.includes(category)) { categories = [...new Set(pls.category).difference(new Set([category]))]; }
+							else { categories = [...pls.category, category]; }
+							setCategory(categories, list, z);
+						}, bAddInvisibleIds
 					});
-					menu.newCheckMenuLast(() => (pls.category === (i ? category : '')));
+					menu.newCheckMenuLast(() => (i ? pls.category.includes(category) : pls.category.length === 0));
 				});
 			}
 			if (showMenus['Tags']) { // Set tag(s)
@@ -1445,30 +1459,46 @@ function createMulSelMenu(forcedIndexes = []) {
 			const menuName = menu.newMenu('Set category...', parentMenuName, !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({
 				menuName, entryText: 'New category...', func: () => {
-					let category = '';
-					try { category = utils.InputBox(window.ID, 'Category name (only 1):', window.FullPanelName, playlists[0].category === null ? '' : playlists[0].category, true); }
-					catch (e) { return; } // eslint-disable-line no-unused-vars
+					const input = Input.json(
+						'array strings',
+						playlists[0].tags,
+						'Category Name(s):\n(JSON)\n\nFor ex: ["My category", "Another category"]',
+						window.FullPanelName + ': ' + playlists.map((pls) => pls.name).joinUpToChars(', ', 50),
+						'["My category", "Another category"]',
+						void (0),
+						true
+					);
+					if (input === null) { return; }
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
 						if (!isLockPls(pls) && isPlsEditable(pls)) {
-							if (pls.category !== category) { setCategory(category, list, z); }
+							if (!isArrayEqual(pls.category, input)) { setCategory(input, list, z); }
 						}
 					});
 				}
 			});
 			menu.newSeparator(menuName);
+			let bAddInvisibleIds = false;
 			list.categories().forEach((category, i) => {
-				const count = playlists.reduce((total, pls) => { return (pls.category === (i === 0 ? '' : category) ? total + 1 : total); }, 0);
-				const entryText = category + '\t' + _b(count);
+				const count = playlists.reduce((total, pls) => { return ((i === 0 ? pls.category.length === 0 : pls.category.includes(category)) ? total + 1 : total); }, 0);
+				if (menu.isSeparator(category)) { menu.newSeparator(menuName); bAddInvisibleIds = true; return; } // Add invisible id for entries after separator to duplicate check marks
 				menu.newEntry({
-					menuName, entryText, func: () => {
+					menuName, entryText: category + '\t' + _b(count), func: () => {
+						let categories;
+						const bAll = playlists.every((pls) => isLockPls(pls) || !isPlsEditable(pls) || pls.category.includes(category));
 						indexes.forEach((z, j) => {
 							const pls = playlists[j];
 							if (!isLockPls(pls) && isPlsEditable(pls)) {
-								if (pls.category !== category) { setCategory(i ? category : '', list, z); }
+								if (i === 0) {
+									categories = [];
+								} else if (pls.category.includes(category)) {
+									if (bAll) { categories = [...new Set(pls.category).difference(new Set([category]))]; }
+									else { return; }
+								} else { categories = [...pls.category, category]; }
+								if (!isArrayEqual(pls.category, categories)) { setCategory(categories, list, z); }
 							}
 						});
-					}
+					}, bAddInvisibleIds
 				});
 				menu.newCheckMenuLast(() => (playlists.length === count));
 			});
@@ -1477,7 +1507,7 @@ function createMulSelMenu(forcedIndexes = []) {
 			const menuName = menu.newMenu('Set playlist tag(s)...', parentMenuName, !bIsLockPlsEvery && bIsPlsEditable ? MF_STRING : MF_GRAYED);
 			menu.newEntry({
 				menuName, entryText: 'New tag(s)...', func: () => {
-					const tags = Input.json(
+					const input = Input.json(
 						'array strings',
 						playlists[0].tags,
 						'Tag(s) Name(s):\n(JSON)\n\nFor ex: ["Summer", "Cool"]',
@@ -1486,11 +1516,11 @@ function createMulSelMenu(forcedIndexes = []) {
 						void (0),
 						true
 					);
-					if (tags === null) { return; }
+					if (input === null) { return; }
 					indexes.forEach((z, i) => {
 						const pls = playlists[i];
 						if (!isLockPls(pls) && isPlsEditable(pls)) {
-							if (!isArrayEqual(pls.tags, tags)) { setTag(tags, list, z); }
+							if (!isArrayEqual(pls.tags, input)) { setTag(input, list, z); }
 						}
 					});
 				}
@@ -3617,7 +3647,6 @@ function createSettingsMenu(parent, parentBackground) {
 	{	// Export/Import settings
 		const menuName = menu.newMenu('File import/export');
 		if (!parent.bLiteMode) {	// Export and Converter settings
-			menu.newSeparator(menuName);
 			{	// Export and copy
 				const subMenuName = menu.newMenu('Export and copy', menuName);
 				menu.newEntry({ menuName: subMenuName, entryText: 'Configuration of copy tools:', flags: MF_GRAYED });

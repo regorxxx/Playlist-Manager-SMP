@@ -1,5 +1,5 @@
 ﻿'use strict';
-//30/12/23
+//23/10/26
 
 /*
   Meant to be called by name on json files or other external tools to limit eval usage.
@@ -22,7 +22,7 @@ const funcDict = {
 		return { value: [pls.name], bOverWrite: true, bMultiple: false };
 	},
 	playlistCategory: function playlistCategory(pls) {
-		return { value: [pls.category], bOverWrite: true, bMultiple: false };
+		return { value: pls.category.slice(), bOverWrite: true, bMultiple: false };
 	},
 	playlistTags: function playlistTags(pls) {
 		return { value: pls.tags.slice(), bOverWrite: true, bMultiple: false };
@@ -34,7 +34,7 @@ const funcDict = {
 		return { value: [pls.name], bOverWrite: false, bMultiple: true };
 	},
 	playlistCategoryMult: function playlistCategoryMult(pls) {
-		return { value: [pls.category], bOverWrite: false, bMultiple: true };
+		return { value: pls.category.slice(), bOverWrite: false, bMultiple: true };
 	},
 	playlistTagsMult: function playlistTagsMult(pls) {
 		return { value: pls.tags.slice(), bOverWrite: false, bMultiple: true };

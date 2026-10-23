@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/10/26
+//23/10/26
 
 /* exported _list */
 
@@ -29,7 +29,7 @@ include('..\\..\\helpers\\helpers_xxx_playlists_files.js');
 include('..\\..\\helpers\\helpers_xxx_tags.js');
 /* global getHandleListTagsV2:readable, getHandleTags:readable, checkQuery:readable, stripSort:readable, checkSort:readable, isQuery:readable, getHandleListTags:readable, queryJoin:readable, queryCombinations:readable, isSubsong:readable */
 include('..\\..\\helpers\\helpers_xxx_file.js');
-/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, _resolvePath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable, _foldPath:readable */
+/* global _explorer:readable, _isFile:readable, _renameFile:readable, getRelPath:readable, _copyFile:readable, _deleteFile:readable, _isFolder:readable , _createFolder:readable, WshShell:readable, _jsonParseFileCheck:readable, utf8:readable, _jsonParseFile:readable, _save:readable, _recycleFile:readable, _resolvePath:readable, _restoreFile:readable, sanitizePath:readable, editTextFile:readable, getFiles:readable, findRecursiveFile:readable, _open:readable, _foldPath:readable, _jsonParse:readable */
 include('..\\..\\helpers\\helpers_xxx_utils.js');
 /* global funcDict:readable */
 include('..\\..\\helpers\\helpers_xxx_controller.js');
@@ -464,7 +464,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				}
 			}
 			if (showMenus['Category'] && showTt.category) {
-				tooltipText += '\n' + 'Category: ' + (pls.category ? pls.category.cut(50) : '-');
+				tooltipText += '\n' + 'Category: ' + (isArrayStrings(pls.category) ? pls.category.join('|').cut(50) : '-');
 			}
 			if (showMenus['Tags'] && showTt.tags) {
 				tooltipText += '\n' + 'Tags: ' + (isArrayStrings(pls.tags) ? pls.tags.join(', ').cut(200) : '-');
@@ -4451,7 +4451,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		const defCategory = '(None)';
 		if (idx === 0) { return defCategory; }
 		let categories = new Set();
-		this.dataAll.forEach((playlist) => { if (playlist.category.length) { categories.add(playlist.category); } });
+		this.dataAll.forEach((playlist) => { if (playlist.category.length) { playlist.category.forEach((category) => { categories.add(category); }); } });
 		return idx
 			? [defCategory, ...[...categories].sort(strNumCollator.compare)][idx]
 			: [defCategory, ...[...categories].sort(strNumCollator.compare)];
@@ -4580,11 +4580,12 @@ function _list({ x, y, w, h, properties } = {}) {
 		}
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
+			const categoriesFilter = new Set(categoryState);
 			const isCategory = (item) => {
-				const cat = item.category;
-				return categoryState.includes('(None)')
-					? (!cat.length || categoryState.includes(cat)) || (item.isFolder && item.pls.some(isCategory))
-					: (categoryState.includes(cat) || (item.isFolder && item.pls.some(isCategory)));
+				const categories = new Set(item.category);
+				return categoriesFilter.has('(None)')
+					? (!categories.size || categoriesFilter.intersectionSize(categories) !== 0) || (item.isFolder && item.pls.some(isCategory))
+					: (categoriesFilter.intersectionSize(categories) !== 0 || (item.isFolder && item.pls.some(isCategory)));
 			};
 			this.data = this.data.filter(isCategory);
 		}
@@ -4768,8 +4769,8 @@ function _list({ x, y, w, h, properties } = {}) {
 		// And again with categories
 		if (!isArrayEqual(categoryState, this.categories())) {
 			const isCategory = (item) => {
-				if (categoryState.includes('(None)')) { return (!item.category.length || categoryState.includes(item.category)) || (item.isFolder && item.pls.some(isCategory)); }
-				else { return (categoryState.includes(item.category) || (item.isFolder && item.pls.some(isCategory))); }
+				if (categoryState.includes('(None)')) { return (!item.category.length || new Set(categoryState).intersectionSize(new Set(item.category)) !== 0) || (item.isFolder && item.pls.some(isCategory)); }
+				else { return new Set(categoryState).intersectionSize(new Set(item.category)) !== 0 || (item.isFolder && item.pls.some(isCategory)); }
 			};
 			outData = outData.filter(isCategory);
 		}
@@ -4827,8 +4828,8 @@ function _list({ x, y, w, h, properties } = {}) {
 				? {
 					'By category':
 					{
-						'(C) Az': (a, b) => strNumCollator.compare(a.category, b.category),
-						'(C) Za': (a, b) => -strNumCollator.compare(a.category, b.category)
+						'(C) Az': (a, b) => strNumCollator.compare(a.category[0] || '', b.category[0] || ''),
+						'(C) Za': (a, b) => -strNumCollator.compare(a.category[0] || '', b.category[0] || '')
 					}
 				}
 				: {}
@@ -5210,6 +5211,7 @@ function _list({ x, y, w, h, properties } = {}) {
 						if (Object.hasOwn(item, 'trackSize')) { item.trackSize = round(item.trackSize, 2); }
 					}
 					// Process
+					if (!Array.isArray(item.category)) { item.category = item.category ? [item.category] : []; }
 					if ((item.isAutoPlaylist || item.query) && item.extension !== '.ui') {
 						if (!Object.hasOwn(item, 'duration')) { item.duration = -1; }
 						if (!Object.hasOwn(item, 'trackSize')) { item.trackSize = -1; }
@@ -6007,7 +6009,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (!this.tagState.includes(this.tags(0))) { this.tagState.forEach((tag) => { if (!new Set(folder.tags).has(tag)) { folder.tags.push(tag); } }); }
 		// Categories
 		// Add Category of current view if none was forced
-		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !folder.category.length) { folder.category = this.categoryState[0]; }
+		if (!this.categoryState.includes(this.categories(0))) { this.tagState.categoryState((category) => { if (!new Set(folder.category).has(category)) { folder.tags.push(category); } }); }
 		// Save
 		this.addToData(folder);
 		return folder;
@@ -6379,7 +6381,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (!this.tagState.includes(this.tags(0))) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
 		// Categories
 		// Add Category of current view if none was forced
-		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
+		if (!this.categoryState.includes(this.categories(0))) { this.tagState.categoryState((category) => { if (!new Set(objectPlaylist.category).has(category)) { objectPlaylist.tags.push(category); } }); }
 		// Save
 		this.addToData(objectPlaylist);
 		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
@@ -6476,7 +6478,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (!this.tagState.includes(this.tags(0))) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
 		// Categories
 		// Add Category of current view if none was forced
-		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
+		if (!this.categoryState.includes(this.categories(0))) { this.tagState.categoryState((category) => { if (!new Set(objectPlaylist.category).has(category)) { objectPlaylist.tags.push(category); } }); }
 		// Save
 		this.addToData(objectPlaylist);
 		this.update({ bReuseData: true, bNotPaint: true }); // We have already updated data before only for the variables changed
@@ -6566,7 +6568,7 @@ function _list({ x, y, w, h, properties } = {}) {
 			extension: '.xsp',
 			size: queryCount,
 			queryObj: newQueryObj,
-			category: hasCategory ? pls.category : '',
+			category: hasCategory ? pls.category : [],
 			tags: hasTags ? pls.tags : [],
 			trackTags: hasTrackTags ? pls.trackTags : [],
 			limit: newLimit,
@@ -6585,7 +6587,7 @@ function _list({ x, y, w, h, properties } = {}) {
 		if (!this.tagState.includes(this.tags(0))) { this.tagState.forEach((tag) => { if (!new Set(objectPlaylist.tags).has(tag)) { objectPlaylist.tags.push(tag); } }); }
 		// Categories
 		// Add Category of current view if none was forced
-		if (this.categoryState.length === 1 && this.categoryState[0] !== this.categories(0) && !objectPlaylist.category.length) { objectPlaylist.category = this.categoryState[0]; }
+		if (!this.categoryState.includes(this.categories(0))) { this.tagState.categoryState((category) => { if (!new Set(objectPlaylist.category).has(category)) { objectPlaylist.tags.push(category); } }); }
 		let bDone = false;
 		if (rules.length) {
 			const jsp = XSP.emptyJSP('songs');

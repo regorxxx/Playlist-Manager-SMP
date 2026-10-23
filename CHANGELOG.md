@@ -83,6 +83,7 @@
 - Statistics: new chart type 'Lines (with markers)'.
 - UI: new 'Description' option to show on tooltips (configurable at 'Panel UI' submenu).
 ### Changed
+- Playlist formats: category metadata is now multi-value supporting values split by ';'. Note all items tracked by the manager will be updated automatically at startup (existing playlist files don't need to be rewritten though).
 - UI: some menus now have default actions set (bold text), if JS-Host allows it. This is only a minor display detail without any associated functionality.
 - Statistics: minor improvements to menu entries display.
 - Exporting Playlist: improved 'FiiO (playlists folder)' and 'Namida (playlists folder)' export and convert presets to better handle tags with '|' or non ASCII chars at end of folder names, so they match foobar2000 converter output paths. This is in fact a workaround to a [foobar2000 undesired behavior](https://hydrogenaudio.org/index.php/topic,129623.0.html).
