@@ -1,5 +1,5 @@
 ﻿'use strict';
-//23/10/26
+//27/10/26
 
 /* 	Playlist Manager
 	Manager for Playlists Files and Auto-Playlists. Shows a virtual list of all playlists files within a configured folder (playlistPath).
@@ -124,7 +124,7 @@ const cacheLib = (bInit = false, message = 'Loading...', tt = 'Caching library p
 const debouncedCacheLib = debounce(cacheLib, 5000);
 
 let properties = {
-	drawMode: ['- Draw mode: GDI (0), D2D (1)', 0, { func: isInt, range: [[0, 1]] }],
+	drawMode: ['- Draw mode: GDI (0), D2D (1)', 1, { func: isInt, range: [[0, 1]] }],
 	playlistsPath: ['Tracked playlists folder', '.\\profile\\playlist_manager\\', { func: isString, portable: true }],
 	autoSave: ['Auto-save delay with loaded playlists (in ms). Forced > 1000. 0 disables it.', 3000, { func: isInt, range: [[0, 0], [1000, Infinity]] }], // Safety limit 0 or > 1000
 	fplRules: ['fpl playlists behavior', JSON.stringify({

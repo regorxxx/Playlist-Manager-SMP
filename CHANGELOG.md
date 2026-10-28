@@ -93,6 +93,7 @@
 - Helpers: create full folder tree on file/folder remove.
 - Installation: fonts installation is no longer needed when using JSplitter. Fonts will be directly loaded on real time, without system wide installation. Note this doesn't apply to 'Segoe UI' and 'Arial Unicode', which are supposed to be bundled with Windows; if missing (Unix systems), install required fonts from [here](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts).
 - Installation: package description will now contain the build timestamp ('Package built: YYYY/MM/DD hh:mm') as first line; meant to be used on nightlies (which don't follow semVer).
+- Installation: new installations will use D2D draw mode by default.
 ### Removed
 ### Fixed
 - Statistics: fixed vertical labels position on Horizontal bars charts when using multiple series (for ex. using 3 axis).
