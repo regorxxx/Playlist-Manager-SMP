@@ -83,6 +83,7 @@
 - Statistics: new chart type 'Lines (with markers)'.
 - UI: new 'Description' option to show on tooltips (configurable at 'Panel UI' submenu).
 - Exporting Playlist: added new settings to omit exporting specific tags/categories and avoid writing them to files. This is meant to be used along external players, like [Namida](https://github.com/namidaco/namida/issues/1336), so unwanted values are filtered and not written to exported playlists which will be used by other apps. Feature can be set at 'File import/export' submenu.
+- Installation: added support for [foo_component_update_checker](https://github.com/p2ashiura/foo_component_update_checker). Those who use that component, will get automatic notifications about package updates from now on (not nightlies).
 ### Changed
 - Playlist formats: category metadata is now multi-value supporting values split by ';'. Note all items tracked by the manager will be automatically updated at startup (existing playlist files don't need to be rewritten though). Change has been done to support other players metadata, like [Namida](https://github.com/namidaco/namida/issues/1336). Note tags had already multi-value support.
 - UI: some menus now have default actions set (bold text), if JS-Host allows it. This is only a minor display detail without any associated functionality.

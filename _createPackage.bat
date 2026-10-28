@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.21/10/2026
+REM Create packages (zip file) from js files v.28/10/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -110,7 +110,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=World-Map-SMP
 SET id=FA5A85D5-5C81-4B9B-BF01-52872BA83EA7
-SET description=https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/world-map-smp/\r\n\r\nA foobar2000 UI Spider Monkey Panel which displays current artist's country on the world map and lets you generate autoplaylists based on selection and locale tag saving when integrated along WilB's Biography Script.\r\n\r\n• Map image configurable:\r\n   - Full.\r\n   - No Antarctica.\r\n   - Custom. (coordinates may need a transformation to work)\r\n• Configurable X and Y factors for transformation (along custom image maps).\r\n• 2 modes:\r\n   - Standard: Follow now playing track or selection.\r\n   - Library: display statistics of entire library (independtly of the selection/playback).\r\n• Works with multiple selected tracks (draws all points on the map), allowing to show statistics of an entire playlist or library.\r\n• Fully configurable UI.\r\n• On playback the panel fetches tags from (by order of preference):\r\n   - Track's tags.\r\n   - JSON database.\r\n   - WilB's Biography panel.\r\n• WilB's Biography integration\r\n• Tool-tip shows multiple info about the points and tracks selected.\r\n• AutoPlaylist creation on click over a point with any artist on your library from the selected country.\r\n• Fully Wine - Unix - non IE SOs compatible.
+SET source=https://github.com/regorxxx/world-map-smp
+SET description=A foobar2000 UI Spider Monkey Panel which displays current artist's country on the world map and lets you generate autoplaylists based on selection and locale tag saving when integrated along WilB's Biography Script.\r\n\r\n• Map image configurable:\r\n   - Full.\r\n   - No Antarctica.\r\n   - Custom. (coordinates may need a transformation to work)\r\n• Configurable X and Y factors for transformation (along custom image maps).\r\n• 2 modes:\r\n   - Standard: Follow now playing track or selection.\r\n   - Library: display statistics of entire library (independtly of the selection/playback).\r\n• Works with multiple selected tracks (draws all points on the map), allowing to show statistics of an entire playlist or library.\r\n• Fully configurable UI.\r\n• On playback the panel fetches tags from (by order of preference):\r\n   - Track's tags.\r\n   - JSON database.\r\n   - WilB's Biography panel.\r\n• WilB's Biography integration\r\n• Tool-tip shows multiple info about the points and tracks selected.\r\n• AutoPlaylist creation on click over a point with any artist on your library from the selected country.\r\n• Fully Wine - Unix - non IE SOs compatible.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" world_map.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -244,7 +245,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Playlist-Manager-SMP
 SET id=2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D
-SET description=https://regorxxx.github.io/foobar2000-SMP.github.io/scripts/playlist-manager-smp/\r\n\r\nPlaylist manager for foobar2000 and Spider Monkey Panel to save and load (auto)playlists on demand, synchronizing, ... along many more utilities.\r\n\r\n• Manages Playlist files, AutoPlaylists and Smart Playlists(XBMC or Kodi).\r\n• ListenBrainz integration: sync user's playlists, ...\r\n• Loads playlist files x100 times faster than standard foobar.\r\n• Multiple exporting options: compatible with Foobar2000 mobile, Kodi and XBMC systems, etc.\r\n• Group by categories, tags and inline searching.\r\n• Filters and Sorting.\r\n• Configurable UI.\r\n• Fully Wine - Unix - non IE SOs compatible.\r\n• Other scripts integration:\r\n   - Infinity-Tools-SMP\r\n   - ajquery-xxx\r\n   - SMP Dynamic menus
+SET source=https://github.com/regorxxx/playlist-manager-smp
+SET description=Playlist manager for foobar2000 and Spider Monkey Panel to save and load (auto)playlists on demand, synchronizing, ... along many more utilities.\r\n\r\n• Manages Playlist files, AutoPlaylists and Smart Playlists(XBMC or Kodi).\r\n• ListenBrainz integration: sync user's playlists, ...\r\n• Loads playlist files x100 times faster than standard foobar.\r\n• Multiple exporting options: compatible with Foobar2000 mobile, Kodi and XBMC systems, etc.\r\n• Group by categories, tags and inline searching.\r\n• Filters and Sorting.\r\n• Configurable UI.\r\n• Fully Wine - Unix - non IE SOs compatible.\r\n• Other scripts integration:\r\n   - Infinity-Tools-SMP\r\n   - ajquery-xxx\r\n   - SMP Dynamic menus
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" playlist_manager.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -389,7 +391,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Not-A-Waveform-Seekbar-SMP
 SET id=293B12D8-CC8B-4D21-8883-1A29EAFC4074
-SET description=https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP\r\n\r\nA seekbar for foobar2000, using Spider Monkey Panel, audiowaveform or ffprobe. It's based on RMS, peak levels, the actual waveform or visualization presets.\r\n\r\n• Uses audiowaveform by default (included).\r\n• ffprobe can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\\ffprobe'.\r\n• Visualizer mode to simply show an animation which changes according to BPM (if tag exists).\r\n• Fully configurable using the R. Click menu:\r\n   - Colors\r\n   - Waveform modes\r\n   - Analysis modes\r\n   - Animations\r\n   - Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
+SET source=https://github.com/regorxxx/Not-A-Waveform-Seekbar-SMP
+SET description=A seekbar for foobar2000, using Spider Monkey Panel, audiowaveform or ffprobe. It's based on RMS, peak levels, the actual waveform or visualization presets.\r\n\r\n• Uses audiowaveform by default (included).\r\n• ffprobe can be used if desired. Download it and copy ffprobe.exe into 'helpers-external\\ffprobe'.\r\n• Visualizer mode to simply show an animation which changes according to BPM (if tag exists).\r\n• Fully configurable using the R. Click menu:\r\n   - Colors\r\n   - Waveform modes\r\n   - Analysis modes\r\n   - Animations\r\n   - Refresh rate (not recommended anything below 100 ms except on really modern CPUs)
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" not_a_waveform_seekbar.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -469,7 +472,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Timeline-SMP
 SET id=EAEB88D1-44AC-4B13-8960-FB3AAD78828D
-SET description=https://github.com/regorxxx/Timeline-SMP\r\n\r\nA timeline for foobar2000, using Spider Monkey Panel, and Statistics-Framework-SMP (https://github.com/regorxxx/Statistics-Framework-SMP).\r\n\r\n• Draws date (X) and nº tracks (Y) per artist (Z) by default.\r\n• Contextual menu to create playlists clicking on any point.\r\n• Fully customizable data per axis with TitleFormat.\r\n• Asynchronous data calculations. \r\n• Point statistics.\r\n• Scroll with buttons and mouse dragging.\r\n• Zoom with mouse wheel.\r\n• Configurable background.\r\n• Highly configurable chart and data manipulation.
+SET source=https://github.com/regorxxx/Timeline-SMP
+SET description=A timeline for foobar2000, using Spider Monkey Panel, and Statistics-Framework-SMP (https://github.com/regorxxx/Statistics-Framework-SMP).\r\n\r\n• Draws date (X) and nº tracks (Y) per artist (Z) by default.\r\n• Contextual menu to create playlists clicking on any point.\r\n• Fully customizable data per axis with TitleFormat.\r\n• Asynchronous data calculations. \r\n• Point statistics.\r\n• Scroll with buttons and mouse dragging.\r\n• Zoom with mouse wheel.\r\n• Configurable background.\r\n• Highly configurable chart and data manipulation.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" timeline.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -582,7 +586,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Volume-Seekbar-SMP
 SET id=82303AA1-3DA0-4817-BE47-85A4AE09D5CD
-SET description=https://github.com/regorxxx/Volume-Seekbar-SMP\r\n\r\nA volume slider\\seekbar for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume (volume bar) or time (seekbar).\r\n• Double L. Click on button to mute\\set full volume (volume bar).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout, buttons, actions and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
+SET source=https://github.com/regorxxx/Volume-Seekbar-SMP
+SET description=A volume slider\\seekbar for foobar2000, using Spider Monkey Panel.\r\n\r\n• Drag + L. Click to set volume (volume bar) or time (seekbar).\r\n• Double L. Click on button to mute\\set full volume (volume bar).\r\n• Double L. Click on button to restart\\skip playback (seekbar).\r\n• Vertical and horizontal mouse wheel scrolling.\r\n• Configurable layout, buttons, actions and colors using R. Click menu.\r\n• Elements may be disabled removing color or setting size to 0.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" volume_seekbar.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -661,7 +666,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Infinity-Tools-SMP
 SET id=2FCD04DE-E8BD-4EAD-9DCB-A37DAE9033AC
-SET description=https://github.com/regorxxx/Infinity-Tools-SMP\r\n\r\nA collection of Spider Monkey tools for foobar2000: from removing duplicates, to dynamic queries, status bars, advanced tagging, library reports, Music map and Genre explorer, Spotify-like playlist creation...\r\n\r\n• Toolbar can be modified to include the desired tools.\r\n• R. Click on toolbar to open settings menu.\r\n• Drag + R. Click to move buttons.\r\n• Configurable layout and colors.
+SET source=https://github.com/regorxxx/Infinity-Tools-SMP
+SET description=A collection of Spider Monkey tools for foobar2000: from removing duplicates, to dynamic queries, status bars, advanced tagging, library reports, Music map and Genre explorer, Spotify-like playlist creation...\r\n\r\n• Toolbar can be modified to include the desired tools.\r\n• R. Click on toolbar to open settings menu.\r\n• Drag + R. Click to move buttons.\r\n• Configurable layout and colors.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" infinity_tools.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -862,7 +868,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Library-Tree-SMP
 SET id=E85C9EF0-778B-46DD-AF20-F4BE831360DD
-SET description=https://github.com/regorxxx/Library-Tree-SMP\r\n\r\nFeature rich media library viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• New facets\r\n• Statistics\r\n• Album art flow mode\r\n\r\nFor guidance on setting up new facets / multiple panel mode, see help on views tab\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)\r\n• Original Library Tree design (2023): WilB
+SET source=https://github.com/regorxxx/Library-Tree-SMP
+SET description=Feature rich media library viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• New facets\r\n• Statistics\r\n• Album art flow mode\r\n\r\nFor guidance on setting up new facets / multiple panel mode, see help on views tab\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)\r\n• Original Library Tree design (2023): WilB
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" library_tree.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -961,7 +968,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Art-Display-SMP
 SET id=9DFE7B71-FA68-4E78-9004-16E3FEF6DA17
-SET description=https://github.com/regorxxx/Art-Display-SMP\r\n\r\nA display panel for foobar2000, using Spider Monkey Panel.\r\n\r\n• Supports any art type from tracks (playing and selection).\r\n• Load images from any path or folder.\r\n• Multiple image effects.\r\n• Configurable display text by TF.\r\n• Automatic thumbs download from multiple sources.\r\n• Filmstrip features.\r\n• Media playback notifications using foo_flowin.
+SET source=https://github.com/regorxxx/Art-Display-SMP
+SET description=A display panel for foobar2000, using Spider Monkey Panel.\r\n\r\n• Supports any art type from tracks (playing and selection).\r\n• Load images from any path or folder.\r\n• Multiple image effects.\r\n• Configurable display text by TF.\r\n• Automatic thumbs download from multiple sources.\r\n• Filmstrip features.\r\n• Media playback notifications using foo_flowin.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" art_display.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -1042,7 +1050,8 @@ REM version is automatically retrieved from main js file
 REM any text must be JSON encoded
 SET name=Profiler-SMP
 SET id=5EE8144D-2778-4AD7-B90C-3B44FFC6F00A
-SET description=https://github.com/regorxxx/Profiler-SMP\r\n\r\nTest and profiling tool for foobar2000 JS-host testing and benchmarking (e.g. SMP and JSplitter).\r\n\r\n• Unit tests to automatize JS-host checking.\r\n• Compare functions regarding execution speed and memory consumption.\r\n• Reports in txt tables or JSON format.\r\n• Configurable tests.
+SET source=https://github.com/regorxxx/Profiler-SMP
+SET description=Test and profiling tool for foobar2000 JS-host testing and benchmarking (e.g. SMP and JSplitter).\r\n\r\n• Unit tests to automatize JS-host checking.\r\n• Compare functions regarding execution speed and memory consumption.\r\n• Reports in txt tables or JSON format.\r\n• Configurable tests.
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" smp_profiler.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -1158,7 +1167,8 @@ REM add bom EF BB BF bytes in HEX-editor
 ECHO | SET /P dummyName="﻿"> %root%\%filePath%
 ECHO {>> %root%\%filePath%
 ECHO 	"author": "Regorxxx",>> %root%\%filePath%
-ECHO 	"description": "Package built: %timestamp%\r\n%description%",>> %root%\%filePath%
+ECHO 	"source": "%source%",>> %root%\%filePath%
+ECHO 	"description": "Package built: %timestamp%\r\n%source%\r\n\r\n%description%",>> %root%\%filePath%
 ECHO 	"enableDragDrop": %enableDragDrop%,>> %root%\%filePath%
 ECHO 	"id": "{%id%}",>> %root%\%filePath%
 ECHO 	"name": "%name%",>> %root%\%filePath%
