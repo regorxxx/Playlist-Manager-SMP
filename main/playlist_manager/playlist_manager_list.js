@@ -4869,7 +4869,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				'(Ts) Asc.': (a, b) => propertyGet(a, 'trackSize') - propertyGet(b, 'trackSize'),
 				'(Ts) Des.': (a, b) => propertyGet(b, 'trackSize') - propertyGet(a, 'trackSize')
 			},
-			...(this.bAllPls
+			...(this.bAllPls // TODO re-ordering on panel should affect UI
 				? {
 					'By playlist idx': {
 						'(Ts) Asc.': (a, b) => propertyGet(a, 'idx') - propertyGet(b, 'idx'),
@@ -5415,8 +5415,14 @@ function _list({ x, y, w, h, properties } = {}) {
 			this.dataFoobar = [];
 			const fooPls = getPlaylistNames();
 			fooPls.forEach((pls) => {
-				if (!this.dataAll.some((dataPls) => { return dataPls.nameId === pls.name; })) {
-					if (!this.dataFoobar.some((dataPls) => { return dataPls.nameId === pls.name; })) { // Remove duplicates
+				const match = this.dataAll.find((dataPls) => dataPls.nameId === pls.name || pls.guid && dataPls.guid === pls.guid);
+				if (match) {
+					if (match.extension !== '.ui') {
+						if (match.idx === -1) { match.idx = pls.idx; }
+						if (match.guid === null) { match.guid = pls.guid; }
+					}
+				} else {
+					if (!this.dataFoobar.some((dataPls) => dataPls.nameId === pls.name)) { // Remove duplicates
 						const now = Date.now();
 						const handleList = plman.GetPlaylistItems(pls.idx);
 						const item = new PlaylistObj({
@@ -5431,9 +5437,10 @@ function _list({ x, y, w, h, properties } = {}) {
 							author: 'Foobar2000',
 							created: now,
 							modified: now,
-							idx: pls.idx
+							idx: pls.idx,
+							guid: plman.GetGUID(pls.idx)
 						});
-						const cacheItem = this.dataUI.find((dataPls) => { return dataPls.nameId === item.name; });
+						const cacheItem = this.dataUI.find((dataPls) => dataPls.nameId === item.name || pls.guid && dataPls.guid === pls.guid);
 						if (cacheItem) {
 							item.created = cacheItem.created;
 							item.modified = cacheItem.modified;
@@ -5460,7 +5467,17 @@ function _list({ x, y, w, h, properties } = {}) {
 				cache.pls = null; cache.indexes = null;
 			}
 			this.itemsFoobar = this.dataFoobar.length;
-		} else { this.itemsFoobar = 0; }
+		} else {
+			const fooPls = getPlaylistNames();
+			fooPls.forEach((pls) => {
+				const match = this.dataAll.find((dataPls) => dataPls.nameId === pls.name || pls.guid && dataPls.guid === pls.guid);
+				if (match) {
+					if (match.idx === -1) { match.idx = pls.idx; }
+					if (match.guid === null) { match.guid = pls.guid; }
+				}
+			});
+			this.itemsFoobar = 0;
+		}
 		// Folders
 		if (this.itemsFolder) {
 			if (bReuseData) {

@@ -29,7 +29,7 @@ include('..\\..\\helpers\\helpers_xxx_tags.js');
 include('..\\filter_and_query\\remove_duplicates.js');
 /* global removeDuplicates:readable, showDuplicates:readable */
 
-function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = [], tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1, trackSize = -1, idx = -1 } = {}) {
+function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '?', fileSize = 0, bLocked = false, bAutoPlaylist = false, queryObj = { query: '', sort: '', bSortForced: false }, category = [], tags = [], trackTags = [], limit = 0, duration = -1, playlist_mbid = '', author = 'Playlist-Manager-SMP', description = '', type = '', created = -1, modified = -1, trackSize = -1, idx = -1, guid = null } = {}) {
 	if (path && (typeof extension === 'undefined' || typeof name === 'undefined')) {
 		const sfp = utils.SplitFilePath(path);
 		if (typeof extension === 'undefined') { extension = sfp[2]; }
@@ -59,6 +59,7 @@ function PlaylistObj({ id, path, name = void (0), extension = void (0), size = '
 	this.created = created;
 	this.modified = modified;
 	this.idx = idx;
+	this.guid = guid;
 	if (this.extension === '.xsp') { this.type = type || ''; }
 }
 
