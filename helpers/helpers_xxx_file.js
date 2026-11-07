@@ -1,5 +1,5 @@
 ﻿'use strict';
-//14/10/26
+//05/11/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -464,6 +464,7 @@ function _renameFolder(oldFolderPath, newFolderPath) { // TODO
 // Copy
 // https://learn.microsoft.com/en-us/office/vba/language/reference/user-interface-help/copyfile-method
 // Long paths not supported
+// Hidden files are not supported using async cmd method
 function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 	if (!newFilePath.length) { return; }
 	oldFilePath = _resolvePath(oldFilePath);
@@ -482,13 +483,17 @@ function _copyFile(oldFilePath, newFilePath, bAsync = false) {
 				const filePath = utils.SplitFilePath(newFilePath)[0];
 				if (!_isFolder(filePath)) { _createFolder(filePath); }
 			}
-			try {
-				bAsync
-					? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false)
-					: fso.CopyFile(oldFilePath, newFilePath);
-			} catch (e) {
-				console.log('_copyFile: ' + oldFilePath + ' -> ' + newFilePath + '\n\t ' + parseWinApiError(e.message));
-				return false;
+			if (!bAsync && utils.CopyFile) {
+				utils.CopyFile(oldFilePath, newFilePath, false);
+			} else {
+				try {
+					bAsync
+						? _runCmd('CMD /C COPY "' + oldFilePath + '" "' + newFilePath + '"', false)
+						: fso.CopyFile(oldFilePath, newFilePath);
+				} catch (e) {
+					console.log('_copyFile: ' + oldFilePath + ' -> ' + newFilePath + '\n\t ' + parseWinApiError(e.message));
+					return false;
+				}
 			}
 			return (bAsync ? true : (bTargetFolder || _isFile(newFilePath)) && (bWildCard || _isFile(oldFilePath))); // Must check afterwards for Async
 		}
@@ -511,12 +516,16 @@ function _copyFolder(oldFolderPath, newFolderPath, bAsync = false) {
 		return false;
 	}
 	if (_isFolder(source)) {
-		_createFolder(newFolderPath.endsWith('\\') ? newFolderPath : utils.SplitFilePath(newFolderPath)[0]);
-		try {
-			bAsync ? _runCmd('CMD /C COPY "' + oldFolderPath + '" "' + newFolderPath + '"', false) : fso.CopyFolder(oldFolderPath, newFolderPath);
-		} catch (e) {
-			console.log('_copyFolder: ' + oldFolderPath + ' -> ' + newFolderPath + '\n\t ' + parseWinApiError(e.message));
-			return false;
+		if (!bAsync && utils.CopyFolder) {
+			utils.CopyFolder(oldFolderPath, newFolderPath, false, true);
+		} else {
+			_createFolder(newFolderPath.endsWith('\\') ? newFolderPath : utils.SplitFilePath(newFolderPath)[0]);
+			try {
+				bAsync ? _runCmd('CMD /C COPY "' + oldFolderPath + '" "' + newFolderPath + '"', false) : fso.CopyFolder(oldFolderPath, newFolderPath);
+			} catch (e) {
+				console.log('_copyFolder: ' + oldFolderPath + ' -> ' + newFolderPath + '\n\t ' + parseWinApiError(e.message));
+				return false;
+			}
 		}
 		return (bAsync ? true : _isFolder(newFolderPath) && _isFolder(source)); // Must check afterwards for Async
 	}

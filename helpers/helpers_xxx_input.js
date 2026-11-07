@@ -1,5 +1,5 @@
 ﻿'use strict';
-//10/09/26
+//06/11/26
 
 /* exported Input */
 
@@ -246,7 +246,7 @@ const Input = Object.freeze({
 	 * @param {boolean} bFilterEmpty?
 	 * @returns {null|String}
 	 */
-	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false, defVal = null) {
+	string: function (type, oldVal, message, title, example, checks = [], bFilterEmpty = false, defVal = null, bMultiLine = false, help = '') {
 		const types = new Set(['string', 'trimmed string', 'unicode', 'path', 'file', 'url', 'file|url', 'ascii printable']);
 		this.data.last = oldVal; this.data.lastInput = null;
 		if (!types.has(type)) { throw new TypeError('Invalid type: ' + type); }
@@ -254,7 +254,9 @@ const Input = Object.freeze({
 		let uOldVal = null;
 		if (type === 'unicode') { uOldVal = oldVal.split(' ').map((s) => s === '' ? '' : s.codePointAt(0).toString(16)).join(' '); }
 		try {
-			input = utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true);
+			input = bMultiLine && utils.TextBox
+				? utils.TextBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true, help)
+				: utils.InputBox(window.ID, message, title, oldVal !== null && typeof oldVal !== 'undefined' ? uOldVal || oldVal : '', true, help);
 			if (input === null || typeof input === 'undefined') { throw new TypeError('Invalid type'); }
 			else { newVal = String(input); }
 			if (defVal !== null && newVal.toUpperCase() === 'DEFAULT') {
@@ -328,7 +330,7 @@ const Input = Object.freeze({
 				fb.ShowPopupMessage('Checks is not an array:\n' + checks, title);
 			} else if (e.message === 'Invalid checks') {
 				fb.ShowPopupMessage('Value is not valid:\n' + input + '\n\nValue must pass these checks:\n' + checks.map(f => this.cleanCheck(f)).join('\n') + '\n\nExample:\n' + example, title);
-			} else if (e.message !== 'InputBox failed:\nDialog window was closed') {
+			} else if (e.message !== 'InputBox failed:\nDialog window was closed' && e.message !== 'TextBox failed:\nDialog window was closed') {
 				fb.ShowPopupMessage(e.name + '\n\n' + e.message, title);
 			}
 			return null;

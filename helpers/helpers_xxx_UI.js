@@ -1,5 +1,5 @@
 ﻿'use strict';
-//21/10/26
+//06/11/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -62,7 +62,7 @@ const SF_CENTRE = 285212672;
 const LM = _scale(5);
 const TM = _scale(15);
 
-const builtInFonts = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf', 'Twemoji Mozilla': 'Twemoji.Mozilla.ttf' };
+const builtInFonts = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf', 'Twemoji Mozilla': 'Twemoji.Mozilla.ttf', 'OpenMoji': 'OpenMoji-color-glyf_colr_0.ttf' };
 
 // Combinations of invisible chars may be used on UI elements to assign IDs...
 const hiddenChars = ['\u200b', '\u200c', '\u200d', '\u200e'];

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//03/09/26
+//04/11/26
 
 /* exported addEventListener, removeEventListener, removeEventListeners, removeEventListenerSelf, moveEventListener, registerAllCallbacks, runDelayedEventListeners */
 
@@ -37,78 +37,78 @@
 const callbacks = {
 	_stack: [],
 	on_always_on_top_changed: { listeners: [], bRegistered: false, bOnVisible: false },
-	on_button_click: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter
-	on_char: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_colours_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_cursor_follow_playback_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_download_file_done: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter | SMP mod
-	on_drag_drop: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_drag_enter: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_drag_leave: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_drag_over: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_dsp_preset_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_focus: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_font_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_get_album_art_done: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_get_folder_size_done: { listeners: [], bRegistered: false, bOnVisible: false},  // JSplitter
-	on_http_request_done: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter | SMP mod
-	on_item_focus_change: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_item_played: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_key_down: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_key_up: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_library_items_added: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_library_items_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_library_items_removed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_load_image_done: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_locations_added: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_main_menu: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_main_menu_dynamic: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_metadb_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_lbtn_dblclk: { listeners: [], bRegistered: false, bOnVisible: false},
+	on_button_click: { listeners: [], bRegistered: false, bOnVisible: false }, // JSplitter
+	on_char: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_colours_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_cursor_follow_playback_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_download_file_done: { listeners: [], bRegistered: false, bOnVisible: false }, // JSplitter | SMP mod
+	on_drag_drop: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_drag_enter: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_drag_leave: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_drag_over: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_dsp_preset_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_focus: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_font_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_get_album_art_done: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_get_folder_size_done: { listeners: [], bRegistered: false, bOnVisible: false },  // JSplitter
+	on_http_request_done: { listeners: [], bRegistered: false, bOnVisible: false }, // JSplitter | SMP mod
+	on_item_focus_change: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_item_played: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_key_down: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_key_up: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_library_items_added: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_library_items_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_library_items_removed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_load_image_done: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_locations_added: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_main_menu: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_main_menu_dynamic: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_metadb_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_lbtn_dblclk: { listeners: [], bRegistered: false, bOnVisible: false },
 	on_mouse_lbtn_tplclk: { listeners: [], bRegistered: false, timer: { id: null, count: 0, ms: null, x: -1, y: -1, w: 0, h: 0 } }, // Custom
-	on_mouse_lbtn_down: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_lbtn_up: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_leave: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_mbtn_dblclk: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_mbtn_down: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_mbtn_up: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_move: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_rbtn_dblclk: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_rbtn_down: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_rbtn_up: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_wheel: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_mouse_wheel_h: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_notify_data: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_output_device_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_paint: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_panel_mouse_leave: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter
-	on_panel_mouse_move: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter
-	on_playback_dynamic_info: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_dynamic_info_track: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_edited: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_follow_cursor_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_new_track: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_order_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_pause: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_queue_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_seek: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_starting: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_stop: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playback_time: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_item_ensure_visible: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_items_added: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_items_removed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_items_reordered: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_items_selection_change: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_stop_after_current_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlist_switch: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_playlists_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_replaygain_mode_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_run_cmd_async_done: { listeners: [], bRegistered: false, bOnVisible: false}, // JSplitter
-	on_script_unload: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_selection_changed: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_size: { listeners: [], bRegistered: false, bOnVisible: false},
-	on_volume_change: { listeners: [], bRegistered: false, bOnVisible: false}
+	on_mouse_lbtn_down: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_lbtn_up: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_leave: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_mbtn_dblclk: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_mbtn_down: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_mbtn_up: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_move: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_rbtn_dblclk: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_rbtn_down: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_rbtn_up: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_wheel: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_mouse_wheel_h: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_notify_data: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_output_device_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_paint: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_panel_mouse_leave: { listeners: [], bRegistered: false, bOnVisible: false }, // JSplitter
+	on_panel_mouse_move: { listeners: [], bRegistered: false, bOnVisible: false }, // JSplitter
+	on_playback_dynamic_info: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_dynamic_info_track: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_edited: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_follow_cursor_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_new_track: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_order_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_pause: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_queue_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_seek: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_starting: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_stop: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playback_time: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_item_ensure_visible: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_items_added: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_items_removed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_items_reordered: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_items_selection_change: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_stop_after_current_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlist_switch: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_playlists_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_replaygain_mode_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_run_cmd_async_done: { listeners: [], bRegistered: false, bOnVisible: false }, // JSplitter
+	on_script_unload: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_selection_changed: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_size: { listeners: [], bRegistered: false, bOnVisible: false },
+	on_volume_change: { listeners: [], bRegistered: false, bOnVisible: false }
 };
 
 const parentWindow = this; // NOSONAR This is Window in this context without SMP wrapping
@@ -313,7 +313,7 @@ function removeEventListener(event, listener = null, id = null) { // eslint-disa
 	if (!Object.hasOwn(callbacks, event)) { return false; }
 	if (!listener && !id) { return false; }
 	const idx = findEventListener(event, listener, id);
-	return idx !== -1 && callbacks[event].listeners.splice(idx, 1);
+	return idx !== -1 && !!callbacks[event].listeners.splice(idx, 1);
 }
 
 /**
