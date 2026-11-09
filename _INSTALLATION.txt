@@ -1,4 +1,4 @@
-REQUISITES- JS HOST: (CHOOSE ONE)
+REQUISITES JS-HOST: (CHOOSE ONE)
 -------------------
 JavaScript host component required to install this. Available in x86 and x64.
 
