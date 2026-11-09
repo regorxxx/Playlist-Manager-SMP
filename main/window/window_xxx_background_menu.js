@@ -1,5 +1,5 @@
 ﻿'use strict';
-//02/10/26
+//09/11/26
 
 /* exported createBackgroundMenu */
 
@@ -449,7 +449,7 @@ function createBackgroundMenu(appendTo, parentMenu, options = { nameColors: fals
 		].forEach((option) => {
 			const prevVal = option.key === 'blendAlpha' ? Math.round(this.colorModeOptions[option.key] * 100 / 255) : this.colorModeOptions[option.key];
 			menu.newEntry({
-				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + ']', func: () => {
+				menuName: subMenu, entryText: option.entryText + '\t[' + prevVal + '%]', func: () => {
 					const input = Input.number('int positive', prevVal, 'Enter number:' + option.inputHint, window.Name + ' (' + window.ScriptInfo.Name + ')', 100, option.checks);
 					if (input === null) { return; }
 					const newVal = option.key === 'blendAlpha' ? Math.round(input * 255 / 100) : input;

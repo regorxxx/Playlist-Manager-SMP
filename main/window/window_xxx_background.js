@@ -1,16 +1,16 @@
 ﻿'use strict';
-//01/10/26
+//09/11/26
 
 /* exported _background */
 
 include('window_xxx_helpers.js');
 /* global folders:readable */
-/* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable, escapeRegExp */
 /* global _resolvePath:readable, getFiles:readable, sortFiles:readable, _isFolder:readable, _isFile:readable */
+/* global debounce:readable, isFunction:readable, getNested:readable, addNested:readable, escapeRegExp */
 /* global RGBA:readable, toRGB:readable , _scale:readable, applyAsMask:readable, applyMask:readable, applyEffect:readable, applyEffectAsMaskEffect:readable, getBrightness:readable, invert:readable, blendColors:readable, applyManipulation:readable, tintColor:readable, _gdiFont:readable, imgAllowedExt */
-/* global IDC_HAND:readable, IDC_ARROW:readable */
 /* global InterpolationMode:readable, RotateFlipType:readable, Effects:readable, BorderMode:readable, BlendMode:readable, SmoothingMode:readable */
-/* global DT_RIGHT:readable, DT_TOP:readable */
+/* global DT_RIGHT:readable, DT_TOP:readable, IDC_HAND:readable, IDC_ARROW:readable */
+/* global VisSourceType:readable, vis:readable */
 
 /**
  * Background for panel with different cover options
@@ -75,62 +75,66 @@ function _background({
 		if (!this.coverModeOptions.bProcessColors) { this.coverImg.art.colors = null; }
 		if (!this.useColors || this.useColorsBlend) { this.colorImg = null; }
 		else if (!this.useCover) { this.colorsChanged(bRepaint, true, false); }
-		if (!this.useCover) { return false; }
-		if (!handle) { handle = this.getHandle(); }
-		const bPath = ['path', 'folder'].includes(this.coverMode);
-		const path = bPath ? this.getArtPath(void (0), handle) : '';
-		const bFoundPath = bPath && path.length !== 0;
-		if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
-		if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
-		if (bPath && !bFoundPath && !this.coverModeOptions.bFallbackFront) { this.resetArt(); }
-		if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { return false; }
-		let id = null;
-		if (this.coverModeOptions.bCacheAlbum && handle) {
-			const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
-			id = tf.EvalWithMetadb(handle);
-			if (!bForce && id === this.coverImg.id) {
-				if (onDone && isFunction(onDone)) { onDone(false, this.coverImg); }
-				return false;
-			}
-		}
-		let profiler;
-		if (this.logging.bProfile) { profiler = new FbProfiler('Background - loadImg'); }
-		const promise = bFoundPath
-			? gdi.LoadImageAsyncV2('', path)
-			: (!bPath || this.coverModeOptions.bFallbackFront) && handle
-				? this.getHandleArt(handle, this.coverMode)
-				: Promise.reject(new Error('No handle/art'));
-		promise.then((result) => {
-			if (this.logging.bProfile) { profiler.Print(); }
-			this.resetArt();
-			if (bFoundPath) {
-				if (!result) {
-					if (_isFile(path)) { throw new Error('Corrupt image file:\n' + path); }
-					else { throw new Error('Non valid image file:\n' + path); }
+		return new Promise((resolve) => {
+			if (!this.useCover) { resolve({ updated: false, success: false }); }
+			if (!handle) { handle = this.getHandle(); }
+			const bPath = ['path', 'folder'].includes(this.coverMode);
+			const path = bPath ? this.getArtPath(void (0), handle) : '';
+			const bFoundPath = bPath && path.length !== 0;
+			if (this.logging.bDebug) { console.log('Background - updateImageBg - art file: ' + path + ' (path)'); }
+			if (this.logging.bDebug) { console.log('Background - updateImageBg - handle: ' + (handle ? handle.RawPath : '') + ' (handle)'); }
+			if (bPath && !bFoundPath && !this.coverModeOptions.bFallbackFront) { this.resetArt(); }
+			if (!bForce && (handle && this.coverImg.handle === handle.RawPath || bPath && this.coverImg.art.path === path)) { resolve({ updated: false, success: false }); }
+			let id = null;
+			if (this.coverModeOptions.bCacheAlbum && handle) {
+				const tf = fb.TitleFormat('%ALBUM%|$directory(%PATH%,1)');
+				id = tf.EvalWithMetadb(handle);
+				if (!bForce && id === this.coverImg.id) {
+					resolve({ updated: false, success: false });
 				}
-				this.coverImg.art.image = result;
-				this.coverImg.handle = this.coverImg.art.path = path;
-			} else {
-				if (!result || !result.image && this.logging.bDebug) { throw new Error('Image not available'); }
-				this.coverImg.art.image = result.image;
-				this.coverImg.art.path = result.path;
-				this.coverImg.handle = handle.RawPath;
-				this.coverImg.id = id;
-				if (this.logging.bDebug) { console.log('Background - updateImageBg - art handle: ' + result.path + ' (handle)'); }
 			}
-			this.processArtColors();
-			this.processArtEffects();
-			return true;
-		}).catch((error) => {
-			if (this.logging.bDebug || this.logging.bError && (!bPath && handle || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
-			this.resetArt();
-			return false;
-		}).finally(() => {
-			if (this.logging.bDebug) { console.log('Background - updateImageBg - art colors: ' + this.getArtColors()); }
-			this.applyArtColors(bRepaint);
-			this.notifyArtColors();
-			if (bRepaint) { this.repaint(); }
-			if (onDone && isFunction(onDone)) { onDone(true, this.coverImg); }
+			let profiler;
+			if (this.logging.bProfile) { profiler = new FbProfiler('Background - loadImg'); }
+			const promise = bFoundPath
+				? gdi.LoadImageAsyncV2('', path)
+				: (!bPath || this.coverModeOptions.bFallbackFront) && handle
+					? this.getHandleArt(handle, this.coverMode)
+					: Promise.reject(new Error('No handle/art'));
+			resolve(promise.then((result) => {
+				if (this.logging.bProfile) { profiler.Print(); }
+				this.resetArt();
+				if (bFoundPath) {
+					if (!result) {
+						if (_isFile(path)) { throw new Error('Corrupt image file:\n' + path); }
+						else { throw new Error('Non valid image file:\n' + path); }
+					}
+					this.coverImg.art.image = result;
+					this.coverImg.handle = this.coverImg.art.path = path;
+				} else {
+					if (!result || !result.image && this.logging.bDebug) { throw new Error('Image not available'); }
+					this.coverImg.art.image = result.image;
+					this.coverImg.art.path = result.path;
+					this.coverImg.handle = handle.RawPath;
+					this.coverImg.id = id;
+					if (this.logging.bDebug) { console.log('Background - updateImageBg - art handle: ' + result.path + ' (handle)'); }
+				}
+				this.processArtColors();
+				this.processArtEffects();
+				return { updated: true, success: true };
+			}).catch((error) => {
+				if (this.logging.bDebug || this.logging.bError && (!bPath && handle || bFoundPath)) { console.log('Background - updateImageBg: image error\n\n' + error.toString() + '\n' + error.stack); }
+				this.resetArt();
+				return { updated: true, success: false };
+			}).finally(() => {
+				if (this.logging.bDebug) { console.log('Background - updateImageBg - art colors: ' + this.getArtColors()); }
+				this.applyArtColors(bRepaint);
+				this.notifyArtColors();
+			}));
+		}).then((out) => {
+			if (this.visualizerOptions.bShow) { this.updateVisualizer(); }
+			if (out.updated && bRepaint) { this.repaint(); }
+			if (onDone && isFunction(onDone)) { onDone(out.success, this.coverImg); }
+			return out.success;
 		});
 	}, 250);
 	/**
@@ -830,7 +834,7 @@ function _background({
 	 * @param {{image?: object, colors?: object, reflection?: object, blend:? object}} options - Instance specific options instead of global settings
 	 * @returns {void}
 	 */
-	this.paint = (gr, options = { image: {}, colors: {}, reflection: {}, blend: {}}) => { // NOSONAR
+	this.paint = (gr, options = { image: {}, colors: {}, reflection: {}, blend: {} }) => { // NOSONAR
 		if (this.w <= 1 || this.h <= 1) { return; }
 		let profiler;
 		if (this.logging.bProfile) { profiler = fb.CreateProfiler('paint'); }
@@ -891,7 +895,7 @@ function _background({
 				const path = this.getPanelArtPath(void (0), true);
 				if (_isFolder(path)) {
 					const columnW = this.filmStripOptions.columnW;
-					this.paintFilmStrip({ gr, limits: { x: this.x, y: this.h - columnW, w: this.w, h: columnW, offsetH: this.offsetH }, columnW, path, ...options.filmStrip  });
+					this.paintFilmStrip({ gr, limits: { x: this.x, y: this.h - columnW, w: this.w, h: columnW, offsetH: this.offsetH }, columnW, path, ...options.filmStrip });
 				}
 			}
 		}
@@ -1100,6 +1104,15 @@ function _background({
 		});
 		this.checkConfig();
 		if (config.coverModeOptions && Object.hasOwn(config.coverModeOptions, 'pathCycleCount')) { this.fonts.artCounter = null; }
+		if (config.visualizerOptions) {
+			if (this.visualizerOptions.bShow) {
+				const bUpdateColors = !!this.visualizer || this.visualizerOptions.bShow;
+				this.createVisualizer();
+				if (this.isInit && bUpdateColors) { this.updateVisualizer(); }
+			} else {
+				this.clearVisualizer();
+			}
+		}
 		if (config.coverMode || config.coverModeOptions || config.coverModePriority) { this.updateImageBg(true); }
 		if (config.colorMode || config.colorModeOptions) {
 			this.colorImg = null;
@@ -1146,6 +1159,7 @@ function _background({
 			colorMode: this.colorMode,
 			colorModeOptions: { ...this.colorModeOptions },
 			filmStripOptions: { ...this.filmStripOptions },
+			visualizerOptions: { ...this.visualizerOptions },
 			...(bPosition ? { x: this.x, y: this.y, w: this.w, h: this.h, offsetH: this.offsetH } : {}),
 			timer: this.timer,
 			logging: this.logging
@@ -1657,6 +1671,7 @@ function _background({
 					fill: RGBA(0, 0, 0),
 					options: { alpha: 255, pathCycleCount: 0 }
 				});
+				if (window.DrawMode === 1) { mask.ReleaseGraphics(gr); }
 				mask.StackBlur(3);
 			}
 			: null;
@@ -2016,6 +2031,170 @@ function _background({
 		return false;
 	};
 	/**
+	 * Called on when changing image background to recreate visualizers with UI colors
+	 *
+	 * @property
+	 * @name createVisualizer
+	 * @kind method
+	 * @memberof _background
+	 * @param {VisSourceType} type - [={@link visualizerOptions.type}]
+	 * @returns {boolean} success
+	*/
+	this.createVisualizer = (type = this.visualizerOptions.type) => {
+		if (typeof vis === 'undefined') { return false; }
+		this.clearVisualizer();
+		switch (type) {
+			case VisSourceType.Waveform:
+				this.visualizer = vis.Create(
+					type,
+					{ channel: 'mix', points: 'auto', durationMs: 500, smoothing: 0.5 },
+					{ style: 'line', color: this.getAvgArtColor() || this.getAvgUiColor(), gain: 1, lineWidth: 1, glowStrength: 0.3, glowRadius: 4 }
+				);
+				break;
+			case VisSourceType.Spectrum:
+			case VisSourceType.PeakMeter:
+			case VisSourceType.VUMeter:
+				this.visualizer = vis.Create(type);
+				break;
+			case VisSourceType.Spectrogram:
+				this.visualizer = vis.Create(
+					type,
+					null,
+					{ style: 'scrolling', palette: 'inferno' }
+				);
+				break;
+			case VisSourceType.Vectorscope:
+				this.visualizer = vis.Create(
+					type,
+					null,
+					{ scale: 2 }
+				);
+				break;
+		}
+		this.updateVisualizer(void (0), true);
+		if (fb.IsPlaying && !fb.IsPaused) { this.startVisualizer(); }
+		return true;
+	};
+	/**
+	 * Called when starting playback to refresh visualizer
+	 *
+	 * @property
+	 * @name startVisualizer
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} rateMs - [=90]
+	 * @returns {number} intervalId
+	*/
+	this.startVisualizer = (rateMs = 90) => {
+		if (this.visualizer) {
+			clearInterval(this.visualizerInterval);
+			this.visualizerInterval = setInterval(() => this.repaint(0), rateMs);
+		}
+		return this.visualizerInterval;
+	};
+	/**
+	 * Called when stopping  playback to stop visualizer
+	 *
+	 * @property
+	 * @name stopVisualizer
+	 * @kind method
+	 * @memberof _background
+	 * @param {Boolean} bRepaint - [=true] Flag to repaint panel
+	 * @returns {void}
+	*/
+	this.stopVisualizer = (bRepaint = true) => {
+		if (this.visualizerInterval) {
+			clearInterval(this.visualizerInterval);
+			this.visualizerInterval = null;
+			if (bRepaint) { this.repaint(); }
+		}
+	};
+	/**
+	 * Updates visualizer with panel colors
+	 *
+	 * @property
+	 * @name updateVisualizer
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} col - If not provided uses art colors or UI colors as fallback
+	 * @param {Boolean} bForceDefaults - Flag to force default color logic
+	 * @returns {boolean} success
+	*/
+	this.updateVisualizer = (col, bForceDefaults) => {
+		if (typeof vis === 'undefined' || !this.visualizer) { return false; }
+		if (!bForceDefaults && this.callbacks.visualizerColors) { return this.callbacks.visualizerColors(col ? [col] : this.getArtColors()); }
+		else {
+			const colArray = this.getArtColors();
+			if (!col) {
+				col = this.getArtColors();
+				col = col ? col[2] : this.getUiColors()[0];
+			}
+			const alpha = this.visualizerOptions.alpha;
+			switch (this.visualizer.SourceType) {
+				case VisSourceType.Vectorscope:
+				case VisSourceType.Waveform:
+					this.visualizer.Color = col;
+					break;
+				case VisSourceType.PeakMeter:
+					this.visualizer.Ranges = [
+						{ to: -60, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
+						{ to: -30, color: RGBA(...toRGB((colArray ? colArray[1] : null) || 0xff63d471), alpha) },
+						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
+						{ to: -0.01, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
+					];
+					break;
+				case VisSourceType.VUMeter:
+					this.visualizer.Ranges = [
+						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
+						{ to: -5, color: RGBA(...toRGB((colArray ? colArray[1] : null) || 0xff63d471), alpha) },
+						{ to: -0.5, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
+						{ to: 2.99, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
+					];
+					break;
+				case VisSourceType.Spectrum:
+					this.visualizer.Ranges = [
+						{ to: -71.99, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
+						{ to: -50, color: RGBA(...toRGB((colArray ? colArray[1] : null) || 0xff63d471), alpha) },
+						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
+						{ to: -8, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
+					];
+					break;
+			}
+			return true;
+		}
+	};
+	/**
+	 * Called when stopping  playback to stop visualizer
+	 *
+	 * @property
+	 * @name stopVisualizer
+	 * @kind method
+	 * @memberof _background
+	 * @param {Boolean} bRepaint - [=true] Flag to repaint panel
+	 * @returns {void}
+	*/
+	this.clearVisualizer = (bRepaint = true) => {
+		this.stopVisualizer(false);
+		this.visualizer = null;
+		if (bRepaint) { this.repaint(); }
+	};
+	/**
+	 * Called at on_paint
+	 *
+	 * @property
+	 * @name drawVisualizer
+	 * @kind method
+	 * @memberof _background
+	 * @param {number} x
+	 * @param {number} y
+	 * @param {number} w
+	 * @param {number} h
+	 * @returns {void}
+	*/
+	this.drawVisualizer = (gr, x = this.x, y = this.y, w = this.w, h = this.h) => {
+		if (this.visualizer) { this.visualizer.Draw(gr, x, y, w, h); }
+	};
+	/**
 	 * Called on on_colors_changed.
 	 *
 	 * @property
@@ -2052,7 +2231,12 @@ function _background({
 		});
 		this.changeConfig({ config: arguments[0], bRepaint: false });
 		this.updateImageBg();
+		this.isInit = true;
 	};
+	/** @type {Visualization} - Vizualizer object */
+	this.visualizer = null;
+	/** @type {Number} - Vizualizer interval ID */
+	this.visualizerInterval = null;
 	/** @type {Number} - Image for internal use. Drawing colors */
 	this.colorImg = null;
 	/** @type {{ art: { path: string, image: GdiBitmap|null, colors: {col:number, freq:number}[]|null, histogram: number[]|null, blendImage: GdiBitmap|null, blendUiImage: GdiBitmap|null, filmStrip: GdiBitmap[] }, handle: FbMetadbHandle|null, id: string|null }} - Img properties */
@@ -2071,6 +2255,14 @@ function _background({
 	 */
 	/** @type {filmStripOptions} - Film strip settings */
 	this.filmStripOptions = {};
+	/**
+	 * @typedef {object} visualizerOptions - Visualizer settings
+	 * @property {Boolean} bShow - Flag to show the visualizer
+	 * @property {VisSourceType} type - Visualizer renderer type
+	 * @property {number} alpha - Visualizer opacity (0-255)
+	 */
+	/** @type {visualizerOptions} - Visualizer settings */
+	this.visualizerOptions = {};
 	/** @type {Number} - Panel position */
 	this.x = this.y = this.w = this.h = 0;
 	/** @type {Number} - Height margin for image drawing */
@@ -2147,6 +2339,7 @@ function _background({
 	 * @property {(config, arguments, callbackArgs) => void} change - Called on config changes
 	 * @property {(colorArray:num[], bForced:boolean, bRepaint:boolean) => void} artColors - Called when colors are extracted from art, to apply colors to other elements within panel
 	 * @property {(colorArray:num[], bForced:boolean) => void} artColorsNotify - Called when colors are extracted from art, to use as color server
+	 * @property {(colorArray:num[]) => void} visualizerColors - Called visualizer is updated to apply custom colors
 	 */
 	/** @type {Callbacks} - Callbacks for third party integration */
 	this.callbacks = {};
@@ -2162,6 +2355,8 @@ function _background({
 	 */
 	/** @type {Logging} - Panel logging related settings */
 	this.logging = {};
+	/** @type {Boolean} - True when baclground has fully initialized */
+	this.isInit = false;
 
 	this.init();
 }
@@ -2184,6 +2379,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		filmStripOptions: { bShow: false, columnW: 75, alpha: 255, bezelColor: RGBA(0, 0, 0), bezelAlpha: 200 },
+		visualizerOptions: { bShow: false, type: typeof vis === 'undefined' ? 0 : VisSourceType.Waveform, alpha: 128 },
 		...(bCallbacks
 			? {
 				callbacks: {

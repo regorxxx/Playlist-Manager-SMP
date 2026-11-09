@@ -1,5 +1,5 @@
 ﻿'use strict';
-//06/11/26
+//09/11/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -323,15 +323,22 @@ function clampRGB(c) {
 	return Math.max(Math.min(c, 255), 0);
 }
 
+function colTo32Bit(c) {
+	if (c < 0) { return c + 4294967296; }
+	else if (c > 4294967296) { return c - 4294967296; }
+	else { return c; }
+}
+
 function RGBA(r, g, b, a) {
 	const c = 0xff000000 | (clampRGB(r) << 16) | (clampRGB(g) << 8) | (clampRGB(b));
-	if (typeof a !== 'undefined') { return (c & 0x00ffffff) | (clampRGB(a) << 24); }
-	return c;
+	return typeof a === 'undefined'
+		? colTo32Bit(c)
+		: colTo32Bit((c & 0x00ffffff) | (clampRGB(a) << 24));
 }
 
 function RGB(r, g, b) {
 	const c = 0xff000000 | (clampRGB(r) << 16) | (clampRGB(g) << 8) | (clampRGB(b));
-	return c < 0 ? 4294967296 + c : c;
+	return colTo32Bit(c);
 }
 
 function toRGB(color) { // returns an array like [192, 0, 0]
