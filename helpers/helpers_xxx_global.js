@@ -1,7 +1,7 @@
 ﻿'use strict';
-//09/10/26
+//12/10/26
 
-/* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist */
+/* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist, builtInFonts */
 
 include('helpers_xxx.js');
 /* global folders:readable */
@@ -322,6 +322,8 @@ const globFonts = {
 	alt: { name: 'Tahoma', size: 10 },
 	tooltip: {name: 'Tahoma', size: 10}
 };
+
+const builtInFonts = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf', 'Twemoji Mozilla': 'Twemoji.Mozilla.ttf', 'OpenMoji': 'OpenMoji-color-glyf_colr_0.ttf' };
 
 // Fonts: user replaceable with a presets file at folders.data
 const globSettings = {

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//07/10/26
+//12/11/26
 
 /**
  * Global folders setting
@@ -184,7 +184,7 @@ console.MaxSize = 1000000;
 	Global tags, queries, RegExp, Fonts, Settings
 */
 include('helpers_xxx_global.js');
-/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, globNoSplitArtist:readable, _ps:readable, _resolvePath:readable */
+/* global loadUserDefFile:readable, globTags:readable, globQuery:readable, globRegExp:readable, globFonts:readable, globSettings:readable, globNoSplitArtist:readable, _ps:readable, _resolvePath:readable, builtInFonts:readable */
 // Load user files used at helpers_xxx_global.js
 loadUserDefFile(globTags);
 loadUserDefFile(globQuery);
@@ -219,6 +219,7 @@ loadUserDefFile(globFonts);
 // Check user-set fonts
 Object.keys(globFonts).forEach((key) => {
 	if (!key.startsWith('_') && !utils.CheckFont(globFonts[key].name)) {
+		if (utils.LoadFont && builtInFonts[globFonts[key].name] && utils.IsFile(builtInFonts[globFonts[key].name])) { return; }
 		fb.ShowPopupMessage(
 			'Missing font set at:' +
 			'\n\t' + globFonts._file +
