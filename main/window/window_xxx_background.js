@@ -1,5 +1,5 @@
 ﻿'use strict';
-//09/11/26
+//12/11/26
 
 /* exported _background */
 
@@ -2044,13 +2044,6 @@ function _background({
 		if (typeof vis === 'undefined') { return false; }
 		this.clearVisualizer();
 		switch (type) {
-			case VisSourceType.Waveform:
-				this.visualizer = vis.Create(
-					type,
-					{ channel: 'mix', points: 'auto', durationMs: 500, smoothing: 0.5 },
-					{ style: 'line', color: this.getAvgArtColor() || this.getAvgUiColor(), gain: 1, lineWidth: 1, glowStrength: 0.3, glowRadius: 4 }
-				);
-				break;
 			case VisSourceType.Spectrum:
 			case VisSourceType.PeakMeter:
 			case VisSourceType.VUMeter:
@@ -2060,7 +2053,7 @@ function _background({
 				this.visualizer = vis.Create(
 					type,
 					null,
-					{ style: 'scrolling', palette: 'inferno' }
+					{ style: 'scrolling', palette: 'grayscale' }
 				);
 				break;
 			case VisSourceType.Vectorscope:
@@ -2070,7 +2063,16 @@ function _background({
 					{ scale: 2 }
 				);
 				break;
+			case VisSourceType.Waveform:
+			default:
+				this.visualizer = vis.Create(
+					type,
+					{ channel: 'mix', points: 'auto', durationMs: 500, smoothing: 0.5 },
+					{ style: 'line', color: this.getAvgArtColor() || this.getAvgUiColor(), gain: 1, lineWidth: 1, glowStrength: 0.3, glowRadius: 4 }
+				);
+				break;
 		}
+		this.visualizer.UpdateIntervalMs = this.visualizerOptions.rate;
 		this.updateVisualizer(void (0), true);
 		if (fb.IsPlaying && !fb.IsPaused) { this.startVisualizer(); }
 		return true;
@@ -2082,13 +2084,14 @@ function _background({
 	 * @name startVisualizer
 	 * @kind method
 	 * @memberof _background
-	 * @param {number} rateMs - [=90]
+	 * @param {number} rate - [={@link visualizerOptions.rate}]
 	 * @returns {number} intervalId
 	*/
-	this.startVisualizer = (rateMs = 90) => {
+	this.startVisualizer = (rate = this.visualizerOptions.rate) => {
 		if (this.visualizer) {
 			clearInterval(this.visualizerInterval);
-			this.visualizerInterval = setInterval(() => this.repaint(0), rateMs);
+			this.visualizerInterval = setInterval(() => this.repaint(0), rate);
+			this.visualizer.UpdateIntervalMs = rate;
 		}
 		return this.visualizerInterval;
 	};
@@ -2131,10 +2134,6 @@ function _background({
 			}
 			const alpha = this.visualizerOptions.alpha;
 			switch (this.visualizer.SourceType) {
-				case VisSourceType.Vectorscope:
-				case VisSourceType.Waveform:
-					this.visualizer.Color = col;
-					break;
 				case VisSourceType.PeakMeter:
 					this.visualizer.Ranges = [
 						{ to: -60, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
@@ -2158,6 +2157,15 @@ function _background({
 						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
 						{ to: -8, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
 					];
+					break;
+				case VisSourceType.Spectrogram:
+					this.visualizer.Color = RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff, alpha));
+					this.visualizer.BackgroundColor = RGBA(...toRGB((colArray ? colArray[1] : null) || 0xffff5d73, alpha));
+					break;
+				case VisSourceType.Vectorscope:
+				case VisSourceType.Waveform:
+				default:
+					this.visualizer.Color = col;
 					break;
 			}
 			return true;
@@ -2260,6 +2268,7 @@ function _background({
 	 * @property {Boolean} bShow - Flag to show the visualizer
 	 * @property {VisSourceType} type - Visualizer renderer type
 	 * @property {number} alpha - Visualizer opacity (0-255)
+	 * @property {number} rate - Visualizer rate in ms (10-2000)
 	 */
 	/** @type {visualizerOptions} - Visualizer settings */
 	this.visualizerOptions = {};
@@ -2379,7 +2388,7 @@ _background.defaults = (bPosition = false, bCallbacks = false) => {
 		colorMode: 'blend',
 		colorModeOptions: { bDither: true, bUiColors: false, bDarkBiGradOut: true, angle: 91, focus: 1, color: [0xff2e2e2e, 0xff212121], blendIntensity: 90, blendAlpha: 105 }, // RGB(45,45,45), RGB(33,33,33)
 		filmStripOptions: { bShow: false, columnW: 75, alpha: 255, bezelColor: RGBA(0, 0, 0), bezelAlpha: 200 },
-		visualizerOptions: { bShow: false, type: typeof vis === 'undefined' ? 0 : VisSourceType.Waveform, alpha: 128 },
+		visualizerOptions: { bShow: false, type: typeof vis === 'undefined' ? 0 : VisSourceType.Waveform, alpha: 128, rate: 90 },
 		...(bCallbacks
 			? {
 				callbacks: {
