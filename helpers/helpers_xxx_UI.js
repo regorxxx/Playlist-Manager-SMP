@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/26
+//13/11/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
@@ -432,13 +432,19 @@ function _gdiFont(name, size, style) {
 	if (!fonts[id]) {
 		if (utils.CheckFont(name)) { fonts[id] = gdi.Font(name, size, style || 0); }
 		else if (utils.LoadFont) {
-			if (builtInFonts[name] && utils.LoadFont(folders.xxx + 'fonts\\' + builtInFonts[name])) { fonts[id] = gdi.Font(name, size, style || 0); }
+			const intFontFiles = [builtInFonts[name], name + '.ttf', name + '.otf'].filter(Boolean);
+			const intFontFolders = [folders.userFonts, folders.fonts];
+			intFontFiles.some((intFontFile) => {
+				return intFontFolders.some((path) => {
+					if (utils.LoadFont(path + intFontFile)) { fonts[id] = gdi.Font(name, size, style || 0); return true; }
+				});
+			});
 		}
 		if (!fonts[id]) { fonts[id] = gdi.Font(utils.CheckFont('Segoe UI') ? 'Segoe UI' : 'Tahoma', size, style || 0); }
 	}
 	if (fonts[id].Name !== name && !fonts.notFound.includes(name)) { // Display once per session, otherwise it floods the console with the same message...
 		fonts.notFound.push(name);
-		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install the required fonts found at:\nhttps://github.com/regorxxx/foobar2000-assets/tree/main/Fonts\n\nA restart is required after installation!', window.FullPanelName);
+		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install the required fonts, default ones can be found at:\nhttps://github.com/regorxxx/foobar2000-assets/tree/main/Fonts\n\nA restart is required after installation!\n\nYou can also put your own font files to be loaded on-the-fly at (only in JSplitter):\n\t' + folders.userFonts + 'fonts\\', window.FullPanelName);
 		console.log('Missing font: ' + name);
 	}
 	return fonts[id];

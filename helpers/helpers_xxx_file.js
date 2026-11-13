@@ -1,5 +1,5 @@
 ﻿'use strict';
-//05/11/26
+//13/11/26
 
 /* exported _getNameSpacePath, _deleteFolder, _copyFile, _recycleFile, _restoreFile, _saveFSO, _saveSplitJson, _jsonParseFileSplit, _jsonParseFileCheck, _parseAttrFile, _explorer, getFiles, _run, _runHidden, _exec, editTextFile, findRecursiveFile, findRelPathInAbsPath, sanitizePath, sanitize, UUID, created, getFileMeta, popup, getPathMeta, testPath, youTubeRegExp, _isNetwork, findRecursiveDirs, _copyFolder, _renameFolder, _copyDependencies, _moveFile, _foldPath, _getClipboardData, _setClipboardData, _deleteFilesByMask, sortFiles, imgAllowedExt, getDrives, getDrive, getShortPath */
 
@@ -55,6 +55,7 @@ _createFolder(folders.userHelpers);
 _createFolder(folders.temp);
 _createFolder(folders.userPresets);
 _createFolder(folders.userPresetsGlobal);
+_createFolder(folders.userFonts);
 // Add info files
 console.disable();
 [

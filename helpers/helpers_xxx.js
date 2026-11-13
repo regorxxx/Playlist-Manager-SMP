@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/26
+//13/11/26
 
 /**
  * Global folders setting
@@ -71,6 +71,11 @@ folders.binaries = fb.ProfilePath + folders.binariesName;
  */
 folders.dataPackage = folders.JsPackageDirs ? folders.JsPackageDirs.Storage : folders.data;
 /**
+ * Fonts folder bundled with scripts
+ * @type {string} - Ex: [FB2K_PROFILE]\\scripts\\SMP\\xxx-scripts\\fonts or [FB2K_PROFILE]\\foo_spider_monkey_panel\\packages\\{2A6AEDC9-BAE4-4D30-88E2-EDE7225B494D}\\fonts
+ */
+folders.fonts = folders.xxx + 'fonts\\';
+/**
  * Path to global JS temp folder
  * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\temp\\
  */
@@ -100,6 +105,11 @@ folders.userPresets = folders.data + 'presets\\';
  * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\presets\\global\\
  */
 folders.userPresetsGlobal = folders.userPresets + 'global\\';
+/**
+ * Path to global JS user Fonts folder
+ * @type {string} - Ex: [FB2K_PROFILE]\\js_data\\fonts\\
+ */
+folders.userFonts = folders.data + 'fonts\\';
 /**
  * Path to Biography artist folder
  * @type {string} - Ex: [FB2K_PROFILE]\\yttm\\art_img\\$lower($cut($meta(ARTIST,0),1))\\$cut($meta(ARTIST,0),40)\\
@@ -219,13 +229,22 @@ loadUserDefFile(globFonts);
 // Check user-set fonts
 Object.keys(globFonts).forEach((key) => {
 	if (!key.startsWith('_') && !utils.CheckFont(globFonts[key].name)) {
-		if (utils.LoadFont && builtInFonts[globFonts[key].name] && utils.IsFile(builtInFonts[globFonts[key].name])) { return; }
+		if (utils.LoadFont) {
+			const intFontFiles = [builtInFonts[name], name + '.ttf', name + '.otf'].filter(Boolean);
+			const intFontFolders = [folders.userFonts, folders.fonts];
+			if (intFontFiles.some((intFontFile) => intFontFolders.some((path) => utils.IsFile(path + intFontFile)))) { return; }
+		}
 		fb.ShowPopupMessage(
 			'Missing font set at:' +
 			'\n\t' + globFonts._file +
 			'\n\n\t-' + key + ':\t' + globFonts[key].name +
-			'\n\n\nEither change the font at the file to one available in your system or install it. Note default fonts are bundled at:' +
-			'\n\t' + folders.xxx + '_resources\\fonts\\'
+			'\n\n\nEither change the font at the JSON file to one available in your system or install it. Note default fonts are bundled at:' +
+			'\n\t' + folders.xxx + 'fonts\\' +
+			'\n\nYou may also check at:' +
+			'\n\thttps://github.com/regorxxx/foobar2000-assets/tree/main/Fonts' +
+			'\n\nA restart is required after installation!' +
+			'\n\nYou can also put your own font files to be loaded on-the-fly at (only in JSplitter):' +
+			'\n\t' + folders.userFonts + 'fonts\\'
 			, 'Global fonts'
 		);
 	}

@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/10/26
+//13/11/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist, builtInFonts */
 
@@ -323,7 +323,22 @@ const globFonts = {
 	tooltip: {name: 'Tahoma', size: 10}
 };
 
-const builtInFonts = { 'Segoe UI': 'seguisym.ttf', 'FontAwesome': 'Font Awesome 4.ttf', 'Twemoji Mozilla': 'Twemoji.Mozilla.ttf', 'OpenMoji': 'OpenMoji-color-glyf_colr_0.ttf' };
+const builtInFonts = {
+	'Segoe UI': 'seguisym.ttf',
+	'FontAwesome': 'Font Awesome 4.ttf',
+	'Font Awesome 4': 'Font Awesome 4.ttf',
+	'Font Awesome 7': 'Font Awesome 7 Free-Regular-400.otf',
+	'Font Awesome 7 Free': 'Font Awesome 7 Free-Regular-400.otf',
+	'Font Awesome 7 Brands': 'Font Awesome 7 Brands-Regular-400.otf',
+	'Font Awesome 7 Free Solid': 'Font Awesome 7 Free-Solid-900.otf', // Not included by default
+	'OpenMoji': 'OpenMoji-color-glyf_colr_0.ttf',
+	'EmojiTwo COLRv0': 'EmojiTwoCOLRv0.ttf',
+	'Twemoji Mozilla': 'Twemoji.Mozilla.ttf',
+	'Twemoji COLRv0': 'twemoji-glyf_colr_0.ttf',
+	'Twitter Color Emoji': 'TwitterColorEmoji-SVGinOT.ttf', // Not included by default, too big
+	'Noto Emoji': 'NotoEmoji-VariableFont_wght.ttf', // Not included by default
+	'Noto Color Emoji': 'NotoColorEmoji-Regular.ttf', // Not included by default, too big
+};
 
 // Fonts: user replaceable with a presets file at folders.data
 const globSettings = {
