@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/26
+//17/11/26
 
 /* exported getSoFeatures, checkSoFeatures, initCheckFeatures */
 
@@ -136,7 +136,7 @@ function checkSoFeatures(soFeat, bPopup = true) {
 		bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nFonts are not found via utils.CheckFont() and gdi.Font().' + '\n\nFeatures affected:\nScript fonts may not be properly displayed or some symbols missing.' + tip + '\n\nFix: install install \'gdiPlus\' package with winetricks.\n' + 'https://wiki.winehq.org/Winetricks' + '\n\nTerminal command:\n' + 'sh winetricks gdiPlus', 'SO features');
 		bPass = false;
 	} else if (!soFeat.segoe) {
-		if (typeof builtInFonts === 'undefined' || !utils.LoadFont || !builtInFonts['Segoe UI'] || !utils.IsFile(!builtInFonts['Segoe UI'])) {
+		if (typeof builtInFonts === 'undefined' || !utils.LoadFont || !builtInFonts['segoe ui'] || !utils.IsFile(!builtInFonts['segoe ui'])) {
 			bPopup && fb.ShowPopupMessage('Found an issue on current installation:\nSegoe UI font is missing.' + '\n\nFeatures affected:\nDefault and fallback font when others are missing will not be displayed properly and some texts may not be displayed at all.' + tip + '\n\nFix: install missing font.\n' + 'https://github.com/mrbvrz/segoe-ui-linux', 'SO features');
 		}
 		bPass = false;

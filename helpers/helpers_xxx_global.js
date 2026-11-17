@@ -1,5 +1,5 @@
 ﻿'use strict';
-//13/11/26
+//17/11/26
 
 /* exported loadUserDefFile, addGlobValues, globFonts, globSettings, globNoSplitArtist, builtInFonts */
 
@@ -324,20 +324,22 @@ const globFonts = {
 };
 
 const builtInFonts = {
-	'Segoe UI': 'seguisym.ttf',
-	'FontAwesome': 'Font Awesome 4.ttf',
-	'Font Awesome 4': 'Font Awesome 4.ttf',
-	'Font Awesome 7': 'Font Awesome 7 Free-Regular-400.otf',
-	'Font Awesome 7 Free': 'Font Awesome 7 Free-Regular-400.otf',
-	'Font Awesome 7 Brands': 'Font Awesome 7 Brands-Regular-400.otf',
-	'Font Awesome 7 Free Solid': 'Font Awesome 7 Free-Solid-900.otf', // Not included by default
-	'OpenMoji': 'OpenMoji-color-glyf_colr_0.ttf',
-	'EmojiTwo COLRv0': 'EmojiTwoCOLRv0.ttf',
-	'Twemoji Mozilla': 'Twemoji.Mozilla.ttf',
-	'Twemoji COLRv0': 'twemoji-glyf_colr_0.ttf',
-	'Twitter Color Emoji': 'TwitterColorEmoji-SVGinOT.ttf', // Not included by default, too big
-	'Noto Emoji': 'NotoEmoji-VariableFont_wght.ttf', // Not included by default
-	'Noto Color Emoji': 'NotoColorEmoji-Regular.ttf', // Not included by default, too big
+	'segoe ui': 'seguisym.ttf',
+	'arial': 'arial.ttf',
+	'tahoma': 'tahoma.ttf',
+	'fontawesome': 'Font Awesome 4.ttf',
+	'font awesome 4': 'Font Awesome 4.ttf',
+	'font awesome 7': 'Font Awesome 7 Free-Regular-400.otf',
+	'font awesome 7 free': 'Font Awesome 7 Free-Regular-400.otf',
+	'font awesome 7 brands': 'Font Awesome 7 Brands-Regular-400.otf',
+	'font awesome 7 free solid': 'Font Awesome 7 Free-Solid-900.otf', // Not included by default
+	'openmoji': 'OpenMoji-color-glyf_colr_0.ttf',
+	'emojitwo colrv0': 'EmojiTwoCOLRv0.ttf',
+	'twemoji mozilla': 'Twemoji.Mozilla.ttf',
+	'twemoji colrv0': 'twemoji-glyf_colr_0.ttf',
+	'twitter color emoji': 'TwitterColorEmoji-SVGinOT.ttf', // Not included by default, too big
+	'noto emoji': 'NotoEmoji-VariableFont_wght.ttf', // Not included by default
+	'noto color emoji': 'NotoColorEmoji-Regular.ttf', // Not included by default, too big
 };
 
 // Fonts: user replaceable with a presets file at folders.data
