@@ -1,6 +1,6 @@
 @ECHO off
 REM ------------------------------------------------------------------
-REM Create packages (zip file) from js files v.09/11/2026
+REM Create packages (zip file) from js files v.22/11/2026
 REM Requires 7za.exe on windows to compress (otherwise do it manually)
 REM If it's not provided, can be downloaded from:
 REM 	https://www.7-zip.org/download.html
@@ -688,6 +688,8 @@ CALL :copy_main infinity_tools.js
 REM docs
 CALL :copy_file _INSTALLATION.txt
 CALL :copy_file _TIPS.txt
+REM extras
+CALL :copy_file Draw Graph.html
 REM main
 CALL :copy_folder main\autobackup
 CALL :copy_folder main\bio
@@ -869,7 +871,7 @@ REM any text must be JSON encoded
 SET name=Library-Tree-SMP
 SET id=E85C9EF0-778B-46DD-AF20-F4BE831360DD
 SET source=https://github.com/regorxxx/Library-Tree-SMP
-SET description=Feature rich media library viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• New facets\r\n• Statistics\r\n• Album art flow mode\r\n\r\nFor guidance on setting up new facets / multiple panel mode, see help on views tab\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)\r\n• Original Library Tree design (2023): WilB
+SET description=Feature rich media library/playlist/queue viewer for foobar2000.\r\n\r\n• Tree viewer\r\n• Album art browser\r\n• Queue viewer\r\n• Playlist manager\r\n• Auto-DJ\r\n• File explorer\r\n• Booklet viewer\r\n• Facets\r\n• Statistics\r\n• Album art flow mode\r\n• Search mode\r\n\r\nCheck help submenu for more info\r\n\r\nCredits\r\n\r\n• Original Jscript library search (2013): thanhdat1710\r\n• Original JS smooth browser design (2015): Br3tt (aka falstaff)\r\n• Original Library Tree design (2023): WilB
 REM version
 FOR /F "tokens=* USEBACKQ" %%F IN (`findstr /R "window.DefineScript" library_tree.js`) DO (SET version=%%F)
 IF "%version%"=="" (
@@ -1028,6 +1030,7 @@ CALL :copy_file helpers\helpers_xxx_web.js
 CALL :copy_file helpers\menu_xxx.js
 CALL :check_folder helpers\readme
 CALL :copy_file helpers\readme\art_display.txt
+CALL :copy_file helpers\readme\window_display_tf.txt
 REM helpers external
 CALL :copy_folder helpers-external\7z
 CALL :copy_folder helpers-external\bitmasksorterjs
