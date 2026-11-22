@@ -689,7 +689,7 @@ REM docs
 CALL :copy_file _INSTALLATION.txt
 CALL :copy_file _TIPS.txt
 REM extras
-CALL :copy_file Draw Graph.html
+CALL :copy_file "Draw Graph.html"
 REM main
 CALL :copy_folder main\autobackup
 CALL :copy_folder main\bio
