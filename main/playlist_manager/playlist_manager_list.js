@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/26
+//22/11/26
 
 /* exported _list */
 
@@ -3241,9 +3241,10 @@ function _list({ x, y, w, h, properties } = {}) {
 				case 'LIST': {
 					shortcuts.actions = [
 						{ key: '- None -', func: () => { void (0); }, separator: '' },
-						{ key: 'Manage playlist', func: this.playlistMenu, separator: 'to' },
-						{ key: 'Playlist\'s items menu', func: this.contextMenu, separator: 'for' },
-						{ key: 'Load|Show playlist', func: this.loadPlaylistOrShow, separator: 'to' },
+						{ key: 'Manage playlist', func: this.playlistMenu.bind(this), separator: 'to' },
+						{ key: 'Playlist\'s items menu', func: this.contextMenu.bind(this), separator: 'for' },
+						{ key: 'Load|Show playlist', func: this.loadPlaylistOrShow.bind(this), separator: 'to' },
+						{ key: 'Load|Show playlist and play', func: this.loadPlaylistOrShowAndPlay.bind(this), separator: 'to' },
 						{
 							key: 'Copy selection to playlist',
 							func: this.sendSelectionToPlaylists.bind(this, { bDelSource: false }), bStandAlone: true,
@@ -3255,11 +3256,11 @@ function _list({ x, y, w, h, properties } = {}) {
 							separator: 'to'
 						},
 						{ key: 'Clone playlist in UI', func: (z, duplOpt) => clonePlaylistInUI({ list: this, z, duplOpt }), separator: 'to' },
-						{ key: 'Recycle playlist', func: this.removePlaylist, separator: 'to' },
+						{ key: 'Recycle playlist', func: this.removePlaylist.bind(this), separator: 'to' },
 						{ key: 'Lock|Unlock playlist file', func: switchLock.bind(this, this), separator: 'to' },
 						{ key: 'Lock|Unlock UI playlist', func: switchLockUI.bind(this, this), separator: 'to' },
-						{ key: 'Multiple selection', func: this.multSelect, separator: 'for' },
-						{ key: 'Multiple selection (range)', func: this.multSelectRange, separator: 'for' }
+						{ key: 'Multiple selection', func: this.multSelect.bind(this), separator: 'for' },
+						{ key: 'Multiple selection (range)', func: this.multSelectRange.bind(this), separator: 'for' }
 					];
 					break;
 				}
@@ -3267,7 +3268,7 @@ function _list({ x, y, w, h, properties } = {}) {
 					shortcuts.actions = [
 						{ key: '- None -', func: () => { void (0); }, separator: '' },
 						{ key: 'Show Current|Playing playlist', func: () => { this.showCurrPls() || this.showCurrPls({ bPlayingPls: true }); }, separator: 'to' },
-						{ key: 'Multiple selection (all)', func: this.multSelectAll, separator: 'for' },
+						{ key: 'Multiple selection (all)', func: this.multSelectAll.bind(this), separator: 'for' },
 						{ key: 'Cycle categories', func: cycleCategories.bind(this, this), separator: 'to' },
 						{ key: 'Cycle tags', func: cycleTags.bind(this, this), separator: 'to' },
 						{
@@ -3284,7 +3285,7 @@ function _list({ x, y, w, h, properties } = {}) {
 							},
 							separator: 'to'
 						},
-						{ key: 'Manual refresh', func: this.manualRefresh, separator: 'for' },
+						{ key: 'Manual refresh', func: this.manualRefresh.bind(this), separator: 'for' },
 						{ key: 'Manual saving (all not locked)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(false) + ' playlists.'); }, separator: 'for' },
 						{ key: 'Manual saving (all)', func: () => { console.log('Playlist Manager: Updated ' + this.updateAll(true) + ' playlists.'); }, separator: 'for' },
 					];
@@ -6758,7 +6759,7 @@ function _list({ x, y, w, h, properties } = {}) {
 	};
 
 	this.loadPlaylistOrShow = (idx, bAlsoHidden = false) => {
-		let loadPromise = { bLoaded: Promise.resolve(false), bDone: Promise.resolve(false), bShow: Promise.resolve(false) };
+		const loadPromise = { bLoaded: Promise.resolve(false), bDone: Promise.resolve(false), bShow: Promise.resolve(false) };
 		if (idx < 0 || (!bAlsoHidden && idx >= this.items) || (bAlsoHidden && idx >= this.itemsAll)) {
 			console.log('Playlist Manager: Error loading/showing playlist. Index ' + _p(idx) + ' out of bounds. (loadPlaylistOrShow)');
 			return loadPromise;
@@ -6769,16 +6770,22 @@ function _list({ x, y, w, h, properties } = {}) {
 			({ bLoaded: loadPromise.bLoaded, bDone: loadPromise.bDone } = this.loadPlaylist(idx, bAlsoHidden));
 			loadPromise.bShow = loadPromise.bDone;
 		} else if (duplicated.length === 1) {
-			loadPromise.bShow = Promise.resolve(this.showBoundPlaylist(idx, bAlsoHidden));
+			loadPromise.bDone = loadPromise.bShow = Promise.resolve(this.showBoundPlaylist(idx, bAlsoHidden));
 		} else if (duplicated.length > 1 && pls.extension === '.ui') { // Cycle through all playlist with same name
 			let i = 0;
 			const ap = plman.ActivePlaylist;
 			if (ap !== -1) {
 				if (duplicated[duplicated.length - 1] !== ap) { while (duplicated[i] <= ap) { i++; } }
 				plman.ActivePlaylist = duplicated[i];
-				loadPromise.bShow = Promise.resolve(true);
+				loadPromise.bDone = loadPromise.bShow = Promise.resolve(true);
 			}
 		}
+		return loadPromise;
+	};
+
+	this.loadPlaylistOrShowAndPlay = (idx, bAlsoHidden = false) => {
+		const loadPromise = this.loadPlaylistOrShow(idx, bAlsoHidden);
+		loadPromise.bPlayed = loadPromise.bDone.then((v) => v && plman.ExecutePlaylistDefaultAction(plman.ActivePlaylist, 0));
 		return loadPromise;
 	};
 
@@ -7293,7 +7300,7 @@ function _list({ x, y, w, h, properties } = {}) {
 				const keys = ['Colors', 'Fonts', 'Background', 'Columns', 'Playlists display', 'UI elements', 'Tooltip'];
 				const answer = WshShell.Popup('Share current UI settings with other panels?\nSettings which will be copied:\n\n' + keys.join(', '), 0, window.ScriptInfo.Name + ': share UI settings', popup.question + popup.yes_no);
 				if (answer === popup.yes) {
-					window.NotifyOthers(window.ScriptInfo.Name +': share UI settings', settings);
+					window.NotifyOthers(window.ScriptInfo.Name + ': share UI settings', settings);
 					return true;
 				}
 				return false;
