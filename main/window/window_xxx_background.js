@@ -1,5 +1,5 @@
 ﻿'use strict';
-//12/11/26
+//20/11/26
 
 /* exported _background */
 
@@ -2132,35 +2132,35 @@ function _background({
 				col = this.getArtColors();
 				col = col ? col[2] : this.getUiColors()[0];
 			}
-			const alpha = this.visualizerOptions.alpha;
+			this.visualizer.Opacity = this.visualizerOptions.alpha / 255;
 			switch (this.visualizer.SourceType) {
 				case VisSourceType.PeakMeter:
 					this.visualizer.Ranges = [
-						{ to: -60, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
-						{ to: -30, color: RGBA(...toRGB((colArray ? colArray[1] : null) || 0xff63d471), alpha) },
-						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
-						{ to: -0.01, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
+						{ to: -60, color: (colArray ? colArray[0] : null) || 0xff63a4ff },
+						{ to: -30, color: (colArray ? colArray[1] : null) || 0xff63d471 },
+						{ to: -20, color: (colArray ? colArray[2] : null) || 0xffffd166 },
+						{ to: 0, color: (colArray ? colArray[3] : null) || 0xffff5d73 }
 					];
 					break;
 				case VisSourceType.VUMeter:
 					this.visualizer.Ranges = [
-						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
-						{ to: -5, color: RGBA(...toRGB((colArray ? colArray[1] : null) || 0xff63d471), alpha) },
-						{ to: -0.5, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
-						{ to: 2.99, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
+						{ to: -20, color: (colArray ? colArray[0] : null) || 0xff63a4ff },
+						{ to: -5, color: (colArray ? colArray[1] : null) || 0xff63d471 },
+						{ to: -0.5, color: (colArray ? colArray[2] : null) || 0xffffd166 },
+						{ to: 3, color: (colArray ? colArray[3] : null) || 0xffff5d73 }
 					];
 					break;
 				case VisSourceType.Spectrum:
 					this.visualizer.Ranges = [
-						{ to: -71.99, color: RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff), alpha) },
-						{ to: -50, color: RGBA(...toRGB((colArray ? colArray[1] : null) || 0xff63d471), alpha) },
-						{ to: -20, color: RGBA(...toRGB((colArray ? colArray[2] : null) || 0xffffd166), alpha) },
-						{ to: -8, color: RGBA(...toRGB((colArray ? colArray[3] : null) || 0xffff5d73), alpha) }
+						{ to: -72, color: (colArray ? colArray[0] : null) || 0xff63a4ff },
+						{ to: -50, color: (colArray ? colArray[1] : null) || 0xff63d471 },
+						{ to: -20, color: (colArray ? colArray[2] : null) || 0xffffd166 },
+						{ to: -8, color: (colArray ? colArray[3] : null) || 0xffff5d73 }
 					];
 					break;
 				case VisSourceType.Spectrogram:
-					this.visualizer.Color = RGBA(...toRGB((colArray ? colArray[0] : null) || 0xff63a4ff, alpha));
-					this.visualizer.BackgroundColor = RGBA(...toRGB((colArray ? colArray[1] : null) || 0xffff5d73, alpha));
+					this.visualizer.Color = (colArray ? colArray[0] : null) || 0xff63a4ff;
+					this.visualizer.BackgroundColor = (colArray ? colArray[1] : null) || 0xffff5d73;
 					break;
 				case VisSourceType.Vectorscope:
 				case VisSourceType.Waveform:

@@ -91,7 +91,7 @@
 - Statistics: minor improvements to menu entries display.
 - Exporting Playlist: improved 'FiiO (playlists folder)' and 'Namida (playlists folder)' export and convert presets to better handle tags with '|' or non ASCII chars at end of folder names, so they match foobar2000 converter output paths. This is in fact a workaround to a [foobar2000 undesired behavior](https://hydrogenaudio.org/index.php/topic,129623.0.html).
 - Helpers: updated helpers.
-- Helpers: replaced nircmd.exe with nircmdx.exe so all recycle bin errors are directly handled by console.
+- Helpers: replaced nircmd.exe with nircmdc.exe so all recycle bin errors are directly handled by console.
 - Helpers: create full folder tree on file/folder remove.
 - Installation: fonts installation is no longer needed when using JSplitter. Fonts will be directly loaded on real time, without system wide installation.If any font is missing (Unix systems), install required fonts from [here](https://github.com/regorxxx/foobar2000-assets/tree/main/Fonts) either system-wide or use the user fonts feature as seen [here](https://hydrogenaudio.org/index.php/topic,130149.msg1090600.html#msg1090600).
 - Installation: new user fonts feature which allows to override or load any custom font in JSplitter by adding them at '[FB2K_PROFILE]\js_data\fonts' folder. Additionally package has real time built-in support for up to 7 different popular emoji fonts (also for flags), ready to be used at any custom font field. See [here](https://hydrogenaudio.org/index.php/topic,130149.msg1090600.html#msg1090600) for more info.

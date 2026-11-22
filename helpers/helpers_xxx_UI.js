@@ -1,10 +1,10 @@
 ﻿'use strict';
-//13/11/26
+//21/11/26
 
 /* exported colorBlind, colorbrewer, LEFT, RIGHT, CENTRE, DT_CENTER, SF_CENTRE, LM, TM, nextId, _tt, blendColors, lightenColor, darkenColor, tintColor, opaqueColor, invert, _gdiFont, removeIdFromStr, _textWidth, _textHeight, _textLines, _textLinesWrap, popup, applyAsMask, applyMask, getRed, getBlue, getGreen, getAlpha, applyEffectAsMask, applyEffect, applyEffectAsMaskEffect */
 
 include(fb.ComponentPath + 'docs\\Flags.js');
-/* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable, TTDT_INITIAL:readable */
+/* global DT_VCENTER:readable, DT_NOPREFIX:readable, DT_CALCRECT:readable, DT_END_ELLIPSIS:readable, DT_RIGHT:readable, DT_CENTER:readable, TTDT_INITIAL:readable, FontStyle:readable */
 include('helpers_xxx.js');
 /* global globFonts:readable, globSettings:readable, doOnce:readable, globSettings:readable, folders:readable, builtInFonts:readable */
 /* global _isFile:readable */
@@ -51,7 +51,16 @@ const colorbrewer = {
 
 // Cache
 const scaleDPI = { factor: -1, reference: 72 }; // Caches _scale() values;
-const fonts = { notFound: [] }; // Caches _gdiFont() values;
+const fonts = { // Caches _gdiFont() values;
+	notFound: [],
+	re: {
+		bold: /(?:\b|extra|semi)(?:bold|solid|emphasis)\b/gi,
+		regular: /\b(?:regular|medium)\b/gi,
+		light: /(?:\b|extra|semi)(?:light|thin)\b/gi,
+		italic: /\b(?:italic|cursive)\b/gi,
+		boldItalic: /(?:\b|extra|semi)(?:bold|solid|emphasis).*?(?:italic|cursive)\b/gi,
+	}
+};
 
 // Flags
 const LEFT = DT_VCENTER | DT_END_ELLIPSIS | DT_CALCRECT | DT_NOPREFIX;
@@ -427,27 +436,60 @@ function invert(color, bBW = false, bUseAlpha = false) {
 	Fonts
 */
 
-function _gdiFont(name, size, style) {
+function _gdiFont(name, size, style = 0) {
 	const id = name.toLowerCase() + '_' + size + '_' + (style || 0);
 	if (!fonts[id]) {
+		const checkNames = [name];
+		const shortName = name.slice(0, 31);
 		if (utils.CheckFont(name)) { fonts[id] = gdi.Font(name, size, style || 0); }
+		else if (shortName !== name && utils.CheckFont(shortName)) { fonts[id] = gdi.Font(shortName, size, style || 0); checkNames.push(shortName); }
 		else if (utils.LoadFont) {
-			const intFontFiles = [builtInFonts[name], name + '.ttf', name + '.otf'].filter(Boolean);
+			const intFontFiles = [builtInFonts[name.toLowerCase()], name + '.ttf', name + '.otf', name + '.ttc', name + '.otc'].filter(Boolean);
 			const intFontFolders = [folders.userFonts, folders.fonts];
 			intFontFiles.some((intFontFile) => {
 				return intFontFolders.some((path) => {
-					if (utils.LoadFont(path + intFontFile)) { fonts[id] = gdi.Font(name, size, style || 0); return true; }
+					const found = utils.LoadFont(path + intFontFile);
+					if (found && found.length) {
+						const family = getFontFamily(found, name, style);
+						const shortNamefamily = family.slice(0, 31);
+						if (utils.CheckFont(family)) { fonts[id] = gdi.Font(family, size, style || 0); checkNames.push(family); }
+						else if (shortNamefamily !== family && utils.CheckFont(shortNamefamily)) { fonts[id] = gdi.Font(shortNamefamily, size, style || 0); checkNames.push(shortNamefamily); }
+						return !!fonts[id];
+					}
 				});
 			});
 		}
-		if (!fonts[id]) { fonts[id] = gdi.Font(utils.CheckFont('Segoe UI') ? 'Segoe UI' : 'Tahoma', size, style || 0); }
-	}
-	if (fonts[id].Name !== name && !fonts.notFound.includes(name)) { // Display once per session, otherwise it floods the console with the same message...
-		fonts.notFound.push(name);
-		fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install the required fonts, default ones can be found at:\nhttps://github.com/regorxxx/foobar2000-assets/tree/main/Fonts\n\nA restart is required after installation!\n\nYou can also put your own font files to be loaded on-the-fly at (only in JSplitter):\n\t' + folders.userFonts + 'fonts\\', window.FullPanelName);
-		console.log('Missing font: ' + name);
+		const bFound = !!fonts[id];
+		if (!bFound) {
+			fonts[id] = gdi.Font(utils.CheckFont('Segoe UI') ? 'Segoe UI' : 'Tahoma', size, style || 0);
+			if (!fonts.notFound.includes(name)) { // Display once per session, otherwise it floods the console with the same message...
+				checkNames.forEach((n) => fonts.notFound.push(n));
+				fb.ShowPopupMessage('Missing font: ' + name + '\n\nPlease install the required fonts, default ones can be found at:\nhttps://github.com/regorxxx/foobar2000-assets/tree/main/Fonts\n\nA restart is required after installation!\n\nYou can also put your own font files to be loaded on-the-fly at (only in JSplitter):\n\t' + folders.userFonts, window.FullPanelName);
+				console.log('Missing font: ' + name);
+			}
+		}
 	}
 	return fonts[id];
+}
+
+function getFontFamily(fontArr, name, style = 0) {
+	const names = new Set([name.slice(0, 31).toLowerCase(), name.toLowerCase()]);
+	const re = fonts.re;
+	const [isRegN, isBoldN, isBoldItaN, isItaN, isLigN] = [re.regular.test(name), re.bold.test(name), re.boldItalic.test(name), re.italic.test(name), re.light.test(name)];
+	const canBeRegN = isRegN || [isBoldN, isBoldItaN, isItaN, isLigN].every((v) => v === false);
+	return fontArr.find((n) => names.has(n.toLowerCase())) ||
+		((style === 0 && canBeRegN) || isRegN
+			? fontArr.find((n) => re.regular.test(n))
+			: !!(style & FontStyle.Italic) && !!(style & FontStyle.Bold) || isBoldItaN
+				? fontArr.find((n) => re.boldItalic.test(n))
+				: !!(style & FontStyle.Bold) || isBoldN
+					? fontArr.find((n) => re.bold.test(n))
+					: !!(style & FontStyle.Italic) || isItaN
+						? fontArr.find((n) => re.italic.test(n))
+						: isLigN
+							? fontArr.find((n) => re.light.test(n))
+							: fontArr[0]
+		) || fontArr[0];
 }
 
 function _textWidth(value, font) {

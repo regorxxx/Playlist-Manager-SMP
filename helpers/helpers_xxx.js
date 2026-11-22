@@ -1,5 +1,5 @@
 ﻿'use strict';
-//17/11/26
+//20/11/26
 
 /**
  * Global folders setting
@@ -231,7 +231,7 @@ Object.keys(globFonts).forEach((key) => {
 	const name = globFonts[key].name;
 	if (!key.startsWith('_') && !utils.CheckFont(name)) {
 		if (utils.LoadFont) {
-			const intFontFiles = [builtInFonts[name.toLowerCase()], name + '.ttf', name + '.otf'].filter(Boolean);
+			const intFontFiles = [builtInFonts[name.toLowerCase()], name + '.ttf', name + '.otf', name + '.ttc', name + '.otc'].filter(Boolean);
 			const intFontFolders = [folders.userFonts, folders.fonts];
 			if (intFontFiles.some((intFontFile) => intFontFolders.some((path) => utils.IsFile(path + intFontFile)))) { return; }
 		}
